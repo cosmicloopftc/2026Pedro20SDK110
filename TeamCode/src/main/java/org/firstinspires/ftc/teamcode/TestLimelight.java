@@ -38,8 +38,8 @@ public class TestLimelight extends LinearOpMode {
     }
 
     public static double getLaunchAngle(Limelight3A limelight){
-        double x = getDistanceToGoal(limelight);
-        double y = 38.75-16;
+        double x = 74; //getDistanceToGoal(limelight);
+        double y = 38.75-16.5;
         double g = 9.8;
         //The equation for surface speed, temporary calculation for muzzle velocity of ball
         double v = 0.5 * Math.PI * 0.096 * 6000;
