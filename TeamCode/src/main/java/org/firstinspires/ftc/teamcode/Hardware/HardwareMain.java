@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Hardware;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -52,6 +53,8 @@ public class HardwareMain {
     public DcMotorEx shooterMotor = null;
     public DcMotorEx turretMotor = null;
     public Servo hoodServo = null;
+
+    public Limelight3A limelight = null;
 
     double newForward = 0, newRight = 0, driveTheta = 0, r = 0 ;
 
@@ -117,6 +120,9 @@ public class HardwareMain {
 
         //map nad setup mode of Hood servo
         hoodServo = hardwareMap.get(Servo.class,"hoodServo");
+
+        //limelight setup
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
 
 
@@ -226,7 +232,10 @@ public class HardwareMain {
         transferServo.setPosition(0.008);
     }
 
-    public void hoodOUT(){
+    public void hoodOutFar(){
+        hoodServo.setPosition(0.17);
+    }
+    public void hoodOutClose(){
         hoodServo.setPosition(0.18);
     }
 

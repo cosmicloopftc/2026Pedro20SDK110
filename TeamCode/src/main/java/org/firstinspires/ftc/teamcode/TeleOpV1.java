@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.drawOnlyCurrent;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad2;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
@@ -14,10 +13,12 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.PoseHistory;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.Hardware.HardwareDrivetrain;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -27,6 +28,8 @@ import java.util.function.Supplier;
 @Configurable
 @TeleOp
 public class TeleOpV1 extends OpMode {
+
+
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this
     private boolean automatedDrive;
@@ -36,7 +39,8 @@ public class TeleOpV1 extends OpMode {
     private double slowModeMultiplier = 0.2;
     ElapsedTime timer = new ElapsedTime();
 
-    HardwareMain robot = new HardwareMain();
+    public static HardwareMain robot = new HardwareMain();
+    HardwareDrivetrain robotDrivetrain = new HardwareDrivetrain();
     enum State{
         INTAKE,
         SHOOT
@@ -48,6 +52,7 @@ public class TeleOpV1 extends OpMode {
     @Override
     public void init() {
         robot.init(hardwareMap);
+        robotDrivetrain.init(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
         follower.update();
@@ -61,7 +66,13 @@ public class TeleOpV1 extends OpMode {
     }
 
     public void init_loop() {
-
+        if(gamepad2.left_bumper){
+            robot.limelight.pipelineSwitch(0);
+            telemetry.addLine("Red pipeline initialized");
+        }else if(gamepad2.right_bumper){
+            robot.limelight.pipelineSwitch(1);
+            telemetry.addLine("Blue pipeline initialized");
+        }
     }
 
     @Override
@@ -71,10 +82,30 @@ public class TeleOpV1 extends OpMode {
         //If you don't pass anything in, it uses the default (false)
         follower.startTeleopDrive();
         follower.update();
-
+        robot.limelight.start();
     }
     @Override
     public void loop() {
+        //AprilTagTracking
+        LLResult result = robot.limelight.getLatestResult();
+        if(result != null) {
+            double tx = result.getTx();
+            double min_command = 0.001;
+            double Kp = -0.02;
+            double heading_error = -tx;
+            double steering_adjust = 0.0;
+            if (Math.abs(heading_error) > 1.0) {
+
+                if (heading_error < 0) {
+                    steering_adjust = Kp * heading_error + min_command;
+                } else {
+                    steering_adjust = Kp * heading_error - min_command;
+                }
+            }
+            robot.turretMotor.setPower(steering_adjust);
+        }else{
+            robot.turretMotor.setPower(gamepad2.left_stick_x);
+        }
 
 //        if (gamepad2.a){
 //            robot.transferDOWN();
@@ -95,16 +126,18 @@ public class TeleOpV1 extends OpMode {
                     robot.intakeOUT();
                     robot.transferOUT();
                 }
-                else if (gamepad1.dpad_left || gamepad1.dpad_right){
+                else if (gamepad1.dpad_left || gamepad1.dpad_right) {
                     robot.intakeSTOP();
                     //robot.transferOFF();
                 }
                 else if (gamepad1.a){
                     state = State.SHOOT;
                 }
+
                 break;
             case SHOOT:
                 robot.transferIN();
+
                 if (gamepad1.a){
                     robot.transferUP();
                     timer.reset();
@@ -133,14 +166,19 @@ public class TeleOpV1 extends OpMode {
         }
         if(gamepad2.dpad_down){
             robot.hoodIN();
-        }else if(gamepad2.dpad_up){
-            robot.hoodOUT();
+        }else if(gamepad2.dpad_left){
+            robot.hoodOutFar();
         }
-        else if(gamepad2.dpad_left){
-            robot.moveHoodUp();
-        }else if(gamepad2.dpad_right){
-            robot.moveHoodDown();
+        else if(gamepad2.dpad_right){
+            robot.hoodOutClose();
         }
+        else if(gamepad2.dpad_up){
+            robot.hoodServo.setPosition(getLaunchAngle());
+        }
+        else if (gamepad1.ps){
+            robot.transferOFF();
+        }
+
 
         //Call this once per loop
         follower.update();
@@ -185,8 +223,46 @@ public class TeleOpV1 extends OpMode {
 //        if (gamepad2.yWasPressed()) {
 //            slowModeMultiplier -= 0.25;
 //        }
+        telemetry.addData("Hood position", robot.hoodServo.getPosition());
+        telemetry.addData("Launch angle", getLaunchAngle());
+        telemetry.addData("Distance to goal", getDistanceToGoal());
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive", automatedDrive);
+    }
+    public static double getDistanceToGoal(){
+        LLResult result = robot.limelight.getLatestResult();
+        double targetOffsetAngle_Vertical = result.getTy();
+        // how many degrees back is your limelight rotated from perfectly vertical?
+        double limelightMountAngleDegrees = 20.0;
+
+        // distance from the center of the Limelight lens to the floor
+        //TODO get this variable
+        double limelightLensHeightInches = 11.0;
+
+        // distance from the target to the floor
+        double goalHeightInches = 38.75;
+
+        double angleToGoalDegrees = limelightMountAngleDegrees + targetOffsetAngle_Vertical;
+        double angleToGoalRadians = angleToGoalDegrees * (3.14159 / 180.0);
+
+        //calculate distance
+        return (goalHeightInches - limelightLensHeightInches) / Math.tan(angleToGoalRadians);
+    }
+
+    public static double getLaunchAngle(){
+        double x = getDistanceToGoal();
+        double y = 28.25;
+        double g = 9.8;
+        //The equation for surface speed, temporary calculation for muzzle velocity of ball
+        double v = 7.3;
+
+        //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
+        double C = (g*x*x) / (2*v*v);
+        double discriminant = Math.sqrt((x*x - 4*(-C)*C*y));
+        double theta1 = Math.atan((-x + discriminant) / (2*(-C)));
+        double theta2 = Math.atan((-x - discriminant) / (2*(-C)));
+
+        return ((Math.min(theta1, theta2) * 180/Math.PI) - 55)/360;
     }
 }
