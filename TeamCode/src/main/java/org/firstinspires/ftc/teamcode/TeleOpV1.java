@@ -88,10 +88,10 @@ public class TeleOpV1 extends OpMode {
     public void loop() {
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
-        if(result != null) {
+        if(result.getTx() != 0 && result.getTx() <= 12 && result.getTx() >= -12) {
             double tx = result.getTx();
             double min_command = 0.001;
-            double Kp = -0.02;
+            double Kp = -0.015;
             double heading_error = -tx;
             double steering_adjust = 0.0;
             if (Math.abs(heading_error) > 1.0) {
@@ -104,7 +104,7 @@ public class TeleOpV1 extends OpMode {
             }
             robot.turretMotor.setPower(steering_adjust);
         }else{
-            robot.turretMotor.setPower(gamepad2.left_stick_x);
+            robot.turretMotor.setPower(gamepad2.left_stick_x * 0.2);
         }
 
 //        if (gamepad2.a){
@@ -226,6 +226,8 @@ public class TeleOpV1 extends OpMode {
         telemetry.addData("Hood position", robot.hoodServo.getPosition());
         telemetry.addData("Launch angle", getLaunchAngle());
         telemetry.addData("Distance to goal", getDistanceToGoal());
+        telemetry.addData("Angle to goal from lightlight", result.getTy());
+        telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive", automatedDrive);
@@ -234,11 +236,11 @@ public class TeleOpV1 extends OpMode {
         LLResult result = robot.limelight.getLatestResult();
         double targetOffsetAngle_Vertical = result.getTy();
         // how many degrees back is your limelight rotated from perfectly vertical?
-        double limelightMountAngleDegrees = 20.0;
+        double limelightMountAngleDegrees = 30.45;  //32.39;
 
         // distance from the center of the Limelight lens to the floor
         //TODO get this variable
-        double limelightLensHeightInches = 11.0;
+        double limelightLensHeightInches = 11.25;
 
         // distance from the target to the floor
         double goalHeightInches = 38.75;
@@ -251,18 +253,18 @@ public class TeleOpV1 extends OpMode {
     }
 
     public static double getLaunchAngle(){
-        double x = getDistanceToGoal();
-        double y = 28.25;
+        double x = getDistanceToGoal()/39.37;
+        double y = 27.25/39.37;
         double g = 9.8;
-        //The equation for surface speed, temporary calculation for muzzle velocity of ball
+
         double v = 7.3;
 
         //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
         double C = (g*x*x) / (2*v*v);
-        double discriminant = Math.sqrt((x*x - 4*(-C)*C*y));
+        double discriminant = Math.sqrt((x*x - 4*(-C)*(-C-y)));
         double theta1 = Math.atan((-x + discriminant) / (2*(-C)));
         double theta2 = Math.atan((-x - discriminant) / (2*(-C)));
 
-        return ((Math.min(theta1, theta2) * 180/Math.PI) - 55)/360;
+        return (90-(Math.min(theta1, theta2) * 180/Math.PI))/360 - 0.01; //37 = 0
     }
 }

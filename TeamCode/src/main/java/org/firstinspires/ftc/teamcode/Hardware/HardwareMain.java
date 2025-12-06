@@ -115,7 +115,7 @@ public class HardwareMain {
         turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         turretMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turretMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        turretMotor.setDirection(DcMotorEx.Direction.REVERSE);
         turretMotor.setPower(0);
 
         //map nad setup mode of Hood servo
