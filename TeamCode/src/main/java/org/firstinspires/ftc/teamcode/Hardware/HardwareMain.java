@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -48,6 +49,7 @@ public class HardwareMain {
 
     public CRServo intakeLeftTransfer = null;
     public CRServo intakeRightTransfer = null;
+    public Servo spindexerServo = null;
     public Servo transferServo = null;
 
     public DcMotorEx shooterMotor = null;
@@ -101,6 +103,9 @@ public class HardwareMain {
         intakeRightTransfer = hardwareMap.get(CRServo.class, "intakeRightTransfer");
         intakeRightTransfer.setDirection(DcMotorSimple.Direction.REVERSE); //Change if wrong
 
+        spindexerServo = hardwareMap.get(Servo.class,"spindexerServo");
+        spindexerServo.setDirection(Servo.Direction.REVERSE);
+
         transferServo = hardwareMap.get(Servo.class,"transferServo");
 
         //map and setup mode of Shooter motor
@@ -115,7 +120,7 @@ public class HardwareMain {
         turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         turretMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turretMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        turretMotor.setDirection(DcMotorEx.Direction.REVERSE);
         turretMotor.setPower(0);
 
         //map nad setup mode of Hood servo
@@ -197,7 +202,15 @@ public class HardwareMain {
 
     }
 
-
+    public void spindexerPosition1(){
+        spindexerServo.setPosition(0);
+    }
+    public void spindexerPosition2(){
+        spindexerServo.setPosition(0.375);
+    }
+    public void spindexerPosition3(){
+        spindexerServo.setPosition(0.75);
+    }
     public void transferIN(){
         intakeLeftTransfer.setPower(0.8);
         intakeRightTransfer.setPower(0.8);
@@ -252,5 +265,43 @@ public class HardwareMain {
         if(!(hoodServo.getPosition() <= 0.05)) {
             hoodServo.setPosition(hoodServo.getPosition() - 0.01);
         }
+    }
+
+    public void auto3Shoot(){
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+        if (timer.milliseconds() > 0 && timer.milliseconds() < 800){
+            spindexerPosition1();
+            //move kicker up?
+        }
+        else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
+            spindexerPosition1();
+            //move kicker down?
+        }
+        else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
+            spindexerPosition2();
+        }
+        else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
+            spindexerPosition2();
+            //move kicker up?
+        }
+        else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
+            spindexerPosition2();
+            //move kicker down?
+        }
+        else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
+            spindexerPosition3();
+        }
+        else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
+            spindexerPosition3();
+            //move kicker up?
+        }
+        else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
+            spindexerPosition3();
+            //move kicker down?
+        }
+//        else{
+//            spindexerPosition1();
+//        }
     }
 }
