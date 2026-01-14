@@ -106,7 +106,7 @@ public class HardwareMain {
         //map and setup mode of Shooter motor
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         shooterMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        shooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        shooterMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         shooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
         shooterMotor.setPower(0);
 

@@ -88,8 +88,15 @@ public class TeleOpV1 extends OpMode {
     public void loop() {
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
-        if(result.getTx() != 0 && result.getTx() <= 12 && result.getTx() >= -12) {
+        //TODO get the right numbers for the position of the shooter
+        if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -300) {
             double tx = result.getTx();
+            //This is to adjust for the  fact that aiming at the april tag from a long distance is not actually
+            //where we want to aim
+            if(getDistanceToGoal() > 80){
+                //TODO get a good value for this
+                tx+=0.5;
+            }
             double min_command = 0.001;
             double Kp = -0.015;
             double heading_error = -tx;
@@ -104,7 +111,16 @@ public class TeleOpV1 extends OpMode {
             }
             robot.turretMotor.setPower(steering_adjust);
         }else{
-            robot.turretMotor.setPower(gamepad2.left_stick_x * 0.2);
+            //TODO test to see if this is useful and works
+            if(result.getTx() == 0 && robot.turretMotor.getTargetPosition() != 0){
+                robot.turretMotor.setTargetPosition(0);
+            } else if(robot.turretMotor.getCurrentPosition() <= -300 && gamepad1.left_stick_x > 0){
+                robot.turretMotor.setPower(gamepad1.left_stick_x * 0.2);
+            }else if(robot.turretMotor.getCurrentPosition() >= 300 && gamepad1.left_stick_x < 0){
+                robot.turretMotor.setPower(gamepad1.left_stick_x * 0.2);
+            }else {
+                robot.turretMotor.setPower(0);
+            }
         }
 
 //        if (gamepad2.a){
