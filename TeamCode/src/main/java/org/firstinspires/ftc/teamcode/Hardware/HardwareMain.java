@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.Hardware;
 
+/** copy over from Marcus' branch 1/18/2026
+ */
+
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -11,6 +14,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -48,9 +52,11 @@ public class HardwareMain {
 
     public CRServo intakeLeftTransfer = null;
     public CRServo intakeRightTransfer = null;
+    public Servo spindexerServo = null;
     public Servo transferServo = null;
 
-    public DcMotorEx shooterMotor = null;
+    public DcMotorEx rightShooterMotor = null;
+    public DcMotorEx leftShooterMotor = null;
     public DcMotorEx turretMotor = null;
     public Servo hoodServo = null;
 
@@ -101,14 +107,28 @@ public class HardwareMain {
         intakeRightTransfer = hardwareMap.get(CRServo.class, "intakeRightTransfer");
         intakeRightTransfer.setDirection(DcMotorSimple.Direction.REVERSE); //Change if wrong
 
+        spindexerServo = hardwareMap.get(Servo.class,"spindexerServo");
+        spindexerServo.setDirection(Servo.Direction.REVERSE);
+
         transferServo = hardwareMap.get(Servo.class,"transferServo");
 
         //map and setup mode of Shooter motor
-        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
-        shooterMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        shooterMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        shooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        shooterMotor.setPower(0);
+        rightShooterMotor = hardwareMap.get(DcMotorEx.class, "rightShooterMotor");
+        rightShooterMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rightShooterMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);        //use this for run at .setvelocity
+        rightShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);               //use this for run at.setvelocity
+        //rightShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);     //use this for run at .setpower
+        rightShooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        rightShooterMotor.setPower(0);
+
+        leftShooterMotor = hardwareMap.get(DcMotorEx.class, "leftShooterMotor");
+        leftShooterMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        leftShooterMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);     //use this for run at .setvelocity
+        leftShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);            //use this for run at .setvelocity
+        //leftShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);  //use this for run at .setpower
+        leftShooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        leftShooterMotor.setPower(0);
+
 
         //map and setup mode of Turret motor
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
@@ -197,7 +217,15 @@ public class HardwareMain {
 
     }
 
-
+    public void spindexerPosition1(){
+        spindexerServo.setPosition(0);
+    }
+    public void spindexerPosition2(){
+        spindexerServo.setPosition(0.375);
+    }
+    public void spindexerPosition3(){
+        spindexerServo.setPosition(0.75);
+    }
     public void transferIN(){
         intakeLeftTransfer.setPower(0.8);
         intakeRightTransfer.setPower(0.8);
@@ -218,10 +246,15 @@ public class HardwareMain {
 
     //Algorithm to calculate speed? - this is temporary!!!!
     public void shooterON() {
-        shooterMotor.setPower(1);
+        //rightShooterMotor.setPower(-0.2);
+        //leftShooterMotor.setPower(0.2);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
+        //TODO:  need to find optimal .setVelocity below
+        rightShooterMotor.setVelocity(-30,AngleUnit.DEGREES);       //value degrees per seconds
+        leftShooterMotor.setVelocity(30,AngleUnit.DEGREES);         //value degrees per seconds
     }
     public void shooterOFF() {
-        shooterMotor.setPower(0);
+        rightShooterMotor.setPower(0);
+        leftShooterMotor.setPower(0);
     }
 
     public void transferUP(){
@@ -252,5 +285,43 @@ public class HardwareMain {
         if(!(hoodServo.getPosition() <= 0.05)) {
             hoodServo.setPosition(hoodServo.getPosition() - 0.01);
         }
+    }
+
+    public void auto3Shoot(){
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+        if (timer.milliseconds() > 0 && timer.milliseconds() < 800){
+            spindexerPosition1();
+            //move kicker up?
+        }
+        else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
+            spindexerPosition1();
+            //move kicker down?
+        }
+        else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
+            spindexerPosition2();
+        }
+        else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
+            spindexerPosition2();
+            //move kicker up?
+        }
+        else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
+            spindexerPosition2();
+            //move kicker down?
+        }
+        else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
+            spindexerPosition3();
+        }
+        else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
+            spindexerPosition3();
+            //move kicker up?
+        }
+        else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
+            spindexerPosition3();
+            //move kicker down?
+        }
+//        else{
+//            spindexerPosition1();
+//        }
     }
 }
