@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad2;
 
 import com.bylazar.configurables.annotations.Configurable;
@@ -14,20 +15,27 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Hardware.HardwareDrivetrain;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.Hardware.HardwareDrivetrainNOTusingPedroPath;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+import java.util.List;
 import java.util.function.Supplier;
 
+/**1/18/2026  correct manual move control (used PedroPathing teleOp method)
+ * identify code to slow down manual move (slowModeMultiplier, slowMode) ; auto path (automatedDrive)
+ *
+ */
 
 @Configurable
-@TeleOp
-public class TeleOpV1 extends OpMode {
+@TeleOp(name = "TeleOpV2 v1")
+public class TeleOpV2 extends OpMode {
 
 
     private Follower follower;
@@ -38,9 +46,10 @@ public class TeleOpV1 extends OpMode {
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.2;
     ElapsedTime timer = new ElapsedTime();
+    private String shootingMode = "none";
 
     public static HardwareMain robot = new HardwareMain();
-    HardwareDrivetrain robotDrivetrain = new HardwareDrivetrain();
+    HardwareDrivetrainNOTusingPedroPath robotDrivetrain = new HardwareDrivetrainNOTusingPedroPath();
     enum State{
         INTAKE,
         SHOOT
@@ -62,6 +71,14 @@ public class TeleOpV1 extends OpMode {
                 .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
                 .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(45), 0.8))
                 .build();
+
+        //Set up bulk data reading
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+
+
 
     }
 
@@ -88,15 +105,8 @@ public class TeleOpV1 extends OpMode {
     public void loop() {
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
-        //TODO get the right numbers for the position of the shooter
-        if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -300) {
+        if(result.getTx() != 0 && result.getTx() <= 12 && result.getTx() >= -12) {
             double tx = result.getTx();
-            //This is to adjust for the  fact that aiming at the april tag from a long distance is not actually
-            //where we want to aim
-            if(getDistanceToGoal() > 80){
-                //TODO get a good value for this
-                tx+=0.5;
-            }
             double min_command = 0.001;
             double Kp = -0.015;
             double heading_error = -tx;
@@ -111,16 +121,7 @@ public class TeleOpV1 extends OpMode {
             }
             robot.turretMotor.setPower(steering_adjust);
         }else{
-            //TODO test to see if this is useful and works
-            if(result.getTx() == 0 && robot.turretMotor.getTargetPosition() != 0){
-                robot.turretMotor.setTargetPosition(0);
-            } else if(robot.turretMotor.getCurrentPosition() <= -300 && gamepad1.left_stick_x > 0){
-                robot.turretMotor.setPower(gamepad1.left_stick_x * 0.2);
-            }else if(robot.turretMotor.getCurrentPosition() >= 300 && gamepad1.left_stick_x < 0){
-                robot.turretMotor.setPower(gamepad1.left_stick_x * 0.2);
-            }else {
-                robot.turretMotor.setPower(0);
-            }
+            robot.turretMotor.setPower(gamepad2.left_stick_x * 0.2);
         }
 
 //        if (gamepad2.a){
@@ -132,6 +133,48 @@ public class TeleOpV1 extends OpMode {
 
         switch (state) {
             case INTAKE:
+                robot.spindexerPosition1();
+                if (gamepad2.b){
+                    //robot.auto3Shoot();
+                    shootingMode = "all3";
+                    timer.reset();
+                    state = State.SHOOT;
+                }
+                else if (gamepad2.x){
+                    shootingMode = "manual";
+                    state = State.SHOOT;
+                }
+//                if (gamepad2.b && timer.milliseconds() > 0 && timer.milliseconds() < 800){
+//                    robot.spindexerPosition1();
+//                    //move kicker up?
+//                }
+//                else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
+//                    robot.spindexerPosition1();
+//                    //move kicker down?
+//                }
+//                else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
+//                    robot.spindexerPosition2();
+//                }
+//                else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
+//                    robot.spindexerPosition2();
+//                    //move kicker up?
+//                }
+//                else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
+//                    robot.spindexerPosition2();
+//                    //move kicker down?
+//                }
+//                else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
+//                    robot.spindexerPosition3();
+//                }
+//                else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
+//                    robot.spindexerPosition3();
+//                    //move kicker up?
+//                }
+//                else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
+//                    robot.spindexerPosition3();
+//                    //move kicker down?
+//                }
+
                 robot.transferDOWN();
 
                 if (gamepad1.dpad_up){
@@ -152,28 +195,90 @@ public class TeleOpV1 extends OpMode {
 
                 break;
             case SHOOT:
-                robot.transferIN();
+                //robot.transferIN();
 
-                if (gamepad1.a){
-                    robot.transferUP();
-                    timer.reset();
+                if (shootingMode.equals("all3")){
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 800){
+                        robot.spindexerPosition1();
+                        //move kicker up?
+                    }
+                    else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
+                        robot.spindexerPosition1();
+                        //move kicker down?
+                    }
+                    else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
+                        robot.spindexerPosition2();
+                    }
+                    else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
+                        robot.spindexerPosition2();
+                        //move kicker up?
+                    }
+                    else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
+                        robot.spindexerPosition2();
+                        //move kicker down?
+                    }
+                    else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
+                        robot.spindexerPosition3();
+                    }
+                    else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
+                        robot.spindexerPosition3();
+                        //move kicker up?
+                    }
+                    else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
+                        robot.spindexerPosition3();
+                        //move kicker down?
+                    }
+                    else if(timer.milliseconds() > 3200){
+                        robot.spindexerPosition1();
+                        shootingMode = "none";
+                    }
                 }
-                else if (timer.milliseconds() > 800)
-                {
-                    robot.transferDOWN();
+                else if (shootingMode.equals("manual")){
+                    if (gamepad2.right_bumper){
+                        //move kicker up
+                        timer.reset();
+                    }
+                    else if(timer.milliseconds() > 200){
+                        //move kicker down
+                    }
+                    if (gamepad2.left_trigger >= 0.2){
+                        robot.spindexerPosition1();
+                    }
+                    else if (gamepad2.left_bumper){
+                        robot.spindexerPosition2();
+                    }
+                    else if(gamepad2.right_trigger >= 0.2){
+                        robot.spindexerPosition3();
+                    }
+                    if (gamepad2.left_stick_button){
+                        shootingMode = "none";
+                    }
                 }
-                if (gamepad1.left_trigger > 0.2 || gamepad1.left_bumper){
-                    robot.intakeIN();
-                }
-                else{
-                    robot.intakeSTOP();
-                }
-                if (gamepad1.dpad_up || gamepad1.dpad_down){
+
+
+//                if (gamepad1.a){
+//                    robot.transferUP();
+//                    timer.reset();
+//                }
+//                else if (timer.milliseconds() > 800)
+//                {
+//                    robot.transferDOWN();
+//                }
+//                if (gamepad1.left_trigger > 0.2 || gamepad1.left_bumper){
+//                    robot.intakeIN();
+//                }
+//                else{
+//                    robot.intakeSTOP();
+//                }
+//                if (gamepad1.dpad_up || gamepad1.dpad_down){
+//                    shootingMode = "none";
+//                    state = State.INTAKE;
+//                }
+                if (shootingMode.equals("none")){
                     state = State.INTAKE;
                 }
                 break;
         }
-
         if (gamepad2.y){
             robot.shooterON();
         }
@@ -204,34 +309,34 @@ public class TeleOpV1 extends OpMode {
             //In case the drivers want to use a "slowMode" you can scale the vectors
             //This is the normal version to use in the TeleOp
             if (!slowMode) follower.setTeleOpDrive(
-                    gamepad1.left_stick_y,
-                    gamepad1.left_stick_x,
-                    gamepad1.right_stick_x,
+                    -gamepad1.left_stick_y,
+                    -gamepad1.left_stick_x,
+                    -gamepad1.right_stick_x,
                     true // Robot Centric
             );
                 //This is how it looks with slowMode on
             else follower.setTeleOpDrive(
-                    gamepad1.left_stick_y * slowModeMultiplier,
-                    gamepad1.left_stick_x * slowModeMultiplier,
-                    gamepad1.right_stick_x * slowModeMultiplier,
+                    -gamepad1.left_stick_y * slowModeMultiplier,
+                    -gamepad1.left_stick_x * slowModeMultiplier,
+                    -gamepad1.right_stick_x * slowModeMultiplier,
                     true // Robot Centric
             );
         }
-//        //Automated PathFollowing
+//        //Automated PathFollowing                //TODO: This is where we can automate a path
 //        if (gamepad1.aWasPressed()) {
 //            follower.followPath(pathChain.get());
 //            automatedDrive = true;
 //        }
-//        //Stop automated following if the follower is done
+//        //Stop automated following if the follower is done //TODO: stop automate a path when 1) manually stopped or done with path
 //        if (automatedDrive && (gamepad1.bWasPressed() || !follower.isBusy())) {
 //            follower.startTeleopDrive();
 //            automatedDrive = false;
 //        }
-//        //Slow Mode
+//        //Slow Mode                               //TODO: slow down robot movement by multiplying a slowModeMultiplier = 0.2 (very slow)
 //        if (gamepad1.rightBumperWasPressed()) {
 //            slowMode = !slowMode;
 //        }
-//        //Optional way to change slow mode strength
+//        //Optional way to change slow mode strength  //TODO: slow down robot movement by multiplying a
 //        if (gamepad1.xWasPressed()) {
 //            slowModeMultiplier += 0.25;
 //        }
@@ -244,10 +349,20 @@ public class TeleOpV1 extends OpMode {
         telemetry.addData("Distance to goal", getDistanceToGoal());
         telemetry.addData("Angle to goal from lightlight", result.getTy());
         telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
+
+        telemetry.addData("rightShooter AngVel (deg/s?): ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));
+        telemetry.addData("leftShooter  AngVel (deg/s?): ", robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive", automatedDrive);
+
     }
+
+
+
+
+
     public static double getDistanceToGoal(){
         LLResult result = robot.limelight.getLatestResult();
         double targetOffsetAngle_Vertical = result.getTy();
