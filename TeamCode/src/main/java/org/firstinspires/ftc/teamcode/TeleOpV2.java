@@ -134,6 +134,7 @@ public class TeleOpV2 extends OpMode {
         switch (state) {
             case INTAKE:
                 robot.spindexerPosition1();
+                robot.transferDOWN();
                 if (gamepad2.b){
                     //robot.auto3Shoot();
                     shootingMode = "all3";
@@ -144,48 +145,16 @@ public class TeleOpV2 extends OpMode {
                     shootingMode = "manual";
                     state = State.SHOOT;
                 }
-//                if (gamepad2.b && timer.milliseconds() > 0 && timer.milliseconds() < 800){
-//                    robot.spindexerPosition1();
-//                    //move kicker up?
-//                }
-//                else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
-//                    robot.spindexerPosition1();
-//                    //move kicker down?
-//                }
-//                else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
-//                    robot.spindexerPosition2();
-//                }
-//                else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
-//                    robot.spindexerPosition2();
-//                    //move kicker up?
-//                }
-//                else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
-//                    robot.spindexerPosition2();
-//                    //move kicker down?
-//                }
-//                else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
-//                    robot.spindexerPosition3();
-//                }
-//                else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
-//                    robot.spindexerPosition3();
-//                    //move kicker up?
-//                }
-//                else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
-//                    robot.spindexerPosition3();
-//                    //move kicker down?
-//                }
-
-                robot.transferDOWN();
 
                 if (gamepad1.dpad_up){
                     robot.intakeIN();
-                    robot.transferIN();
+                    //robot.transferIN();
                 }
                 else if (gamepad1.dpad_down){
                     robot.intakeOUT();
-                    robot.transferOUT();
+                    //robot.transferOUT();
                 }
-                else if (gamepad1.dpad_left || gamepad1.dpad_right) {
+                if (gamepad1.dpad_left || gamepad1.dpad_right) {
                     robot.intakeSTOP();
                     //robot.transferOFF();
                 }
@@ -198,35 +167,32 @@ public class TeleOpV2 extends OpMode {
                 //robot.transferIN();
 
                 if (shootingMode.equals("all3")){
-                    if (timer.milliseconds() > 0 && timer.milliseconds() < 800){
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 400){
                         robot.spindexerPosition1();
-                        //move kicker up?
-                    }
+                        robot.transferUP();                    }
                     else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
                         robot.spindexerPosition1();
-                        //move kicker down?
+                        robot.transferDOWN();
                     }
                     else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
                         robot.spindexerPosition2();
                     }
                     else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
                         robot.spindexerPosition2();
-                        //move kicker up?
-                    }
+                        robot.transferUP();                    }
                     else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
                         robot.spindexerPosition2();
-                        //move kicker down?
+                        robot.transferDOWN();
                     }
                     else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
                         robot.spindexerPosition3();
                     }
                     else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
                         robot.spindexerPosition3();
-                        //move kicker up?
-                    }
+                        robot.transferUP();                    }
                     else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
                         robot.spindexerPosition3();
-                        //move kicker down?
+                        robot.transferDOWN();
                     }
                     else if(timer.milliseconds() > 3200){
                         robot.spindexerPosition1();
@@ -235,11 +201,11 @@ public class TeleOpV2 extends OpMode {
                 }
                 else if (shootingMode.equals("manual")){
                     if (gamepad2.right_bumper){
-                        //move kicker up
+                        robot.transferUP();
                         timer.reset();
                     }
                     else if(timer.milliseconds() > 200){
-                        //move kicker down
+                        robot.transferDOWN();
                     }
                     if (gamepad2.left_trigger >= 0.2){
                         robot.spindexerPosition1();
@@ -296,9 +262,9 @@ public class TeleOpV2 extends OpMode {
         else if(gamepad2.dpad_up){
             robot.hoodServo.setPosition(getLaunchAngle());
         }
-        else if (gamepad1.ps){
-            robot.transferOFF();
-        }
+//        else if (gamepad1.ps){
+//            robot.transferOFF();
+//        }
 
 
         //Call this once per loop

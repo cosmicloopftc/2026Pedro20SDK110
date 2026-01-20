@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -27,10 +28,26 @@ public class ShooterTest extends OpMode {
     public DcMotorEx rightShooterMotor = null;
     public DcMotorEx leftShooterMotor = null;
     public Double AngularVel_DegPerSec;
-    boolean aPressedLastCycle = false;
-    boolean bPressedLastCycle = false;
+
+//    boolean lastButtonStateA = false;
+//    boolean lastButtonStateB = false;
+//
+//    boolean changeVelocityIsActiveA = false;
+//    boolean changeVelocityIsActiveB = false;
+//
+//    boolean currentButtonStateA = false;
+//    boolean currentButtonStateB = false;
+
+    boolean isPushed_dPad_up = false;
+    boolean isPushed_dPad_down = false;
+
+    ElapsedTime runtime = new ElapsedTime(); ;
+    ElapsedTime lastButtonPushTimeA;
+    ElapsedTime lastButtonPushTimeB;
+    ElapsedTime timeLastPush = new ElapsedTime(); ;
 
     public void init() {
+
         //Set up bulk data reading
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
@@ -52,39 +69,61 @@ public class ShooterTest extends OpMode {
             //leftShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);  //use this for run at .setpower
             leftShooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
             leftShooterMotor.setPower(0);
-
-
         }
+
+
+
+
+
     }
 
     public void init_loop () {
         }
 
     public void start () {
-            AngularVel_DegPerSec = 5.0;
+            AngularVel_DegPerSec = -20.0;
             shooterON(AngularVel_DegPerSec);
+            runtime.reset();
+            timeLastPush =runtime;
         }
 
 
     public void loop () {
-        boolean aPressednow = gamepad1.dpad_up;
-        boolean bPressednow = gamepad1.dpad_down;
+        isPushed_dPad_up = gamepad1.yWasReleased();
+        isPushed_dPad_down = gamepad1.aWasReleased();
 
-        if (aPressednow && !aPressedLastCycle) {
+
+//        currentButtonStateB = gamepad1.dpad_down;
+//
+        if (isPushed_dPad_up ) {
             AngularVel_DegPerSec = AngularVel_DegPerSec - 5;
-
+            timeLastPush = runtime;
+            isPushed_dPad_up = false;
+            shooterON(AngularVel_DegPerSec);
         }
-        if (bPressednow && !bPressedLastCycle) {
+        if (isPushed_dPad_down) {
             AngularVel_DegPerSec = AngularVel_DegPerSec + 5;
-
+            timeLastPush = runtime;
+            isPushed_dPad_down = false;
+            shooterON(AngularVel_DegPerSec);
         }
+
         if (gamepad1.x) {
             shooterOFF();
         }
-        shooterON(AngularVel_DegPerSec);
+
+
 
         telemetry.addData("rightShooter AngVel (deg/s?): ", rightShooterMotor.getVelocity(AngleUnit.DEGREES));
+        telemetry.addData("rightPower : ", rightShooterMotor.getPower());
+        telemetry.addLine(" ");
         telemetry.addData("leftShooter  AngVel (deg/s?): ", leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+        telemetry.addData("leftPower : ", leftShooterMotor.getPower());
+        telemetry.addLine(" ");
+        telemetry.addData("AngularVel_DegPerSec (deg/s?): ", AngularVel_DegPerSec);
+
+
+
     }
 
 
@@ -93,18 +132,25 @@ public class ShooterTest extends OpMode {
 
 
         //Algorithm to calculate speed? - this is temporary!!!!
-    public void shooterON(double RateDegPerSec){
+    private void shooterON(double RateDegPerSec){
             //rightShooterMotor.setPower(-0.2);
             //leftShooterMotor.setPower(0.2);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
             //TODO:  need to find optimal .setVelocity below
-            rightShooterMotor.setVelocity(-RateDegPerSec, AngleUnit.DEGREES);       //value degrees per seconds
-            leftShooterMotor.setVelocity(RateDegPerSec, AngleUnit.DEGREES);         //value degrees per seconds
+            rightShooterMotor.setVelocity(RateDegPerSec, AngleUnit.DEGREES);       //value degrees per seconds
+            leftShooterMotor.setVelocity(-RateDegPerSec, AngleUnit.DEGREES);         //value degrees per seconds
         }
 
-   public void shooterOFF() {
+   private void shooterOFF() {
             rightShooterMotor.setPower(0);
             leftShooterMotor.setPower(0);
    }
+
+//    public boolean isRisingEdgeA(boolean currentButtonStateA, boolean lastButtonStateB){
+//        return currentButtonStateA && !lastButtonStateA;
+//    }
+//    public boolean isRisingEdgeB(boolean currentButtonStateB, boolean lastButtonStateB){
+//        return currentButtonStateB && !lastButtonStateB;
+//    }
 
 
 }
