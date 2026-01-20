@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 
 //FTC Thunderbolts (S0acramento, CA) mentor program structure
 //1:01:slider example adjusts the motor speed for the slide for it to reach a set Encoder value.
@@ -18,16 +19,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 //LinearOpMode structure: runOpMode(), waitForStart(), isStarted(), isStopRequested(), idle(), opModeIsActive(), opModeInInit()
 
 
-@TeleOp (name= "Intake_Test")
+@TeleOp (name= "Intake_Test", group = "Test")
 
 public class IntakeTest extends OpMode {
     //This method will be called once, when the INIT button is pressed.
 
-    public DcMotor intakeMotor = null;
+    public DcMotor shooterLeft = null;
+    public DcMotor shooterRight = null;
+    public static HardwareMain robot = new HardwareMain();
 
     public void init() {
-        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
-        intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.init(hardwareMap);
     }
 
     public void init_loop() {
@@ -41,13 +43,21 @@ public class IntakeTest extends OpMode {
 
     public void loop(){
         if (gamepad1.dpad_up){
-            intakeMotor.setPower(0.5);
+            robot.transferUP();
+            telemetry.addData("Transfer servo position", robot.transferServo.getPosition());
         }
         else if (gamepad1.dpad_down){
-            intakeMotor.setPower(-0.5);
+            robot.transferDOWN();
+            telemetry.addData("Transfer servo position", robot.transferServo.getPosition());
         }
         else if (gamepad1.dpad_left || gamepad1.dpad_right){
-            intakeMotor.setPower(0);
+            robot.shooterON();
+        }else if(gamepad1.x){
+            robot.spindexerPosition1();
+        }else if(gamepad1.y){
+            robot.spindexerPosition2();
+        }else if(gamepad1.b){
+            robot.spindexerPosition3();
         }
     }
 

@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode;
+//TODO:  need to add changes Dominic made on 1/22/2026 Wed-Thurs (master_endJan18LATEST_DCP branch)
+//             in HardwareMain, and in TeleOpV2.java
 
-
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad2;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
@@ -52,11 +52,13 @@ public class TeleOpV2 extends OpMode {
     HardwareDrivetrainNOTusingPedroPath robotDrivetrain = new HardwareDrivetrainNOTusingPedroPath();
     enum State{
         INTAKE,
-        SHOOT
+        SPINDEXER_STATE_ACTION, SHOOT
     }
     State state = State.INTAKE;
     @IgnoreConfigurable
     static PoseHistory poseHistory;
+
+
 
     @Override
     public void init() {
@@ -78,7 +80,8 @@ public class TeleOpV2 extends OpMode {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-
+        double imuHeading = robot.imu.getRobotYawPitchRollAngles()
+                .getYaw(AngleUnit.RADIANS);
 
     }
 
@@ -100,6 +103,9 @@ public class TeleOpV2 extends OpMode {
         follower.startTeleopDrive();
         follower.update();
         robot.limelight.start();
+
+
+
     }
     @Override
     public void loop() {
@@ -134,60 +140,29 @@ public class TeleOpV2 extends OpMode {
         switch (state) {
             case INTAKE:
                 robot.spindexerPosition1();
+                robot.transferDOWN();
                 if (gamepad2.b){
                     //robot.auto3Shoot();
                     shootingMode = "all3";
                     timer.reset();
                     state = State.SHOOT;
                 }
-                else if (gamepad2.x){
+                else if (gamepad2.right_bumper){
                     shootingMode = "manual";
                     state = State.SHOOT;
                 }
-//                if (gamepad2.b && timer.milliseconds() > 0 && timer.milliseconds() < 800){
-//                    robot.spindexerPosition1();
-//                    //move kicker up?
-//                }
-//                else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
-//                    robot.spindexerPosition1();
-//                    //move kicker down?
-//                }
-//                else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
-//                    robot.spindexerPosition2();
-//                }
-//                else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
-//                    robot.spindexerPosition2();
-//                    //move kicker up?
-//                }
-//                else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
-//                    robot.spindexerPosition2();
-//                    //move kicker down?
-//                }
-//                else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
-//                    robot.spindexerPosition3();
-//                }
-//                else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
-//                    robot.spindexerPosition3();
-//                    //move kicker up?
-//                }
-//                else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
-//                    robot.spindexerPosition3();
-//                    //move kicker down?
-//                }
 
-                robot.transferDOWN();
-
-                if (gamepad1.dpad_up){
+                if (gamepad1.dpad_up || gamepad1.left_trigger > 0.2){
                     robot.intakeIN();
-                    robot.transferIN();
+                    robot.intakeServoIN();
                 }
-                else if (gamepad1.dpad_down){
+                else if (gamepad1.dpad_down || gamepad1.left_bumper){
                     robot.intakeOUT();
-                    robot.transferOUT();
+                    //robot.transferOUT();
                 }
-                else if (gamepad1.dpad_left || gamepad1.dpad_right) {
+                if (gamepad1.dpad_left || gamepad1.dpad_right) {
                     robot.intakeSTOP();
-                    //robot.transferOFF();
+                    robot.intakeServoSTOP();
                 }
                 else if (gamepad1.a){
                     state = State.SHOOT;
@@ -198,35 +173,33 @@ public class TeleOpV2 extends OpMode {
                 //robot.transferIN();
 
                 if (shootingMode.equals("all3")){
-                    if (timer.milliseconds() > 0 && timer.milliseconds() < 800){
+                    robot.intakeServoIN();
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 400){
                         robot.spindexerPosition1();
-                        //move kicker up?
-                    }
+                        robot.transferUP();                    }
                     else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
                         robot.spindexerPosition1();
-                        //move kicker down?
+                        robot.transferDOWN();
                     }
                     else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
                         robot.spindexerPosition2();
                     }
                     else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
                         robot.spindexerPosition2();
-                        //move kicker up?
-                    }
+                        robot.transferUP();                    }
                     else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
                         robot.spindexerPosition2();
-                        //move kicker down?
+                        robot.transferDOWN();
                     }
                     else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
                         robot.spindexerPosition3();
                     }
                     else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
                         robot.spindexerPosition3();
-                        //move kicker up?
-                    }
+                        robot.transferUP();                    }
                     else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
                         robot.spindexerPosition3();
-                        //move kicker down?
+                        robot.transferDOWN();
                     }
                     else if(timer.milliseconds() > 3200){
                         robot.spindexerPosition1();
@@ -234,12 +207,13 @@ public class TeleOpV2 extends OpMode {
                     }
                 }
                 else if (shootingMode.equals("manual")){
+                    robot.intakeServoIN();
                     if (gamepad2.right_bumper){
-                        //move kicker up
+                        robot.transferUP();
                         timer.reset();
                     }
                     else if(timer.milliseconds() > 200){
-                        //move kicker down
+                        robot.transferDOWN();
                     }
                     if (gamepad2.left_trigger >= 0.2){
                         robot.spindexerPosition1();
@@ -250,30 +224,10 @@ public class TeleOpV2 extends OpMode {
                     else if(gamepad2.right_trigger >= 0.2){
                         robot.spindexerPosition3();
                     }
-                    if (gamepad2.left_stick_button){
+                    if (gamepad1.dpad_up || gamepad2.x){
                         shootingMode = "none";
                     }
                 }
-
-
-//                if (gamepad1.a){
-//                    robot.transferUP();
-//                    timer.reset();
-//                }
-//                else if (timer.milliseconds() > 800)
-//                {
-//                    robot.transferDOWN();
-//                }
-//                if (gamepad1.left_trigger > 0.2 || gamepad1.left_bumper){
-//                    robot.intakeIN();
-//                }
-//                else{
-//                    robot.intakeSTOP();
-//                }
-//                if (gamepad1.dpad_up || gamepad1.dpad_down){
-//                    shootingMode = "none";
-//                    state = State.INTAKE;
-//                }
                 if (shootingMode.equals("none")){
                     state = State.INTAKE;
                 }
@@ -296,9 +250,9 @@ public class TeleOpV2 extends OpMode {
         else if(gamepad2.dpad_up){
             robot.hoodServo.setPosition(getLaunchAngle());
         }
-        else if (gamepad1.ps){
-            robot.transferOFF();
-        }
+//        else if (gamepad1.ps){
+//            robot.transferOFF();
+//        }
 
 
         //Call this once per loop
@@ -398,4 +352,7 @@ public class TeleOpV2 extends OpMode {
 
         return (90-(Math.min(theta1, theta2) * 180/Math.PI))/360 - 0.01; //37 = 0
     }
+
+
+
 }
