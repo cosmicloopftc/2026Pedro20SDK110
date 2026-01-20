@@ -105,14 +105,14 @@ public class TeleOpV2 extends OpMode {
     public void loop() {
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
-        if(result.getTx() != 0 && result.getTx() <= 12 && result.getTx() >= -12) {
+        telemetry.addData("Tx", result.getTx());
+        if(result.getTx() != 0) {
             double tx = result.getTx();
             double min_command = 0.001;
             double Kp = -0.015;
             double heading_error = -tx;
             double steering_adjust = 0.0;
             if (Math.abs(heading_error) > 1.0) {
-
                 if (heading_error < 0) {
                     steering_adjust = Kp * heading_error + min_command;
                 } else {
@@ -367,7 +367,7 @@ public class TeleOpV2 extends OpMode {
         LLResult result = robot.limelight.getLatestResult();
         double targetOffsetAngle_Vertical = result.getTy();
         // how many degrees back is your limelight rotated from perfectly vertical?
-        double limelightMountAngleDegrees = 30.45;  //32.39;
+        double limelightMountAngleDegrees = 47;  //32.39;
 
         // distance from the center of the Limelight lens to the floor
         //TODO get this variable

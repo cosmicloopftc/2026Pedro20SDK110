@@ -6,6 +6,7 @@ package org.firstinspires.ftc.teamcode.Hardware;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -54,6 +55,7 @@ public class HardwareMain {
     public CRServo intakeRightTransfer = null;
     public Servo spindexerServo = null;
     public Servo transferServo = null;
+    public AnalogInput transferServoPosition = null;
 
     public DcMotorEx rightShooterMotor = null;
     public DcMotorEx leftShooterMotor = null;
@@ -110,7 +112,8 @@ public class HardwareMain {
         spindexerServo = hardwareMap.get(Servo.class,"spindexerServo");
         spindexerServo.setDirection(Servo.Direction.REVERSE);
 
-        transferServo = hardwareMap.get(Servo.class,"transferServo");
+        transferServo = hardwareMap.get(Servo.class, "transferServo");
+//        transferServoPosition = hardwareMap.get(AnalogInput.class, "transferServoPosition");
 
         //map and setup mode of Shooter motor
         rightShooterMotor = hardwareMap.get(DcMotorEx.class, "rightShooterMotor");
@@ -217,6 +220,11 @@ public class HardwareMain {
 
     }
 
+    public void intakeOFF() {
+        intakeMotor.setPower(0);
+
+    }
+
     public void spindexerPosition1(){
         spindexerServo.setPosition(0);
     }
@@ -246,11 +254,11 @@ public class HardwareMain {
 
     //Algorithm to calculate speed? - this is temporary!!!!
     public void shooterON() {
-        //rightShooterMotor.setPower(-0.2);
-        //leftShooterMotor.setPower(0.2);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
+        rightShooterMotor.setPower(-0.3);
+        leftShooterMotor.setPower(0.3);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
         //TODO:  need to find optimal .setVelocity below
-        rightShooterMotor.setVelocity(-30,AngleUnit.DEGREES);       //value degrees per seconds
-        leftShooterMotor.setVelocity(30,AngleUnit.DEGREES);         //value degrees per seconds
+//        rightShooterMotor.setVelocity(-30,AngleUnit.DEGREES);       //value degrees per seconds
+//        leftShooterMotor.setVelocity(30,AngleUnit.DEGREES);         //value degrees per seconds
     }
     public void shooterOFF() {
         rightShooterMotor.setPower(0);
@@ -258,11 +266,11 @@ public class HardwareMain {
     }
 
     public void transferUP(){
-        transferServo.setPosition(0.042);
+        transferServo.setPosition(0);
 
     }
     public void transferDOWN(){
-        transferServo.setPosition(0.008);
+        transferServo.setPosition(0.24);
     }
 
     public void hoodOutFar(){
