@@ -133,11 +133,11 @@ public class TeleOpV1 extends OpMode {
 
                 if (gamepad1.dpad_up){
                     robot.intakeIN();
-                    robot.transferIN();
+//                    robot.transferIN();
                 }
                 else if (gamepad1.dpad_down){
                     robot.intakeOUT();
-                    robot.transferOUT();
+//                    robot.transferOUT();
                 }
                 else if (gamepad1.dpad_left || gamepad1.dpad_right) {
                     robot.intakeSTOP();
@@ -149,7 +149,7 @@ public class TeleOpV1 extends OpMode {
 
                 break;
             case SHOOT:
-                robot.transferIN();
+//                robot.transferIN();
 
                 if (gamepad1.a){
                     robot.transferUP();
@@ -189,7 +189,7 @@ public class TeleOpV1 extends OpMode {
             robot.hoodServo.setPosition(getLaunchAngle());
         }
         else if (gamepad1.ps){
-            robot.transferOFF();
+//            robot.transferOFF();
         }
 
 

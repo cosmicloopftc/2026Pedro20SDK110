@@ -179,11 +179,11 @@ public class TeleOpV2 extends OpMode {
 
                 if (gamepad1.dpad_up){
                     robot.intakeIN();
-                    robot.transferIN();
+//                    robot.transferIN();
                 }
                 else if (gamepad1.dpad_down){
                     robot.intakeOUT();
-                    robot.transferOUT();
+//                    robot.transferOUT();
                 }
                 else if (gamepad1.dpad_left || gamepad1.dpad_right) {
                     robot.intakeSTOP();
@@ -297,7 +297,7 @@ public class TeleOpV2 extends OpMode {
             robot.hoodServo.setPosition(getLaunchAngle());
         }
         else if (gamepad1.ps){
-            robot.transferOFF();
+//            robot.transferOFF();
         }
 
 
@@ -367,7 +367,7 @@ public class TeleOpV2 extends OpMode {
         LLResult result = robot.limelight.getLatestResult();
         double targetOffsetAngle_Vertical = result.getTy();
         // how many degrees back is your limelight rotated from perfectly vertical?
-        double limelightMountAngleDegrees = 47;  //32.39;
+        double limelightMountAngleDegrees = 19;  //32.39;
 
         // distance from the center of the Limelight lens to the floor
         //TODO get this variable

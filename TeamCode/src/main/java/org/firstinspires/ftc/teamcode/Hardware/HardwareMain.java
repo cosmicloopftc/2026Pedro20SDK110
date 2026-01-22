@@ -104,10 +104,10 @@ public class HardwareMain {
         intakeMotor.setPower(0);
 
         //map and setup mode of Intake Servos
-        intakeLeftTransfer = hardwareMap.get(CRServo.class, "intakeLeftTransfer");
-        intakeLeftTransfer.setDirection(DcMotorSimple.Direction.FORWARD); //Change if wrong
-        intakeRightTransfer = hardwareMap.get(CRServo.class, "intakeRightTransfer");
-        intakeRightTransfer.setDirection(DcMotorSimple.Direction.REVERSE); //Change if wrong
+//        intakeLeftTransfer = hardwareMap.get(CRServo.class, "intakeLeftTransfer");
+//        intakeLeftTransfer.setDirection(DcMotorSimple.Direction.FORWARD); //Change if wrong
+//        intakeRightTransfer = hardwareMap.get(CRServo.class, "intakeRightTransfer");
+//        intakeRightTransfer.setDirection(DcMotorSimple.Direction.REVERSE); //Change if wrong
 
         spindexerServo = hardwareMap.get(Servo.class,"spindexerServo");
         spindexerServo.setDirection(Servo.Direction.REVERSE);
@@ -234,19 +234,19 @@ public class HardwareMain {
     public void spindexerPosition3(){
         spindexerServo.setPosition(0.75);
     }
-    public void transferIN(){
-        intakeLeftTransfer.setPower(0.8);
-        intakeRightTransfer.setPower(0.8);
-    }
-    public void transferOUT(){
-        intakeLeftTransfer.setPower(-0.8);
-        intakeRightTransfer.setPower(-0.8);
-    }
+//    public void transferIN(){
+//        intakeLeftTransfer.setPower(0.8);
+//        intakeRightTransfer.setPower(0.8);
+//    }
+//    public void transferOUT(){
+//        intakeLeftTransfer.setPower(-0.8);
+//        intakeRightTransfer.setPower(-0.8);
+//    }
 
-    public void transferOFF(){
-        intakeLeftTransfer.setPower(0);
-        intakeRightTransfer.setPower(0);
-    }
+//    public void transferOFF(){
+//        intakeLeftTransfer.setPower(0);
+//        intakeRightTransfer.setPower(0);
+//    }
     //public method (function) for stopping the intake
     public void intakeSTOP() {
         intakeMotor.setPower(0);
@@ -254,8 +254,8 @@ public class HardwareMain {
 
     //Algorithm to calculate speed? - this is temporary!!!!
     public void shooterON() {
-        rightShooterMotor.setPower(-0.3);
-        leftShooterMotor.setPower(0.3);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
+        rightShooterMotor.setPower(-0.75);
+        leftShooterMotor.setPower(0.75);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
         //TODO:  need to find optimal .setVelocity below
 //        rightShooterMotor.setVelocity(-30,AngleUnit.DEGREES);       //value degrees per seconds
 //        leftShooterMotor.setVelocity(30,AngleUnit.DEGREES);         //value degrees per seconds
