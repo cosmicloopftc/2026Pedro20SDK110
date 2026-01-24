@@ -177,17 +177,17 @@ public class TeleOpV1 extends OpMode {
         else if (gamepad2.a){
             robot.shooterOFF();
         }
-        if(gamepad2.dpad_down){
-            robot.hoodIN();
-        }else if(gamepad2.dpad_left){
-            robot.hoodOutFar();
-        }
-        else if(gamepad2.dpad_right){
-            robot.hoodOutClose();
-        }
-        else if(gamepad2.dpad_up){
-            robot.hoodServo.setPosition(getLaunchAngle());
-        }
+//        if(gamepad2.dpad_down){
+//            robot.hoodIN();
+//        }else if(gamepad2.dpad_left){
+//            robot.hoodOutFar();
+//        }
+//        else if(gamepad2.dpad_right){
+//            robot.hoodOutClose();
+//        }
+//        else if(gamepad2.dpad_up){
+//            robot.hoodServo.setPosition(getLaunchAngle());
+//        }
 //        else if (gamepad1.ps){
 //            robot.transferOFF();
 //        }

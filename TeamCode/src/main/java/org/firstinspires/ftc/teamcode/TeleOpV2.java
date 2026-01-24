@@ -38,8 +38,8 @@ import java.util.function.Supplier;
 @TeleOp(name = "TeleOpV2 v1")
 public class TeleOpV2 extends OpMode {
 
-    boolean endGameRumble16secondsLeftOnce = true;
-    boolean endGameRumble8secondsLeftOnce = true;
+    boolean endGameRumble20secondsLeftOnce = true;
+    boolean endGameRumble10secondsLeftOnce = true;
     Gamepad.RumbleEffect customRumbleEffect;
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -88,20 +88,26 @@ public class TeleOpV2 extends OpMode {
 
         double imuHeading = robot.imu.getRobotYawPitchRollAngles()
                 .getYaw(AngleUnit.RADIANS);
-        if (AutoToTeleopData.autoRan) {
-            follower.setPose(AutoToTeleopData.pose);
-            robot.spindexerServo.setPosition(AutoToTeleopData.SpindexerServoPos);
-            robot.transferServo.setPosition(AutoToTeleopData.transferServoPos);
-            robot.hoodServo.setPosition(AutoToTeleopData.hoodServoPos);
-            robot.turretMotor.setTargetPosition(AutoToTeleopData.turretMotorPos);
-            robot.limelight.pipelineSwitch(AutoToTeleopData.limeLightPipeline);
-        } else {
+
+//        if (AutoToTeleopData.autoRan) {
+//            follower.setPose(AutoToTeleopData.pose);
+//            robot.spindexerServo.setPosition(AutoToTeleopData.SpindexerServoPos);
+//            robot.transferServo.setPosition(AutoToTeleopData.transferServoPos);
+//            robot.hoodServo.setPosition(AutoToTeleopData.hoodServoPos);
+//            robot.turretMotor.setTargetPosition(AutoToTeleopData.turretMotorPos);
+//            robot.limelight.pipelineSwitch(AutoToTeleopData.limeLightPipeline);
+//        } else {
             follower.setPose(new Pose(0, 0, 0));
-        }
+ //       }
 
     }
 
     public void init_loop() {
+        telemetry.addLine("G2.left_bumper to initialize RED Limelight");
+        telemetry.addLine("");
+        telemetry.addLine("G2.right_bumper to initialize RED Limelight");
+        telemetry.addLine("");
+
         if(gamepad2.left_bumper){
             robot.limelight.pipelineSwitch(0);
             telemetry.addLine("Red pipeline initialized");
@@ -109,6 +115,9 @@ public class TeleOpV2 extends OpMode {
             robot.limelight.pipelineSwitch(1);
             telemetry.addLine("Blue pipeline initialized");
         }
+
+        telemetry.update();
+
     }
 
     @Override
@@ -172,11 +181,11 @@ public class TeleOpV2 extends OpMode {
                     robot.intakeIN();
                     robot.intakeServoIN();
                 }
-                else if (gamepad1.dpad_down || gamepad1.left_bumper){
+                else if (gamepad1.dpad_down){
                     robot.intakeOUT();
                     //robot.transferOUT();
                 }
-                if (gamepad1.dpad_left || gamepad1.dpad_right) {
+                if (gamepad1.dpad_left || gamepad1.dpad_right || gamepad1.left_bumper) {
                     robot.intakeSTOP();
                     robot.intakeServoSTOP();
                 }
@@ -190,34 +199,34 @@ public class TeleOpV2 extends OpMode {
 
                 if (shootingMode.equals("all3")){
                     robot.intakeServoIN();
-                    if (timer.milliseconds() > 0 && timer.milliseconds() < 400){
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 250){
                         robot.spindexerPosition1();
                         robot.transferUP();                    }
-                    else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
+                    else if(timer.milliseconds() >= 250 && timer.milliseconds() < 500){
                         robot.spindexerPosition1();
                         robot.transferDOWN();
                     }
-                    else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
+                    else if(timer.milliseconds() >= 500 && timer.milliseconds() < 900){
                         robot.spindexerPosition2();
                     }
-                    else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
+                    else if(timer.milliseconds() >= 900 && timer.milliseconds() < 1150){
                         robot.spindexerPosition2();
                         robot.transferUP();                    }
-                    else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
+                    else if(timer.milliseconds() >= 1150 && timer.milliseconds() < 1400){
                         robot.spindexerPosition2();
                         robot.transferDOWN();
                     }
-                    else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
+                    else if(timer.milliseconds() >= 1400 && timer.milliseconds() < 2400){
                         robot.spindexerPosition3();
                     }
-                    else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
+                    else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2650){
                         robot.spindexerPosition3();
                         robot.transferUP();                    }
-                    else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
+                    else if(timer.milliseconds() >= 2650 && timer.milliseconds() < 2900){
                         robot.spindexerPosition3();
                         robot.transferDOWN();
                     }
-                    else if(timer.milliseconds() > 3200){
+                    else if(timer.milliseconds() > 2900){
                         robot.spindexerPosition1();
                         shootingMode = "none";
                     }
@@ -249,23 +258,40 @@ public class TeleOpV2 extends OpMode {
                 }
                 break;
         }
-        if (gamepad2.y){
-            robot.shooterON();
+//        if (gamepad2.y){
+//            robot.shooterON();
+//        }
+        if (gamepad2.dpad_up){
+            robot.hoodMID();
+            //robot.shooterVELO(-210); // Far launch zone, overshoot
+            //robot.shooterVELO(-200); // Far launch zone, almost over shoot
+            robot.shooterVELO(-195); // Far launch zone, bounce out
+            //robot.shooterVELO(-190); // Far launch zone, bounce out
+            //robot.shooterVELO(-185); // Far launch zone, bounce out
+
+        }
+        else if (gamepad2.dpad_down){
+            robot.hoodMID();
+            //robot.shooterVELO(-167); // Near launch zone, equivalent to 0.54 power
+            robot.shooterVELO(-160); // Near launch zone, equivalent to 0.52 power
+            //robot.shooterVELO(-150); // Near launch zone, equivalent to 0.50 power
+            //robot.shooterVELO(-145); // Near launch zone, equivalent to 0.48 power
+
         }
         else if (gamepad2.a){
             robot.shooterOFF();
         }
-        if(gamepad2.dpad_down){
-            robot.hoodIN();
-        }else if(gamepad2.dpad_left){
-            robot.hoodOutFar();
-        }
-        else if(gamepad2.dpad_right){
-            robot.hoodOutClose();
-        }
-        else if(gamepad2.dpad_up){
-            robot.hoodServo.setPosition(getLaunchAngle());
-        }
+//        if(gamepad2.dpad_down){
+//            robot.hoodIN();
+//        }else if(gamepad2.dpad_left){
+//            robot.hoodOutFar();
+//        }
+//        else if(gamepad2.dpad_right){
+//            robot.hoodOutClose();
+//        }
+//        else if(gamepad2.dpad_up){
+//            robot.hoodServo.setPosition(getLaunchAngle());
+//        }
 //        else if (gamepad1.ps){
 //            robot.transferOFF();
 //        }
@@ -292,17 +318,19 @@ public class TeleOpV2 extends OpMode {
                     true // Robot Centric
             );
         }
-        if ((runtime.seconds() > 100) && endGameRumble16secondsLeftOnce) {
+
+
+        if ((runtime.seconds() > 100) && endGameRumble20secondsLeftOnce) {
             rumble();
             telemetry.addLine("20 SECONDS LEFT");
-            endGameRumble16secondsLeftOnce = false;
+            endGameRumble20secondsLeftOnce = false;
         }
 
         //3 rumble for 8 seconds left for hanging
-        if ((runtime.seconds() > 110) && endGameRumble8secondsLeftOnce) {
+        if ((runtime.seconds() > 110) && endGameRumble10secondsLeftOnce) {
             rumble();
             telemetry.addLine("10 SECONDS");
-            endGameRumble8secondsLeftOnce = false;
+            endGameRumble10secondsLeftOnce = false;
         }
 
 //        //Automated PathFollowing                //TODO: This is where we can automate a path
@@ -328,12 +356,12 @@ public class TeleOpV2 extends OpMode {
 //            slowModeMultiplier -= 0.25;
 //        }
         telemetry.addData("Hood position", robot.hoodServo.getPosition());
-        telemetry.addData("Launch angle", getLaunchAngle());
-        telemetry.addData("Distance to goal", getDistanceToGoal());
-        telemetry.addData("Angle to goal from lightlight", result.getTy());
+        telemetry.addData("Launch angle = ", getLaunchAngle());
+        telemetry.addData("Distance to goal = ", getDistanceToGoal());
+        telemetry.addData("Angle to goal from lightlight = ", result.getTy());
         telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
 
-        telemetry.addData("rightShooter AngVel (deg/s?): ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));
+        telemetry.addData("rightShooter AngVel (deg/s?)= ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));
         telemetry.addData("leftShooter  AngVel (deg/s?): ", robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
 
         telemetryM.debug("position", follower.getPose());

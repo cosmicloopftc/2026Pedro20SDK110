@@ -268,6 +268,10 @@ public class HardwareMain {
 //        rightShooterMotor.setVelocity(-30,AngleUnit.DEGREES);       //value degrees per seconds
 //        leftShooterMotor.setVelocity(30,AngleUnit.DEGREES);         //value degrees per seconds
     }
+    public void shooterVELO(double RateDegPerSec){
+        rightShooterMotor.setVelocity(RateDegPerSec, AngleUnit.DEGREES);       //value degrees per seconds
+        leftShooterMotor.setVelocity(-RateDegPerSec, AngleUnit.DEGREES);         //value degrees per seconds
+    }
     public void shooterOFF() {
         rightShooterMotor.setPower(0);
         leftShooterMotor.setPower(0);
@@ -281,16 +285,16 @@ public class HardwareMain {
         transferServo.setPosition(0.24);
     }
 
-    public void hoodOutFar(){
-        hoodServo.setPosition(0.17);
-    }
-    public void hoodOutClose(){
-        hoodServo.setPosition(0.18);
-    }
+    public void hoodOUT(){
+        hoodServo.setPosition(0.8);
+    } // Goes almost at topmost position
+    public void hoodMID(){
+        hoodServo.setPosition(0.43);
+    } //Middle position
 
     public void hoodIN(){
         hoodServo.setPosition(0);
-    }
+    } //At bottommost position
 
     public void moveHoodUp(){
         if(!(hoodServo.getPosition() >= 0.25)) {

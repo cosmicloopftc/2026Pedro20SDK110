@@ -8,9 +8,9 @@ public class AutoToTeleopData {
 
     //TODO: set the value below at the starting position at Auto.
     //At end of auto, these values will be updated and then transfer to TeleOp
-    public static double SpindexerServoPos = 0.5;
-    public static double transferServoPos = 0.5;
-    public static double hoodServoPos = 0.5;
+    public static double SpindexerServoPos = 0.0;
+    public static double transferServoPos = 0.0;
+    public static double hoodServoPos = 0.0;
     public static int turretMotorPos = 0;
     public static int limeLightPipeline = 0;
     public static boolean autoRan = false;
