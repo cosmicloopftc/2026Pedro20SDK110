@@ -103,18 +103,18 @@ public class TeleOpV2 extends OpMode {
     }
 
     public void init_loop() {
-        telemetry.addLine("G2.left_bumper to initialize RED Limelight");
-        telemetry.addLine("");
-        telemetry.addLine("G2.right_bumper to initialize RED Limelight");
-        telemetry.addLine("");
+//        telemetry.addLine("G2.left_bumper to initialize RED Limelight");
+//        telemetry.addLine("");
+//        telemetry.addLine("G2.right_bumper to initialize RED Limelight");
+//        telemetry.addLine("");
 
-        if(gamepad2.left_bumper){
+//        if(gamepad2.left_bumper){
             robot.limelight.pipelineSwitch(0);
-            telemetry.addLine("Red pipeline initialized");
-        }else if(gamepad2.right_bumper){
-            robot.limelight.pipelineSwitch(1);
-            telemetry.addLine("Blue pipeline initialized");
-        }
+//            telemetry.addLine("Red pipeline initialized");
+//        }else if(gamepad2.right_bumper){
+//            robot.limelight.pipelineSwitch(1);
+//            telemetry.addLine("Blue pipeline initialized");
+//        }
 
         telemetry.update();
 
@@ -128,8 +128,6 @@ public class TeleOpV2 extends OpMode {
         follower.startTeleopDrive();
         follower.update();
         robot.limelight.start();
-
-
 
     }
     @Override
@@ -152,7 +150,8 @@ public class TeleOpV2 extends OpMode {
             }
             robot.turretMotor.setPower(steering_adjust);
         }else{
-            robot.turretMotor.setTargetPosition(0);
+//            robot.turretMotor.setTargetPosition(0);
+            robot.turretMotor.setPower(0);
         }
 
 //        if (gamepad2.a){
@@ -183,7 +182,7 @@ public class TeleOpV2 extends OpMode {
                 }
                 else if (gamepad1.dpad_down){
                     robot.intakeOUT();
-                    //robot.transferOUT();
+                    robot.intakeServoOUT();
                 }
                 if (gamepad1.dpad_left || gamepad1.dpad_right || gamepad1.left_bumper) {
                     robot.intakeSTOP();
@@ -359,6 +358,8 @@ public class TeleOpV2 extends OpMode {
         telemetry.addData("Launch angle = ", getLaunchAngle());
         telemetry.addData("Distance to goal = ", getDistanceToGoal());
         telemetry.addData("Angle to goal from lightlight = ", result.getTy());
+        telemetry.addData("Limelight is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
+
         telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
 
         telemetry.addData("rightShooter AngVel (deg/s?)= ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));

@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode.Hardware;
 /** copy over from Marcus' branch 1/18/2026
  */
 
+import static org.firstinspires.ftc.teamcode.TeleOpV2.getLaunchAngle;
+
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -225,7 +228,6 @@ public class HardwareMain {
     //public method (function) for spitting out sample
     public void intakeOUT() {
         intakeMotor.setPower(-0.6);
-
     }
 
     public void intakeOFF() {
@@ -262,8 +264,8 @@ public class HardwareMain {
 
     //Algorithm to calculate speed? - this is temporary!!!!
     public void shooterON() {
-        rightShooterMotor.setPower(-0.68);
-        leftShooterMotor.setPower(0.68);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
+        rightShooterMotor.setPower(-0.65);
+        leftShooterMotor.setPower(0.65);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
         //TODO:  need to find optimal .setVelocity below
 //        rightShooterMotor.setVelocity(-30,AngleUnit.DEGREES);       //value degrees per seconds
 //        leftShooterMotor.setVelocity(30,AngleUnit.DEGREES);         //value degrees per seconds
@@ -288,6 +290,10 @@ public class HardwareMain {
     public void hoodOUT(){
         hoodServo.setPosition(0.8);
     } // Goes almost at topmost position
+
+    public void hoodOutFar(){
+        hoodServo.setPosition(getLaunchAngle(limelight));
+    }
     public void hoodMID(){
         hoodServo.setPosition(0.43);
     } //Middle position
@@ -355,7 +361,41 @@ public class HardwareMain {
 //        }
     }
 
+    public static double getDistanceToGoal(Limelight3A limelight){
+        LLResult result = limelight.getLatestResult();
+        double targetOffsetAngle_Vertical = result.getTy();
+        // how many degrees back is your limelight rotated from perfectly vertical?
+        double limelightMountAngleDegrees = 66;  //32.39;
 
+        // distance from the center of the Limelight lens to the floor
+        //TODO get this variable
+        double limelightLensHeightInches = 12;
+
+        // distance from the target to the floor
+        double goalHeightInches = 29.75;
+
+        double angleToGoalDegrees = limelightMountAngleDegrees + targetOffsetAngle_Vertical;
+        double angleToGoalRadians = angleToGoalDegrees * (3.14159 / 180.0);
+
+        //calculate distance
+        return (goalHeightInches - limelightLensHeightInches) / Math.tan(angleToGoalRadians);
+    }
+
+    public static double getLaunchAngle(Limelight3A limelight){
+        double x = getDistanceToGoal(limelight)/39.37;
+        double y = 27.25/39.37;
+        double g = 9.8;
+
+        double v = 7.3;
+
+        //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
+        double C = (g*x*x) / (2*v*v);
+        double discriminant = Math.sqrt((x*x - 4*(-C)*(-C-y)));
+        double theta1 = Math.atan((-x + discriminant) / (2*(-C)));
+        double theta2 = Math.atan((-x - discriminant) / (2*(-C)));
+
+        return (90-(Math.min(theta1, theta2) * 180/Math.PI))/360 - 0.01; //37 = 0
+    }
 
 
 

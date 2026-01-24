@@ -25,13 +25,13 @@ public class AutoRedFar extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(80, 8, Math.toRadians(90)); // Start Pose of our robot.
+    private final Pose startPose = new Pose(88, 8, Math.toRadians(90)); // Start Pose of our robot.
     private final Pose pickup1Pose = new Pose(102, 35, Math.toRadians(0)); // Scoring Pose of our robot.
     private final Pose pickup1Pose2 = new Pose(132, 35, Math.toRadians(0));
-    private final Pose scorePose = new Pose(80, 8, Math.toRadians(90));
+    private final Pose scorePose = new Pose(85, 15, Math.toRadians(60));
 
 
-    private final Pose pickup2Pose = new Pose(102, 60, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(102, 38, Math.toRadians(60));
     private final Pose pickup2Pose2 = new Pose(125, 60, Math.toRadians(0));
 
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
@@ -89,15 +89,20 @@ public class AutoRedFar extends OpMode {
         switch (pathState) {
             case 0:
                 if (!follower.isBusy()) {
+                    robot.hoodServo.setPosition(0.55);
                     robot.spindexerPosition1();
-                    robot.shooterON();
+                    robot.shooterVELO(-195);
+                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
                     if(pathTimer.getElapsedTime() > 250){
                         startRunningLimelight = true;
                     }
                     if(pathTimer.getElapsedTime() > 1500) {
+
                         robot.transferUP();
+                        robot.intakeServoIN();
+
                         setPathState(1);
                     }
 //                    telemetry.addData("Elapsed time", pathTimer.getElapsedTime());
@@ -109,7 +114,7 @@ public class AutoRedFar extends OpMode {
                     telemetry.addData("Elapsed time", pathTimer.getElapsedTime());
                     time = 1000;
                     if((pathTimer.getElapsedTime() < 1000)){
-
+                        robot.hoodServo.setPosition(0.55);
                     }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.transferDOWN();
                     }
@@ -130,6 +135,7 @@ public class AutoRedFar extends OpMode {
                     else if(pathTimer.getElapsedTime() < time+3750) {
                         robot.transferDOWN();
                         robot.spindexerPosition1();
+
                         robot.shooterOFF();
                         setPathState(2);
                     }
@@ -139,6 +145,8 @@ public class AutoRedFar extends OpMode {
                 if (!follower.isBusy()) {
                     robot.transferDOWN();
                     robot.intakeIN();
+                    robot.hoodServo.setPosition(0.55);
+                    robot.intakeServoIN();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(goToPickup1, true);
                     follower.followPath(grabPickup1, true);
@@ -149,8 +157,14 @@ public class AutoRedFar extends OpMode {
                 if (!follower.isBusy()) {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
-                    robot.shooterON();
+                    robot.shooterVELO(-195);
+                    if(pathTimer.getElapsedTime() > 1000) {
+                        robot.intakeOUT();
+                        robot.intakeServoOUT();
+                    }
                     if(pathTimer.getElapsedTime() > 3500) {
+//                        robot.hoodServo.setPosition(0.46);
+//                        robot.intakeServoSTOP();
                         robot.transferUP();
                         setPathState(4);
                     }
@@ -162,7 +176,9 @@ public class AutoRedFar extends OpMode {
                     /* Score Sample */
                     time = 1000;
                     if((pathTimer.getElapsedTime() < 1000)){
-
+                        robot.intakeOUT();
+                        robot.intakeServoIN();
+                        robot.hoodServo.setPosition(0.55);
                     }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.transferDOWN();
                     }
@@ -171,7 +187,7 @@ public class AutoRedFar extends OpMode {
                     }else if(pathTimer.getElapsedTime() < time+1750) {
                         robot.transferUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2000) {
+                    else if(pathTimer.getElapsedTime() < time+2250) {
                         robot.transferDOWN();
                     }
                     else if(pathTimer.getElapsedTime() < time+2750) {
@@ -183,8 +199,9 @@ public class AutoRedFar extends OpMode {
                     else if(pathTimer.getElapsedTime() < time+3750) {
                         robot.transferDOWN();
                         robot.spindexerPosition1();
+                        robot.intakeServoSTOP();
                         robot.shooterOFF();
-                        setPathState(-1);
+                        setPathState(5);
                     }
                 }
                 break;
@@ -192,8 +209,8 @@ public class AutoRedFar extends OpMode {
                 if (!follower.isBusy()) {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(goToPickup2, true);
-                    follower.followPath(grabPickup2, true);
-                    setPathState(6);
+//                    follower.followPath(grabPickup2, true);
+                    setPathState(-1);
                 }
                 break;
             case 6:
@@ -305,8 +322,8 @@ public class AutoRedFar extends OpMode {
 //        AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
 //        AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
 //
-//        AutoToTeleopData.limeLightPipeline = 0;
-//        AutoToTeleopData.autoRan = true;
+        AutoToTeleopData.limeLightPipeline = 0;
+        AutoToTeleopData.autoRan = true;
     }
 
     /**
@@ -324,7 +341,7 @@ public class AutoRedFar extends OpMode {
         buildPaths();
         follower.setStartingPose(startPose);
 
-        robot.limelight.pipelineSwitch(1);
+        robot.limelight.pipelineSwitch(0);
 
         //Set up bulk data reading
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
