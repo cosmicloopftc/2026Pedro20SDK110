@@ -18,6 +18,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -37,6 +38,11 @@ import java.util.function.Supplier;
 @TeleOp(name = "TeleOpV2 v1")
 public class TeleOpV2 extends OpMode {
 
+    boolean endGameRumble16secondsLeftOnce = true;
+    boolean endGameRumble8secondsLeftOnce = true;
+    Gamepad.RumbleEffect customRumbleEffect;
+
+    private ElapsedTime runtime = new ElapsedTime();
 
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this
@@ -82,6 +88,16 @@ public class TeleOpV2 extends OpMode {
 
         double imuHeading = robot.imu.getRobotYawPitchRollAngles()
                 .getYaw(AngleUnit.RADIANS);
+        if (AutoToTeleopData.autoRan) {
+            follower.setPose(AutoToTeleopData.pose);
+            robot.spindexerServo.setPosition(AutoToTeleopData.SpindexerServoPos);
+            robot.transferServo.setPosition(AutoToTeleopData.transferServoPos);
+            robot.hoodServo.setPosition(AutoToTeleopData.hoodServoPos);
+            robot.turretMotor.setTargetPosition(AutoToTeleopData.turretMotorPos);
+            robot.limelight.pipelineSwitch(AutoToTeleopData.limeLightPipeline);
+        } else {
+            follower.setPose(new Pose(0, 0, 0));
+        }
 
     }
 
@@ -112,7 +128,7 @@ public class TeleOpV2 extends OpMode {
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
         telemetry.addData("Tx", result.getTx());
-        if(result.getTx() != 0) {
+        if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -300) {
             double tx = result.getTx();
             double min_command = 0.001;
             double Kp = -0.015;
@@ -127,7 +143,7 @@ public class TeleOpV2 extends OpMode {
             }
             robot.turretMotor.setPower(steering_adjust);
         }else{
-            robot.turretMotor.setPower(gamepad2.left_stick_x * 0.2);
+            robot.turretMotor.setTargetPosition(0);
         }
 
 //        if (gamepad2.a){
@@ -276,6 +292,19 @@ public class TeleOpV2 extends OpMode {
                     true // Robot Centric
             );
         }
+        if ((runtime.seconds() > 100) && endGameRumble16secondsLeftOnce) {
+            rumble();
+            telemetry.addLine("20 SECONDS LEFT");
+            endGameRumble16secondsLeftOnce = false;
+        }
+
+        //3 rumble for 8 seconds left for hanging
+        if ((runtime.seconds() > 110) && endGameRumble8secondsLeftOnce) {
+            rumble();
+            telemetry.addLine("10 SECONDS");
+            endGameRumble8secondsLeftOnce = false;
+        }
+
 //        //Automated PathFollowing                //TODO: This is where we can automate a path
 //        if (gamepad1.aWasPressed()) {
 //            follower.followPath(pathChain.get());
@@ -353,6 +382,17 @@ public class TeleOpV2 extends OpMode {
         return (90-(Math.min(theta1, theta2) * 180/Math.PI))/360 - 0.01; //37 = 0
     }
 
-
+    public void rumble(){
+        Gamepad.RumbleEffect customRumbleEffect;    // Use to build a custom rumble sequence.
+        customRumbleEffect = new Gamepad.RumbleEffect.Builder()
+                .addStep(0.0, 1.0, 500)  //  Rumble right motor 100% for 500 mSec
+                .addStep(0.0, 0.0, 300)  //  Pause for 300 mSec
+                .addStep(1.0, 0.0, 250)  //  Rumble left motor 100% for 250 mSec
+                .addStep(0.0, 0.0, 250)  //  Pause for 250 mSec
+                .addStep(1.0, 0.0, 250)  //  Rumble left motor 100% for 250 mSec
+                .build();
+        gamepad1.runRumbleEffect(customRumbleEffect);
+        gamepad2.runRumbleEffect(customRumbleEffect);
+    }
 
 }

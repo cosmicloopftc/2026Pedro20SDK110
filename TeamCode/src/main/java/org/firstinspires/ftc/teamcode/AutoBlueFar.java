@@ -297,6 +297,15 @@ public class AutoBlueFar extends OpMode {
         telemetry.addData("Tx:", result.getTx());
         telemetry.addData("Is running", robot.limelight.isRunning());
         telemetry.update();
+
+        AutoToTeleopData.pose = follower.getPose();
+        AutoToTeleopData.SpindexerServoPos = robot.spindexerServo.getPosition();
+        AutoToTeleopData.transferServoPos = robot.transferServo.getPosition();
+        AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
+        AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
+
+        AutoToTeleopData.limeLightPipeline = 1;
+        AutoToTeleopData.autoRan = true;
     }
 
     /**
