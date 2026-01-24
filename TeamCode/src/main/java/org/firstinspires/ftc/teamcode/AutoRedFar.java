@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode; // make sure this aligns with class loca
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -16,8 +15,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "Blue Far V1.0", group = "Examples")
-public class AutoBlueFar extends OpMode {
+@Autonomous(name = "Red Far", group = "Examples")
+public class AutoRedFar extends OpMode {
     private static boolean startRunningLimelight = false;
 
     public static HardwareMain robot = new HardwareMain();
@@ -26,13 +25,15 @@ public class AutoBlueFar extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(64, 8, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose pickup1Pose = new Pose(44, 35, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(13, 35, Math.toRadians(180));
-    private final Pose scorePose = new Pose(61, 15, Math.toRadians(120));
+    private final Pose startPose = new Pose(80, 8, Math.toRadians(90)); // Start Pose of our robot.
+    private final Pose pickup1Pose = new Pose(102, 35, Math.toRadians(0)); // Scoring Pose of our robot.
+    private final Pose pickup1Pose2 = new Pose(132, 35, Math.toRadians(0));
+    private final Pose scorePose = new Pose(80, 8, Math.toRadians(90));
 
-    private final Pose pickup2Pose = new Pose(9, 24, Math.toRadians(270));
-    private final Pose pickup2Pose2 = new Pose(9, 10, Math.toRadians(270));
+
+    private final Pose pickup2Pose = new Pose(102, 60, Math.toRadians(0));
+    private final Pose pickup2Pose2 = new Pose(125, 60, Math.toRadians(0));
+
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
 
     public void buildPaths() {
@@ -298,14 +299,14 @@ public class AutoBlueFar extends OpMode {
         telemetry.addData("Is running", robot.limelight.isRunning());
         telemetry.update();
 
-        AutoToTeleopData.pose = follower.getPose();
-        AutoToTeleopData.SpindexerServoPos = robot.spindexerServo.getPosition();
-        AutoToTeleopData.transferServoPos = robot.transferServo.getPosition();
-        AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
-        AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
-
-        AutoToTeleopData.limeLightPipeline = 1;
-        AutoToTeleopData.autoRan = true;
+//        AutoToTeleopData.pose = follower.getPose();
+//        AutoToTeleopData.SpindexerServoPos = robot.spindexerServo.getPosition();
+//        AutoToTeleopData.transferServoPos = robot.transferServo.getPosition();
+//        AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
+//        AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
+//
+//        AutoToTeleopData.limeLightPipeline = 0;
+//        AutoToTeleopData.autoRan = true;
     }
 
     /**
