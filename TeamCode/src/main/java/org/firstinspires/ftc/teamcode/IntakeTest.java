@@ -58,7 +58,12 @@ public class IntakeTest extends OpMode {
             robot.spindexerPosition2();
         }else if(gamepad1.b){
             robot.spindexerPosition3();
+        }else if(gamepad2.dpadLeftWasReleased()){
+            robot.hoodServo.setPosition(robot.hoodServo.getPosition() + 0.01);
+        }else if(gamepad2.dpadRightWasReleased()){
+            robot.hoodServo.setPosition(robot.hoodServo.getPosition() - 0.01);
         }
+        telemetry.addData("Hood servo position", robot.hoodServo.getPosition());
     }
 
 
