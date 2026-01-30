@@ -10,6 +10,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -25,14 +26,16 @@ public class AutoRedFar extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(88, 8, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose pickup1Pose = new Pose(102, 35, Math.toRadians(0)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(132, 35, Math.toRadians(0));
-    private final Pose scorePose = new Pose(85, 15, Math.toRadians(60));
+    private Pose startPose = new Pose(88, 8, Math.toRadians(90)); // Start Pose of our robot.
+    private Pose pickup1Pose = new Pose(102, 35, Math.toRadians(0)); // Scoring Pose of our robot.
+    private Pose pickup1Pose2 = new Pose(132, 35, Math.toRadians(0));
+    private Pose scorePose = new Pose(85, 15, Math.toRadians(60));
 
 
-    private final Pose pickup2Pose = new Pose(102, 38, Math.toRadians(60));
-    private final Pose pickup2Pose2 = new Pose(125, 60, Math.toRadians(0));
+    private Pose pickup2Pose = new Pose(102, 38, Math.toRadians(60));
+    private Pose pickup2Pose2 = new Pose(125, 60, Math.toRadians(0));
+
+
 
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
 
@@ -91,7 +94,7 @@ public class AutoRedFar extends OpMode {
                 if (!follower.isBusy()) {
                     robot.hoodServo.setPosition(0.55);
                     robot.spindexerPosition1();
-                    robot.shooterVELO(-195);
+                    shooterOn(200);
                     telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
@@ -99,7 +102,6 @@ public class AutoRedFar extends OpMode {
                         startRunningLimelight = true;
                     }
                     if(pathTimer.getElapsedTime() > 1500) {
-
                         robot.transferUP();
                         robot.intakeServoIN();
 
@@ -113,8 +115,9 @@ public class AutoRedFar extends OpMode {
                 if (!follower.isBusy()) {
                     telemetry.addData("Elapsed time", pathTimer.getElapsedTime());
                     time = 1000;
+
                     if((pathTimer.getElapsedTime() < 1000)){
-                        robot.hoodServo.setPosition(0.55);
+
                     }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.transferDOWN();
                     }
@@ -135,8 +138,6 @@ public class AutoRedFar extends OpMode {
                     else if(pathTimer.getElapsedTime() < time+3750) {
                         robot.transferDOWN();
                         robot.spindexerPosition1();
-
-                        robot.shooterOFF();
                         setPathState(2);
                     }
                 }
@@ -145,7 +146,6 @@ public class AutoRedFar extends OpMode {
                 if (!follower.isBusy()) {
                     robot.transferDOWN();
                     robot.intakeIN();
-                    robot.hoodServo.setPosition(0.55);
                     robot.intakeServoIN();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(goToPickup1, true);
@@ -157,14 +157,11 @@ public class AutoRedFar extends OpMode {
                 if (!follower.isBusy()) {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
-                    robot.shooterVELO(-195);
                     if(pathTimer.getElapsedTime() > 1000) {
                         robot.intakeOUT();
                         robot.intakeServoOUT();
                     }
                     if(pathTimer.getElapsedTime() > 3500) {
-//                        robot.hoodServo.setPosition(0.46);
-//                        robot.intakeServoSTOP();
                         robot.transferUP();
                         setPathState(4);
                     }
@@ -187,16 +184,16 @@ public class AutoRedFar extends OpMode {
                     }else if(pathTimer.getElapsedTime() < time+1750) {
                         robot.transferUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2250) {
+                    else if(pathTimer.getElapsedTime() < time+2500) {
                         robot.transferDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2750) {
+                    else if(pathTimer.getElapsedTime() < time+3000) {
                         robot.spindexerPosition3();
                     }
-                    else if(pathTimer.getElapsedTime() < time+3250) {
+                    else if(pathTimer.getElapsedTime() < time+3500) {
                         robot.transferUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+3750) {
+                    else if(pathTimer.getElapsedTime() < time+4000) {
                         robot.transferDOWN();
                         robot.spindexerPosition1();
                         robot.intakeServoSTOP();
@@ -270,10 +267,11 @@ public class AutoRedFar extends OpMode {
      **/
     @Override
     public void loop() {
+        robot.hoodOutFar();
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -300 && startRunningLimelight) {
-            double tx = result.getTx() ;
+            double tx = result.getTx();
             double min_command = 0.02;
             double Kp = -0.015;
             double heading_error = -tx;
@@ -288,17 +286,6 @@ public class AutoRedFar extends OpMode {
             robot.turretMotor.setPower(steering_adjust);
             telemetry.addData("Tx:", steering_adjust);
         }else{
-//            if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() >= 300 && (Kp * heading_error + min_command < 0 || Kp * heading_error - min_command < 0)){
-//                double steering_adjust = 0.0;
-//                if (Math.abs(heading_error) > 1.0) {
-//                    if (heading_error < 0) {
-//                        steering_adjust = Kp * heading_error + min_command;
-//                    } else {
-//                        steering_adjust = Kp * heading_error - min_command;
-//                    }
-//                }
-//            }
-
             robot.turretMotor.setTargetPosition(0);
             robot.turretMotor.setPower(0);
         }
@@ -316,12 +303,6 @@ public class AutoRedFar extends OpMode {
         telemetry.addData("Is running", robot.limelight.isRunning());
         telemetry.update();
 
-//        AutoToTeleopData.pose = follower.getPose();
-//        AutoToTeleopData.SpindexerServoPos = robot.spindexerServo.getPosition();
-//        AutoToTeleopData.transferServoPos = robot.transferServo.getPosition();
-//        AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
-//        AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
-//
         AutoToTeleopData.limeLightPipeline = 0;
         AutoToTeleopData.autoRan = true;
     }
@@ -335,7 +316,6 @@ public class AutoRedFar extends OpMode {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
-
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
@@ -374,5 +354,14 @@ public class AutoRedFar extends OpMode {
      **/
     @Override
     public void stop() {
+
+    }
+
+    private static void shooterOn(int velocity){
+        if(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) < velocity-10) {
+            robot.shooterVELO(-(velocity-25));
+        }else{
+            robot.shooterVELO(-(velocity));
+        }
     }
 }

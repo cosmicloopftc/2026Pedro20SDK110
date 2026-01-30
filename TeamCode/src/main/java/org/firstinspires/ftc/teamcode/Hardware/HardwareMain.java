@@ -22,6 +22,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 //modified from FTC Thunderbolts (Sacramento, CA) mentor's program structure
@@ -57,15 +58,16 @@ public class HardwareMain {
 //    public CRServo intakeLeftTransfer = null;   OLD
 //    public CRServo intakeRightTransfer = null;  OLD
     public Servo spindexerServo = null;
+    public AnalogInput spindexerServoPosition = null;
     public Servo transferServo = null;
     public AnalogInput transferServoPosition = null;
 
     public DcMotorEx rightShooterMotor = null;
-    public DcMotorEx leftShooterMotor = null;
+    public static DcMotorEx leftShooterMotor = null;
     public DcMotorEx turretMotor = null;
     public Servo hoodServo = null;
 
-    public Limelight3A limelight = null;
+    public static Limelight3A limelight = null;
 
     double newForward = 0, newRight = 0, driveTheta = 0, r = 0 ;
 
@@ -113,10 +115,11 @@ public class HardwareMain {
 
         spindexerServo = hardwareMap.get(Servo.class,"spindexerServo");
         spindexerServo.setDirection(Servo.Direction.REVERSE);
+        spindexerServoPosition = hardwareMap.get(AnalogInput.class, "spindexerServoPosition");
 
 
         transferServo = hardwareMap.get(Servo.class, "transferServo");
-//        transferServoPosition = hardwareMap.get(AnalogInput.class, "transferServoPosition");
+        transferServoPosition = hardwareMap.get(AnalogInput.class, "transferServoPosition");
 
         intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
         intakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -292,7 +295,7 @@ public class HardwareMain {
     } // Goes almost at topmost position
 
     public void hoodOutFar(){
-        hoodServo.setPosition(getLaunchAngle(limelight));
+        hoodServo.setPosition(getLaunchAngle());
     }
     public void hoodMID(){
         hoodServo.setPosition(0.43);
@@ -323,56 +326,32 @@ public class HardwareMain {
         intakeServo.setPower(0);
     }
 
-    public void auto3Shoot(){
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        if (timer.milliseconds() > 0 && timer.milliseconds() < 800){
-            spindexerPosition1();
-            //move kicker up?
-        }
-        else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
-            spindexerPosition1();
-            //move kicker down?
-        }
-        else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
-            spindexerPosition2();
-        }
-        else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
-            spindexerPosition2();
-            //move kicker up?
-        }
-        else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
-            spindexerPosition2();
-            //move kicker down?
-        }
-        else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
-            spindexerPosition3();
-        }
-        else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
-            spindexerPosition3();
-            //move kicker up?
-        }
-        else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
-            spindexerPosition3();
-            //move kicker down?
-        }
-//        else{
-//            spindexerPosition1();
-//        }
+    public double getSpindexerServoPosition(){
+        // get the voltage of our analog line
+        // divide by 3.3 (the max voltage) to get a value between 0 and 1
+        // multiply by 360 to convert it to 0 to 360
+        return spindexerServoPosition.getVoltage() / 3.3;
     }
 
-    public static double getDistanceToGoal(Limelight3A limelight){
+    public double getTransferServoPosition(){
+        // get the voltage of our analog line
+        // divide by 3.3 (the max voltage) to get a value between 0 and 1
+        // multiply by 360 to convert it to 0 to 360
+        return transferServoPosition.getVoltage() / 3.3;
+    }
+
+    public static double getDistanceToGoal(){
         LLResult result = limelight.getLatestResult();
         double targetOffsetAngle_Vertical = result.getTy();
         // how many degrees back is your limelight rotated from perfectly vertical?
-        double limelightMountAngleDegrees = 66;  //32.39;
+        double limelightMountAngleDegrees = 19.48;  //32.39;
 
         // distance from the center of the Limelight lens to the floor
         //TODO get this variable
-        double limelightLensHeightInches = 12;
+        double limelightLensHeightInches = 11.5;
 
         // distance from the target to the floor
-        double goalHeightInches = 29.75;
+        double goalHeightInches = 29.25;
 
         double angleToGoalDegrees = limelightMountAngleDegrees + targetOffsetAngle_Vertical;
         double angleToGoalRadians = angleToGoalDegrees * (3.14159 / 180.0);
@@ -381,12 +360,15 @@ public class HardwareMain {
         return (goalHeightInches - limelightLensHeightInches) / Math.tan(angleToGoalRadians);
     }
 
-    public static double getLaunchAngle(Limelight3A limelight){
-        double x = getDistanceToGoal(limelight)/39.37;
+    public static double getLaunchAngle(){
+        double x = getDistanceToGoal()/39.37;
         double y = 27.25/39.37;
         double g = 9.8;
 
         double v = 7.3;
+        if(leftShooterMotor.getVelocity(AngleUnit.DEGREES) < 180){
+            v = 6.02;
+        }
 
         //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
         double C = (g*x*x) / (2*v*v);
@@ -394,9 +376,22 @@ public class HardwareMain {
         double theta1 = Math.atan((-x + discriminant) / (2*(-C)));
         double theta2 = Math.atan((-x - discriminant) / (2*(-C)));
 
-        return (90-(Math.min(theta1, theta2) * 180/Math.PI))/360 - 0.01; //37 = 0
+        if((x*x - 4*(-C)*(-C-y)) < 0){
+            return 0.43;
+        }
+
+        DecimalFormat df = new DecimalFormat("#.###");
+        double result = Double.parseDouble(df.format((-0.0312086 * (Math.min(theta1, theta2) * 180 / Math.PI) + 1.80914)));
+
+        if(getDistanceToGoal() > 80) {
+            result = result - 0.03;
+        }
+
+        if(result < 0){
+            result = 0;
+        }else if(result > 0.86){
+            result = 0.86;
+        }
+        return result;
     }
-
-
-
 }

@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 //LinearOpMode structure: runOpMode(), waitForStart(), isStarted(), isStopRequested(), idle(), opModeIsActive(), opModeInInit()
 
 
-@TeleOp (name= "Intake_Test", group = "Test")
+@TeleOp (name= "TEST_Intake", group = "Test")
 
 public class IntakeTest extends OpMode {
     //This method will be called once, when the INIT button is pressed.
@@ -58,7 +58,12 @@ public class IntakeTest extends OpMode {
             robot.spindexerPosition2();
         }else if(gamepad1.b){
             robot.spindexerPosition3();
+        }else if(gamepad2.dpadLeftWasReleased()){
+            robot.hoodServo.setPosition(robot.hoodServo.getPosition() + 0.01);
+        }else if(gamepad2.dpadRightWasReleased()){
+            robot.hoodServo.setPosition(robot.hoodServo.getPosition() - 0.01);
         }
+        telemetry.addData("Hood servo position", robot.hoodServo.getPosition());
     }
 
 

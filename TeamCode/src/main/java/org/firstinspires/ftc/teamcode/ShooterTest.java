@@ -21,7 +21,7 @@ import java.util.List;
 //LinearOpMode structure: runOpMode(), waitForStart(), isStarted(), isStopRequested(), idle(), opModeIsActive(), opModeInInit()
 
 
-@TeleOp (name= "Shooter_Test", group = "Test")
+@TeleOp (name= "TEST_Shooter", group = "Test")
 
 public class ShooterTest extends OpMode {
     //This method will be called once, when the INIT button is pressed.
@@ -45,6 +45,11 @@ public class ShooterTest extends OpMode {
     ElapsedTime lastButtonPushTimeA;
     ElapsedTime lastButtonPushTimeB;
     ElapsedTime timeLastPush = new ElapsedTime(); ;
+
+    double timeToTarget1 = 0, timeToTarget2 = 0;
+    boolean timeToTarget1Once = true, timeToTarget2Once = true;
+
+    double maxVelocity = 0;
 
     public void init() {
 
@@ -81,7 +86,7 @@ public class ShooterTest extends OpMode {
         }
 
     public void start () {
-            AngularVel_DegPerSec = -20.0;
+            AngularVel_DegPerSec = -140.0;  // 140 for near, 190 for far
             shooterON(AngularVel_DegPerSec);
             runtime.reset();
             timeLastPush =runtime;
@@ -112,7 +117,21 @@ public class ShooterTest extends OpMode {
             shooterOFF();
         }
 
+        shooterON(AngularVel_DegPerSec);
 
+        if ((rightShooterMotor.getVelocity(AngleUnit.DEGREES) < -140) && (timeToTarget1Once)) {
+            timeToTarget1 = runtime.milliseconds();
+            timeToTarget1Once = false;
+        }
+
+        if ((rightShooterMotor.getVelocity(AngleUnit.DEGREES) > -145) && (!timeToTarget1Once) && (timeToTarget2Once)) {
+            timeToTarget2 = runtime.milliseconds();
+            timeToTarget2Once = false;
+        }
+
+        if ((rightShooterMotor.getVelocity(AngleUnit.DEGREES) < maxVelocity)) {
+            maxVelocity = rightShooterMotor.getVelocity(AngleUnit.DEGREES);
+        }
 
         telemetry.addData("rightShooter AngVel (deg/s?): ", rightShooterMotor.getVelocity(AngleUnit.DEGREES));
         telemetry.addData("rightPower : ", rightShooterMotor.getPower());
@@ -122,12 +141,22 @@ public class ShooterTest extends OpMode {
         telemetry.addLine(" ");
         telemetry.addData("AngularVel_DegPerSec (deg/s?): ", AngularVel_DegPerSec);
 
+        telemetry.addLine(" ");
+        telemetry.addData("runTime (ms) = ", runtime.milliseconds());
 
+        telemetry.addData("timeToTarget1 (ms) = ", timeToTarget1);
+        telemetry.addData("timeToTarget2 (ms) = ", timeToTarget2);
+        telemetry.addData("delta T2 - T1 (ms) = ", timeToTarget2 - timeToTarget1);
+        telemetry.addData("maxVelocity (deg/s) = ", maxVelocity);
+
+        telemetry.update();
 
     }
 
 
     public void stop () {
+        rightShooterMotor.setPower(0);
+        leftShooterMotor.setPower(0);
     }
 
 
@@ -138,6 +167,7 @@ public class ShooterTest extends OpMode {
             //TODO:  need to find optimal .setVelocity below
             rightShooterMotor.setVelocity(RateDegPerSec, AngleUnit.DEGREES);       //value degrees per seconds
             leftShooterMotor.setVelocity(-RateDegPerSec, AngleUnit.DEGREES);         //value degrees per seconds
+     //   leftShooterMotor.setVelocityPIDFCoefficients();
         }
 
    private void shooterOFF() {

@@ -15,6 +15,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -26,6 +27,7 @@ import org.firstinspires.ftc.teamcode.Hardware.HardwareDrivetrainNOTusingPedroPa
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -37,6 +39,9 @@ import java.util.function.Supplier;
 @Configurable
 @TeleOp(name = "TeleOpV2 v1")
 public class TeleOpV2 extends OpMode {
+
+    ArrayList<Double> shootingResults = new ArrayList<Double>();
+    private static boolean shooterIsOn = false;
 
     boolean endGameRumble20secondsLeftOnce = true;
     boolean endGameRumble10secondsLeftOnce = true;
@@ -108,13 +113,13 @@ public class TeleOpV2 extends OpMode {
 //        telemetry.addLine("G2.right_bumper to initialize RED Limelight");
 //        telemetry.addLine("");
 
-//        if(gamepad2.left_bumper){
+        if(gamepad2.left_bumper){
             robot.limelight.pipelineSwitch(0);
-//            telemetry.addLine("Red pipeline initialized");
-//        }else if(gamepad2.right_bumper){
-//            robot.limelight.pipelineSwitch(1);
-//            telemetry.addLine("Blue pipeline initialized");
-//        }
+            telemetry.addLine("Red pipeline initialized");
+        }else if(gamepad2.right_bumper){
+            robot.limelight.pipelineSwitch(1);
+            telemetry.addLine("Blue pipeline initialized");
+        }
 
         telemetry.update();
 
@@ -130,13 +135,21 @@ public class TeleOpV2 extends OpMode {
         robot.limelight.start();
 
     }
+
     @Override
     public void loop() {
+        //Live hood adjustment
+        robot.hoodOutFar();
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
         telemetry.addData("Tx", result.getTx());
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -300) {
-            double tx = result.getTx();
+            double tx;
+            if(getDistanceToGoal() > 80) {
+                tx = result.getTx() + 3.5;
+            }else{
+                tx = result.getTx();
+            }
             double min_command = 0.001;
             double Kp = -0.015;
             double heading_error = -tx;
@@ -195,37 +208,83 @@ public class TeleOpV2 extends OpMode {
                 break;
             case SHOOT:
                 //robot.transferIN();
-
+//                if (shootingMode.equals("all3")){
+//                    robot.intakeServoIN();
+//                    if (timer.milliseconds() > 0 && timer.milliseconds() < 250 && robot.getSpindexerServoPosition() >= 0.03 && robot.getSpindexerServoPosition() < 0.08){
+//                        robot.spindexerPosition1();
+//                        robot.transferUP();
+//                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+//                    }
+//                    else if(timer.milliseconds() >= 250 && timer.milliseconds() < 450 && robot.getTransferServoPosition() > 0.93){
+//                        robot.spindexerPosition1();
+//                        robot.transferDOWN();
+//                    }
+//                    else if(timer.milliseconds() >= 450 && timer.milliseconds() < 750 && robot.getTransferServoPosition() < 0.73){
+//                        robot.spindexerPosition2();
+//                    }
+//                    else if(timer.milliseconds() >= 750 && timer.milliseconds() < 1000 && robot.getSpindexerServoPosition() >= 0.39 && robot.getSpindexerServoPosition() < 0.43){
+//                        robot.spindexerPosition2();
+//                        robot.transferUP();
+//                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+//                    }
+//                    else if(timer.milliseconds() >= 1000 && timer.milliseconds() < 1200 && robot.getTransferServoPosition() > 0.93){
+//                        robot.spindexerPosition2();
+//                        robot.transferDOWN();
+//                    }
+//                    else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1500 && robot.getTransferServoPosition() < 0.73){
+//                        robot.spindexerPosition3();
+//                    }
+//                    else if(timer.milliseconds() >= 1500 && timer.milliseconds() < 1750 && robot.getSpindexerServoPosition() >= 0.72 && robot.getSpindexerServoPosition() < 0.75){
+//                        robot.spindexerPosition3();
+//                        robot.transferUP();
+//                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+//                    }
+//                    else if(timer.milliseconds() >= 1750 && timer.milliseconds() < 2000 && robot.getTransferServoPosition() > 0.93){
+//                        robot.spindexerPosition3();
+//                        robot.transferDOWN();
+//                    }
+//                    else if(timer.milliseconds() > 2000 && robot.getTransferServoPosition() < 0.73){
+//                        robot.spindexerPosition1();
+//                        shootingMode = "none";
+//                    }
+//                }
+                // Old version of all 3:
                 if (shootingMode.equals("all3")){
                     robot.intakeServoIN();
                     if (timer.milliseconds() > 0 && timer.milliseconds() < 250){
                         robot.spindexerPosition1();
-                        robot.transferUP();                    }
-                    else if(timer.milliseconds() >= 250 && timer.milliseconds() < 500){
+                        robot.transferUP();
+                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                    }
+                    else if(timer.milliseconds() >= 250 && timer.milliseconds() < 450){
                         robot.spindexerPosition1();
                         robot.transferDOWN();
                     }
-                    else if(timer.milliseconds() >= 500 && timer.milliseconds() < 900){
+                    else if(timer.milliseconds() >= 450 && timer.milliseconds() < 800){
                         robot.spindexerPosition2();
                     }
-                    else if(timer.milliseconds() >= 900 && timer.milliseconds() < 1150){
+                    else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1050){
                         robot.spindexerPosition2();
-                        robot.transferUP();                    }
-                    else if(timer.milliseconds() >= 1150 && timer.milliseconds() < 1400){
+                        robot.transferUP();
+                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                    }
+                    else if(timer.milliseconds() >= 1050 && timer.milliseconds() < 1250){
                         robot.spindexerPosition2();
                         robot.transferDOWN();
                     }
-                    else if(timer.milliseconds() >= 1400 && timer.milliseconds() < 2400){
+                    else if(timer.milliseconds() >= 1250 && timer.milliseconds() < 1600){
                         robot.spindexerPosition3();
                     }
-                    else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2650){
+                    else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 1850){
                         robot.spindexerPosition3();
-                        robot.transferUP();                    }
-                    else if(timer.milliseconds() >= 2650 && timer.milliseconds() < 2900){
+                        robot.transferUP();
+                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                    }
+                    else if(timer.milliseconds() >= 1850 && timer.milliseconds() < 2050){
                         robot.spindexerPosition3();
                         robot.transferDOWN();
                     }
-                    else if(timer.milliseconds() > 2900){
+                    else if(timer.milliseconds() > 2050){
                         robot.spindexerPosition1();
                         shootingMode = "none";
                     }
@@ -234,6 +293,7 @@ public class TeleOpV2 extends OpMode {
                     robot.intakeServoIN();
                     if (gamepad2.right_bumper){
                         robot.transferUP();
+                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                         timer.reset();
                     }
                     else if(timer.milliseconds() > 200){
@@ -264,7 +324,7 @@ public class TeleOpV2 extends OpMode {
             robot.hoodMID();
             //robot.shooterVELO(-210); // Far launch zone, overshoot
             //robot.shooterVELO(-200); // Far launch zone, almost over shoot
-            robot.shooterVELO(-195); // Far launch zone, bounce out
+            robot.shooterON(); // Far launch zone, bounce out
             //robot.shooterVELO(-190); // Far launch zone, bounce out
             //robot.shooterVELO(-185); // Far launch zone, bounce out
 
@@ -279,6 +339,28 @@ public class TeleOpV2 extends OpMode {
         }
         else if (gamepad2.a){
             robot.shooterOFF();
+            shooterIsOn = false;
+        }else if(gamepad2.dpad_left){
+            robot.hoodOutFar();
+        }
+        else if(gamepad2.dpad_right){
+            shooterIsOn = true;
+        }
+
+        if(shooterIsOn){
+            if(getDistanceToGoal() > 80) {
+                if(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) < 100) {
+                    robot.shooterVELO(-165);
+                }else{
+                    robot.shooterVELO(-200);
+                }
+            }else{
+                if(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) < 100) {
+                    robot.shooterVELO(-140);
+                }else{
+                    robot.shooterVELO(-165);
+                }
+            }
         }
 //        if(gamepad2.dpad_down){
 //            robot.hoodIN();
@@ -354,39 +436,48 @@ public class TeleOpV2 extends OpMode {
 //        if (gamepad2.yWasPressed()) {
 //            slowModeMultiplier -= 0.25;
 //        }
+        telemetry.addData("Is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
         telemetry.addData("Hood position", robot.hoodServo.getPosition());
-        telemetry.addData("Launch angle = ", getLaunchAngle());
-        telemetry.addData("Distance to goal = ", getDistanceToGoal());
-        telemetry.addData("Angle to goal from lightlight = ", result.getTy());
-        telemetry.addData("Limelight is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
-
+        telemetry.addData("Launch angle", HardwareMain.getLaunchAngle());
+        telemetry.addData("Distance to goal", HardwareMain.getDistanceToGoal());
+        telemetry.addData("Angle to goal from lightlight", result.getTy());
         telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
+        telemetry.addData("Shooter velocity TPS:", robot.leftShooterMotor.getVelocity());
 
-        telemetry.addData("rightShooter AngVel (deg/s?)= ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));
+        telemetry.addData("rightShooter AngVel (deg/s?): ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));
         telemetry.addData("leftShooter  AngVel (deg/s?): ", robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+
+        telemetry.addData("Spindexer Servo Position: ", robot.getSpindexerServoPosition());
+        telemetry.addData("Kicker Transfer Servo Position: ", robot.getTransferServoPosition());
+        telemetry.addData("All 3 shooting timer", timer.milliseconds());
+
+        telemetry.addData("Apriltag Results", result.getFiducialResults());
 
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive", automatedDrive);
 
+        telemetry.update();
+
     }
 
-
-
-
+    @Override
+    public void stop(){
+        telemetry.addData("", shootingResults);
+    }
 
     public static double getDistanceToGoal(){
         LLResult result = robot.limelight.getLatestResult();
         double targetOffsetAngle_Vertical = result.getTy();
         // how many degrees back is your limelight rotated from perfectly vertical?
-        double limelightMountAngleDegrees = 47;  //32.39;
+        double limelightMountAngleDegrees = 19.48;  //32.39;
 
         // distance from the center of the Limelight lens to the floor
         //TODO get this variable
-        double limelightLensHeightInches = 11.25;
+        double limelightLensHeightInches = 11.5;
 
         // distance from the target to the floor
-        double goalHeightInches = 38.75;
+        double goalHeightInches = 29.25;
 
         double angleToGoalDegrees = limelightMountAngleDegrees + targetOffsetAngle_Vertical;
         double angleToGoalRadians = angleToGoalDegrees * (3.14159 / 180.0);
@@ -408,7 +499,8 @@ public class TeleOpV2 extends OpMode {
         double theta1 = Math.atan((-x + discriminant) / (2*(-C)));
         double theta2 = Math.atan((-x - discriminant) / (2*(-C)));
 
-        return (90-(Math.min(theta1, theta2) * 180/Math.PI))/360 - 0.01; //37 = 0
+//        return (1-(Math.min(theta1, theta2) * 180/Math.PI)/0.0356) - 0.01; //37 = 0
+        return -0.0312086*(Math.min(theta1, theta2) * 180/Math.PI)+1.80914 -0.01;
     }
 
     public void rumble(){
@@ -423,5 +515,4 @@ public class TeleOpV2 extends OpMode {
         gamepad1.runRumbleEffect(customRumbleEffect);
         gamepad2.runRumbleEffect(customRumbleEffect);
     }
-
 }
