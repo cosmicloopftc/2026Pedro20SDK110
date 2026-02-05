@@ -38,6 +38,8 @@ import java.util.function.Supplier;
 @Configurable
 @TeleOp(name = "TeleOpV2 v1")
 public class TeleOpV2 extends OpMode {
+    public static boolean shooterOn = false;
+    public static int currentSpeed = -207;
 
     boolean endGameRumble20secondsLeftOnce = true;
     boolean endGameRumble10secondsLeftOnce = true;
@@ -116,9 +118,7 @@ public class TeleOpV2 extends OpMode {
             robot.limelight.pipelineSwitch(1);
             telemetry.addLine("Blue pipeline initialized");
         }
-
         telemetry.update();
-
     }
 
     @Override
@@ -133,32 +133,11 @@ public class TeleOpV2 extends OpMode {
     }
     @Override
     public void loop() {
+        robot.hoodOutFar();
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
         telemetry.addData("Tx", result.getTx());
-        if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -300) {
-            double tx;
-            if(getDistanceToGoal() > 80) {
-                tx = result.getTx() - 3.5;
-            }else{
-                tx = result.getTx();
-            }
-            double min_command = 0.001;
-            double Kp = -0.015;
-            double heading_error = -tx;
-            double steering_adjust = 0.0;
-            if (Math.abs(heading_error) > 1.0) {
-                if (heading_error < 0) {
-                    steering_adjust = Kp * heading_error + min_command;
-                } else {
-                    steering_adjust = Kp * heading_error - min_command;
-                }
-            }
-            robot.turretMotor.setPower(steering_adjust);
-        }else{
-//            robot.turretMotor.setTargetPosition(0);
-            robot.turretMotor.setPower(0);
-        }
+       robot.updateLimelight();
 
 //        if (gamepad2.a){
 //            robot.transferDOWN();
@@ -267,13 +246,13 @@ public class TeleOpV2 extends OpMode {
 //            robot.shooterON();
 //        }
         if (gamepad2.dpad_up){
-            robot.hoodMID();
+//            robot.hoodMID();
             //robot.shooterVELO(-210); // Far launch zone, overshoot
             //robot.shooterVELO(-200); // Far launch zone, almost over shoot
             robot.shooterON(); // Far launch zone, bounce out
             //robot.shooterVELO(-190); // Far launch zone, bounce out
             //robot.shooterVELO(-185); // Far launch zone, bounce out
-
+            shooterOn = true;
         }
         else if (gamepad2.dpad_down){
             robot.hoodMID();
@@ -281,20 +260,31 @@ public class TeleOpV2 extends OpMode {
             robot.shooterVELO(-160); // Near launch zone, equivalent to 0.52 power
             //robot.shooterVELO(-150); // Near launch zone, equivalent to 0.50 power
             //robot.shooterVELO(-145); // Near launch zone, equivalent to 0.48 power
-
+            shooterOn = true;
         }
         else if (gamepad2.a){
             robot.shooterOFF();
+            shooterOn = false;
         }else if(gamepad2.dpad_left){
             robot.hoodOutFar();
         }
         else if(gamepad2.dpad_right){
+            shooterOn = true;
+            telemetry.addData("SHOOTER ON", shooterOn);
+        }
+        if(shooterOn){
             if(getDistanceToGoal() > 80) {
-                robot.shooterVELO(-200);
-            }else{
+                robot.shooterVELO(-207);
+                currentSpeed = -207;
+            }else if(result.getTx() != 0){
                 robot.shooterVELO(-165);
+                currentSpeed = -167;
+            }else{
+                robot.shooterVELO(currentSpeed);
             }
-
+            telemetry.addData("Target velocity", currentSpeed);
+        }else{
+            robot.shooterOFF();
         }
 //        if(gamepad2.dpad_down){
 //            robot.hoodIN();

@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -24,6 +25,19 @@ import java.util.List;
 @TeleOp (name= "Shooter_Test", group = "Test")
 
 public class ShooterTest extends OpMode {
+    //Flywheel PF controller
+    double P = 0;
+    double I = 0;
+    double D = 0;
+    double F = 0;
+
+    double highVelocity = 1600;
+    double lowVelocity = 1280;
+    double targetVelocity = highVelocity;
+
+    double[] stepSizes = {10.0, 1.0, 0.1, 0.001, 0.0001};
+    int stepIndex = 0;
+
     //This method will be called once, when the INIT button is pressed.
     public DcMotorEx rightShooterMotor = null;
     public DcMotorEx leftShooterMotor = null;
@@ -53,6 +67,8 @@ public class ShooterTest extends OpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
 
+            PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
+
             //map and setup mode of Shooter motor
             rightShooterMotor = hardwareMap.get(DcMotorEx.class, "rightShooterMotor");
             rightShooterMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
@@ -60,6 +76,7 @@ public class ShooterTest extends OpMode {
             rightShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);               //use this for run at.setvelocity
             //rightShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);     //use this for run at .setpower
             rightShooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
+            rightShooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
             rightShooterMotor.setPower(0);
 
             leftShooterMotor = hardwareMap.get(DcMotorEx.class, "leftShooterMotor");
@@ -68,6 +85,7 @@ public class ShooterTest extends OpMode {
             leftShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);            //use this for run at .setvelocity
             //leftShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);  //use this for run at .setpower
             leftShooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
+            leftShooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
             leftShooterMotor.setPower(0);
         }
 
@@ -112,18 +130,71 @@ public class ShooterTest extends OpMode {
             shooterOFF();
         }
 
+        if(gamepad2.aWasPressed()){
+            if(targetVelocity == highVelocity){
+                targetVelocity = lowVelocity;
+            }else{
+                targetVelocity = highVelocity;
+            }
+        }
+        if(gamepad2.backWasPressed()){
+            targetVelocity = 0;
+        }
+        if(gamepad2.yWasPressed()){
+            stepIndex = (stepIndex +1) % stepSizes.length;
+        }
+        if(gamepad2.dpadUpWasPressed()){
+            F += stepSizes[stepIndex];
+        }
+        if(gamepad2.dpadDownWasPressed()){
+            F -= stepSizes[stepIndex];
+        }
+        if(gamepad2.dpadRightWasPressed()){
+            P += stepSizes[stepIndex];
+        }
+        if(gamepad2.dpadLeftWasPressed()){
+            P -= stepSizes[stepIndex];
+        }
 
+        if(gamepad2.bWasPressed()){
+            I += stepSizes[stepIndex];
+        }
+        if(gamepad2.xWasPressed()){
+            I -= stepSizes[stepIndex];
+        }
+        if(gamepad2.leftBumperWasPressed()){
+            D += stepSizes[stepIndex];
+        }
+        if(gamepad2.rightBumperWasPressed()){
+            D -= stepSizes[stepIndex];
+        }
 
-        telemetry.addData("rightShooter AngVel (deg/s?): ", rightShooterMotor.getVelocity(AngleUnit.DEGREES));
-        telemetry.addData("rightPower : ", rightShooterMotor.getPower());
-        telemetry.addLine(" ");
-        telemetry.addData("leftShooter  AngVel (deg/s?): ", leftShooterMotor.getVelocity(AngleUnit.DEGREES));
-        telemetry.addData("leftPower : ", leftShooterMotor.getPower());
-        telemetry.addLine(" ");
-        telemetry.addData("AngularVel_DegPerSec (deg/s?): ", AngularVel_DegPerSec);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, I, D, F);
+        rightShooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
+        leftShooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
 
+        rightShooterMotor.setVelocity(-targetVelocity);
+        leftShooterMotor.setVelocity(targetVelocity);
 
+        telemetry.addData("Target Velocity", targetVelocity);
+        telemetry.addData("Current velocity left", leftShooterMotor.getVelocity());
+        telemetry.addData("Current velocity right", rightShooterMotor.getVelocity());
+        telemetry.addData("Error left", targetVelocity - leftShooterMotor.getVelocity());
+        telemetry.addData("Error right", targetVelocity + rightShooterMotor.getVelocity());
+        telemetry.addLine("----------------------------------");
+        telemetry.addData("P", P);
+        telemetry.addData("I", I);
+        telemetry.addData("D", D);
+        telemetry.addData("F", F);
+        telemetry.addData("Step size", stepSizes[stepIndex]);
 
+//        telemetry.addData("rightShooter AngVel (deg/s?): ", rightShooterMotor.getVelocity(AngleUnit.DEGREES));
+//        telemetry.addData("rightPower : ", rightShooterMotor.getPower());
+//        telemetry.addLine(" ");
+//        telemetry.addData("leftShooter  AngVel (deg/s?): ", leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+//        telemetry.addData("leftPower : ", leftShooterMotor.getPower());
+//        telemetry.addLine(" ");
+//        telemetry.addData("AngularVel_DegPerSec (deg/s?): ", AngularVel_DegPerSec);
     }
 
 

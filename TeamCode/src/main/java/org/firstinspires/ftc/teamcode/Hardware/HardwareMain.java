@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -83,6 +84,8 @@ public class HardwareMain {
 
     /* Initialize standard Hardware interface */
     public void init(HardwareMap hardwareMap)    {
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(105, 0.003, 0.005, 13.9);
+
         //Save reference to Hardware map
         //Sensor.init(hardwareMap);
 
@@ -128,6 +131,7 @@ public class HardwareMain {
         rightShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);               //use this for run at.setvelocity
         //rightShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);     //use this for run at .setpower
         rightShooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        rightShooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
         rightShooterMotor.setPower(0);
 
         leftShooterMotor = hardwareMap.get(DcMotorEx.class, "leftShooterMotor");
@@ -136,6 +140,7 @@ public class HardwareMain {
         leftShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);            //use this for run at .setvelocity
         //leftShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);  //use this for run at .setpower
         leftShooterMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        leftShooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
         leftShooterMotor.setPower(0);
 
 
@@ -244,6 +249,18 @@ public class HardwareMain {
     public void spindexerPosition3(){
         spindexerServo.setPosition(0.75);
     }
+
+    public int getSpindexerPosition(){
+        if(spindexerServo.getPosition() == 0) {
+            return 1;
+        } else if(spindexerServo.getPosition() == 0.375){
+            return 2;
+        }else if(spindexerServo.getPosition() == 0.75){
+            return 3;
+        } else{
+            return 4;
+        }
+    }
 //    public void transferIN(){
 //        intakeLeftTransfer.setPower(0.8);
 //        intakeRightTransfer.setPower(0.8);
@@ -262,7 +279,8 @@ public class HardwareMain {
         intakeMotor.setPower(0);
     }
 
-    //Algorithm to calculate speed? - this is temporary!!!!
+    //Algorithm to calculate speed? - this is temporary!!
+    // !!
     public void shooterON() {
         rightShooterMotor.setPower(-0.65);
         leftShooterMotor.setPower(0.65);    // 1/18/2026: Confirmed, motors spin in opposite to each others.
@@ -294,6 +312,7 @@ public class HardwareMain {
     public void hoodOutFar(){
         hoodServo.setPosition(getLaunchAngle());
     }
+
     public void hoodMID(){
         hoodServo.setPosition(0.43);
     } //Middle position
@@ -386,7 +405,10 @@ public class HardwareMain {
         double y = 27.25/39.37;
         double g = 9.8;
 
-        double v = 7.3*(leftShooterMotor.getVelocity(AngleUnit.DEGREES)/200);
+        double v = 7.15;
+        if (getDistanceToGoal() < 80) {
+            v = 6.2;
+        }
 
         //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
         double C = (g*x*x) / (2*v*v);
@@ -394,20 +416,49 @@ public class HardwareMain {
         double theta1 = Math.atan((-x + discriminant) / (2*(-C)));
         double theta2 = Math.atan((-x - discriminant) / (2*(-C)));
 
-        double result = 0;
-        if(getDistanceToGoal() > 80) {
-            result = -0.0312086 * (Math.min(theta1, theta2) * 180 / Math.PI) + 1.80914 - 0.03;
-        }else{
-            result = -0.0312086 * (Math.min(theta1, theta2) * 180 / Math.PI) + 1.80914;
+        if((x*x - 4*(-C)*(-C-y)) < 0){
+            return 0.55;
         }
+
+        double result = -0.0312086 * (Math.min(theta1, theta2) * 180 / Math.PI) + 1.80914;
+        if (getDistanceToGoal() > 80) {
+            result = result - 0.03;
+        }
+
         if(result < 0){
             result = 0;
-        }else if(result > 0.86){
-            result = 0.86;
+        }else if(result >= 0.86){
+            result = 0.84;
         }
         return result;
     }
 
-
+    public void updateLimelight(){
+        LLResult result = limelight.getLatestResult();
+        if(result.getTx() != 0 && turretMotor.getCurrentPosition() < 300 && turretMotor.getCurrentPosition() > -300) {
+            turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            double tx;
+            if(getDistanceToGoal() > 80) {
+                tx = result.getTx() - 3.5;
+            }else{
+                tx = result.getTx();
+            }
+            double min_command = 0.027;
+            double Kp = -0.024;
+            double heading_error = -tx;
+            double steering_adjust = 0.0;
+            if (Math.abs(heading_error) > 1.0) {
+                if (heading_error < 0) {
+                    steering_adjust = Kp * heading_error + min_command;
+                } else {
+                    steering_adjust = Kp * heading_error - min_command;
+                }
+            }
+            turretMotor.setPower(steering_adjust);
+        }else{
+            turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            turretMotor.setTargetPosition(0);
+        }
+    }
 
 }
