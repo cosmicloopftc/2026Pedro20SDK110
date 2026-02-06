@@ -433,16 +433,13 @@ public class HardwareMain {
         return result;
     }
 
-    public void updateLimelight(){
+    public void updateLimelight(double offset){
         LLResult result = limelight.getLatestResult();
         if(result.getTx() != 0 && turretMotor.getCurrentPosition() < 300 && turretMotor.getCurrentPosition() > -300) {
             turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             double tx;
-            if(getDistanceToGoal() > 80) {
-                tx = result.getTx() - 3.5;
-            }else{
-                tx = result.getTx();
-            }
+            tx = result.getTx() + offset;
+
             double min_command = 0.027;
             double Kp = -0.024;
             double heading_error = -tx;

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode; // make sure this aligns with class location
+package AutoPrograms; // make sure this aligns with class location
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "Blue Far V1.0", group = "Examples")
+@Autonomous(name = "Blue Far", group = "Examples")
 public class AutoBlueFar extends OpMode {
     private static boolean firstTime;
     private static boolean secondTime;
@@ -276,18 +276,6 @@ public class AutoBlueFar extends OpMode {
             robot.turretMotor.setPower(steering_adjust);
             telemetry.addData("Tx:", steering_adjust);
         }else{
-//            if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() >= 300 && (Kp * heading_error + min_command < 0 || Kp * heading_error - min_command < 0)){
-//                double steering_adjust = 0.0;
-//                if (Math.abs(heading_error) > 1.0) {
-//                    if (heading_error < 0) {
-//                        steering_adjust = Kp * heading_error + min_command;
-//                    } else {
-//                        steering_adjust = Kp * heading_error - min_command;
-//                    }
-//                }
-//            }
-
-            robot.turretMotor.setTargetPosition(0);
             robot.turretMotor.setPower(0);
         }
 

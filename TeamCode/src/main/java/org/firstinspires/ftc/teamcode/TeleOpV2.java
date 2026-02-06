@@ -15,6 +15,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -38,6 +39,7 @@ import java.util.function.Supplier;
 @Configurable
 @TeleOp(name = "TeleOpV2 v1")
 public class TeleOpV2 extends OpMode {
+    int autoPipeline;
     public static boolean shooterOn = false;
     public static int currentSpeed = -207;
 
@@ -103,6 +105,8 @@ public class TeleOpV2 extends OpMode {
             follower.setPose(new Pose(0, 0, 0));
  //       }
 
+        //Stores pipeline from auto
+        autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
     }
 
     public void init_loop() {
@@ -119,6 +123,7 @@ public class TeleOpV2 extends OpMode {
             telemetry.addLine("Blue pipeline initialized");
         }
         telemetry.update();
+        autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
     }
 
     @Override
@@ -128,16 +133,29 @@ public class TeleOpV2 extends OpMode {
         //If you don't pass anything in, it uses the default (false)
         follower.startTeleopDrive();
         follower.update();
+        robot.limelight.pipelineSwitch(5);
         robot.limelight.start();
-
     }
     @Override
     public void loop() {
         robot.hoodOutFar();
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
+        List<LLResultTypes.FiducialResult> aprilTags = result.getFiducialResults();
         telemetry.addData("Tx", result.getTx());
-       robot.updateLimelight();
+        if(aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
+            if(getDistanceToGoal() > 80) {
+                robot.updateLimelight(-3.5);
+            }else{
+                robot.updateLimelight(0);
+            }
+        }else if(aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
+            if(getDistanceToGoal() > 80) {
+                robot.updateLimelight(3.5);
+            }else{
+                robot.updateLimelight(0);
+            }
+        }
 
 //        if (gamepad2.a){
 //            robot.transferDOWN();
@@ -150,7 +168,7 @@ public class TeleOpV2 extends OpMode {
             case INTAKE:
                 robot.spindexerPosition1();
                 robot.transferDOWN();
-                if (gamepad2.b){
+                if (gamepad2.b && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)){
                     //robot.auto3Shoot();
                     shootingMode = "all3";
                     timer.reset();
@@ -180,7 +198,6 @@ public class TeleOpV2 extends OpMode {
                 break;
             case SHOOT:
                 //robot.transferIN();
-
                 if (shootingMode.equals("all3")){
                     robot.intakeServoIN();
                     if (timer.milliseconds() > 0 && timer.milliseconds() < 250){
@@ -217,7 +234,7 @@ public class TeleOpV2 extends OpMode {
                 }
                 else if (shootingMode.equals("manual")){
                     robot.intakeServoIN();
-                    if (gamepad2.right_bumper){
+                    if (gamepad2.right_bumper && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)){
                         robot.transferUP();
                         timer.reset();
                     }
@@ -270,7 +287,6 @@ public class TeleOpV2 extends OpMode {
         }
         else if(gamepad2.dpad_right){
             shooterOn = true;
-            telemetry.addData("SHOOTER ON", shooterOn);
         }
         if(shooterOn){
             if(getDistanceToGoal() > 80) {
@@ -282,7 +298,6 @@ public class TeleOpV2 extends OpMode {
             }else{
                 robot.shooterVELO(currentSpeed);
             }
-            telemetry.addData("Target velocity", currentSpeed);
         }else{
             robot.shooterOFF();
         }
