@@ -1,6 +1,7 @@
 package AutoPrograms; // make sure this aligns with class location
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -9,6 +10,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
@@ -31,10 +33,10 @@ public class AutoBlueClose extends OpMode {
     private final Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(58, 102, Math.toRadians(150));
     private final Pose pickup1Pose = new Pose(46, 84, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(16, 84, Math.toRadians(180));
+    private final Pose pickup1Pose2 = new Pose(18, 84, Math.toRadians(180));
 
-    private final Pose pickup2Pose = new Pose(46, 60, Math.toRadians(180));
-    private final Pose pickup2Pose2 = new Pose(8, 60, Math.toRadians(180));
+    private final Pose pickup2Pose = new Pose(46, 57, Math.toRadians(180));
+    private final Pose pickup2Pose2 = new Pose(8, 57, Math.toRadians(180));
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
 
     public void buildPaths() {
@@ -80,7 +82,7 @@ public class AutoBlueClose extends OpMode {
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(pickup2Pose2, scorePose))
+                .addPath( new BezierCurve(pickup2Pose2, new Pose(32.530, 55.939), scorePose))
                 .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
                 .setConstraints(Constants.pathConstraints)
                 .build();
@@ -92,7 +94,7 @@ public class AutoBlueClose extends OpMode {
             case 0:
                 if (!follower.isBusy()) {
                     robot.spindexerPosition1();
-                    robot.shooterVELO(-210);
+                    robot.shooterVELO(-162);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
@@ -161,7 +163,6 @@ public class AutoBlueClose extends OpMode {
                 if (!follower.isBusy()) {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
-                    robot.shooterVELO(-210);
                     if(pathTimer.getElapsedTime() > 4000) {
                         robot.intakeOUT();
                         robot.intakeServoOUT();
@@ -210,6 +211,8 @@ public class AutoBlueClose extends OpMode {
                 break;
             case 5:
                 if (!follower.isBusy()) {
+                    robot.turretMotor.setTargetPosition(0);
+                    robot.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(goToPickup2, true);
                     setPathState(6);
@@ -217,6 +220,7 @@ public class AutoBlueClose extends OpMode {
                 break;
             case 6:
                 if (!follower.isBusy()) {
+                    robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     robot.intakeIN();
                     robot.intakeServoIN();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
@@ -260,7 +264,7 @@ public class AutoBlueClose extends OpMode {
         robot.hoodOutFar();
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
-        if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -233 && startRunningLimelight) {
+        if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 245 && robot.turretMotor.getCurrentPosition() > -263 && startRunningLimelight) {
             double tx = result.getTx();
             double min_command = 0.02;
             double Kp = -0.015;

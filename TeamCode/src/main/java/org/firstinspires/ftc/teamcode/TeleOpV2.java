@@ -20,6 +20,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -41,7 +42,7 @@ import java.util.function.Supplier;
 public class TeleOpV2 extends OpMode {
     int autoPipeline;
     public static boolean shooterOn = false;
-    public static int currentSpeed = -207;
+    public static int currentSpeed = -210;
 
     boolean endGameRumble20secondsLeftOnce = true;
     boolean endGameRumble10secondsLeftOnce = true;
@@ -57,6 +58,7 @@ public class TeleOpV2 extends OpMode {
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.2;
     ElapsedTime timer = new ElapsedTime();
+    ElapsedTime timerLimelight = new ElapsedTime();
     private String shootingMode = "none";
 
     public static HardwareMain robot = new HardwareMain();
@@ -122,8 +124,10 @@ public class TeleOpV2 extends OpMode {
             robot.limelight.pipelineSwitch(1);
             telemetry.addLine("Blue pipeline initialized");
         }
+        telemetry.addData("AutoPipeline", autoPipeline);
         telemetry.update();
         autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
+
     }
 
     @Override
@@ -133,7 +137,7 @@ public class TeleOpV2 extends OpMode {
         //If you don't pass anything in, it uses the default (false)
         follower.startTeleopDrive();
         follower.update();
-        robot.limelight.pipelineSwitch(5);
+        robot.limelight.pipelineSwitch(3);
         robot.limelight.start();
     }
     @Override
@@ -143,18 +147,26 @@ public class TeleOpV2 extends OpMode {
         LLResult result = robot.limelight.getLatestResult();
         List<LLResultTypes.FiducialResult> aprilTags = result.getFiducialResults();
         telemetry.addData("Tx", result.getTx());
-        if(aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
+        telemetry.addData("Is empty", aprilTags.isEmpty());
+        if(!aprilTags.isEmpty()) {
+            telemetry.addData("Id", aprilTags.get(0).getFiducialId());
+        }
+        telemetry.addData("Auto pipeline", autoPipeline);
+        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
+            telemetry.addLine("ACCESSED");
             if(getDistanceToGoal() > 80) {
                 robot.updateLimelight(-3.5);
             }else{
                 robot.updateLimelight(0);
             }
-        }else if(aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
+        }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
             if(getDistanceToGoal() > 80) {
                 robot.updateLimelight(3.5);
             }else{
                 robot.updateLimelight(0);
             }
+        }else{
+            robot.turretMotor.setPower(0);
         }
 
 //        if (gamepad2.a){
@@ -168,7 +180,7 @@ public class TeleOpV2 extends OpMode {
             case INTAKE:
                 robot.spindexerPosition1();
                 robot.transferDOWN();
-                if (gamepad2.b && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)){
+                if (gamepad2.b && (!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0))){
                     //robot.auto3Shoot();
                     shootingMode = "all3";
                     timer.reset();
@@ -234,7 +246,7 @@ public class TeleOpV2 extends OpMode {
                 }
                 else if (shootingMode.equals("manual")){
                     robot.intakeServoIN();
-                    if (gamepad2.right_bumper && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)){
+                    if (gamepad2.right_bumper && (!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0))){
                         robot.transferUP();
                         timer.reset();
                     }
@@ -294,7 +306,7 @@ public class TeleOpV2 extends OpMode {
                 currentSpeed = -207;
             }else if(result.getTx() != 0){
                 robot.shooterVELO(-165);
-                currentSpeed = -167;
+                currentSpeed = -165;
             }else{
                 robot.shooterVELO(currentSpeed);
             }

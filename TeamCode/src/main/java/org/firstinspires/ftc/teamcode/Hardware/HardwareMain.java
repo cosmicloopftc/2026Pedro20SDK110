@@ -405,7 +405,7 @@ public class HardwareMain {
         double y = 27.25/39.37;
         double g = 9.8;
 
-        double v = 7.15;
+        double v = 7.3;
         if (getDistanceToGoal() < 80) {
             v = 6.2;
         }
@@ -436,7 +436,6 @@ public class HardwareMain {
     public void updateLimelight(double offset){
         LLResult result = limelight.getLatestResult();
         if(result.getTx() != 0 && turretMotor.getCurrentPosition() < 300 && turretMotor.getCurrentPosition() > -300) {
-            turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             double tx;
             tx = result.getTx() + offset;
 
@@ -453,8 +452,7 @@ public class HardwareMain {
             }
             turretMotor.setPower(steering_adjust);
         }else{
-            turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            turretMotor.setTargetPosition(0);
+            turretMotor.setPower(0);
         }
     }
 
