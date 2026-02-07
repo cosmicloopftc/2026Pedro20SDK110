@@ -17,6 +17,8 @@ import java.util.List;
 
 @Autonomous(name = "Red Far", group = "Examples")
 public class AutoRedFar extends OpMode {
+    private static boolean firstTime;
+    private static boolean secondTime;
     private static boolean startRunningLimelight = false;
 
     public static HardwareMain robot = new HardwareMain();
@@ -27,12 +29,12 @@ public class AutoRedFar extends OpMode {
     private int pathState;
     private final Pose startPose = new Pose(88, 8, Math.toRadians(90)); // Start Pose of our robot.
     private final Pose pickup1Pose = new Pose(102, 35, Math.toRadians(0)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(132, 35, Math.toRadians(0));
+    private final Pose pickup1Pose2 = new Pose(140, 35, Math.toRadians(0)); // x= 132
     private final Pose scorePose = new Pose(85, 15, Math.toRadians(60));
 
 
-    private final Pose pickup2Pose = new Pose(102, 38, Math.toRadians(60));
-    private final Pose pickup2Pose2 = new Pose(125, 60, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(140, 35, Math.toRadians(270));
+    private final Pose pickup2Pose2 = new Pose(140, 11, Math.toRadians(270));
 
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
 
@@ -54,6 +56,7 @@ public class AutoRedFar extends OpMode {
                 .addPath(new BezierLine(pickup1Pose, pickup1Pose2))
                 .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose2.getHeading())
                 .setConstraints(Constants.pathConstraints)
+                .setTimeoutConstraint(2000)
                 .build();
 
         /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -74,6 +77,7 @@ public class AutoRedFar extends OpMode {
                 .addPath(new BezierLine(pickup2Pose, pickup2Pose2))
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickup2Pose2.getHeading())
                 .setConstraints(Constants.pathConstraints)
+                .setTimeoutConstraint(1000)
                 .build();
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -114,7 +118,7 @@ public class AutoRedFar extends OpMode {
                     telemetry.addData("Elapsed time", pathTimer.getElapsedTime());
                     time = 1000;
                     if((pathTimer.getElapsedTime() < 1000)){
-                        robot.hoodServo.setPosition(0.55);
+                        robot.transferUP();
                     }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.transferDOWN();
                     }
@@ -132,12 +136,17 @@ public class AutoRedFar extends OpMode {
                     else if(pathTimer.getElapsedTime() < time+3250) {
                         robot.transferUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+3750) {
+                    else if(pathTimer.getElapsedTime() < time+4000) {
                         robot.transferDOWN();
                         robot.spindexerPosition1();
-
-                        robot.shooterOFF();
-                        setPathState(2);
+//                        robot.shooterOFF();
+                        if(firstTime) {
+                            setPathState(2);
+                        }else if(secondTime){
+                            setPathState(5);
+                        }else{
+                            setPathState(-1);
+                        }
                     }
                 }
                 break;
@@ -157,16 +166,18 @@ public class AutoRedFar extends OpMode {
                 if (!follower.isBusy()) {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
-                    robot.shooterVELO(-195);
-                    if(pathTimer.getElapsedTime() > 1000) {
-                        robot.intakeOUT();
-                        robot.intakeServoOUT();
+          //          robot.shooterVELO(-195);
+                    if(pathTimer.getElapsedTime() > 4000) {  // 1000
+            //            robot.intakeOUT();
+            //            robot.intakeServoOUT();
                     }
-                    if(pathTimer.getElapsedTime() > 3500) {
+                    if(pathTimer.getElapsedTime() > 5500) {  // 3500
 //                        robot.hoodServo.setPosition(0.46);
 //                        robot.intakeServoSTOP();
                         robot.transferUP();
-                        setPathState(4);
+                        firstTime = false;
+                        setPathState(1);
+                       // setPathState(4);
                     }
                 }
                 break;
@@ -178,7 +189,7 @@ public class AutoRedFar extends OpMode {
                     if((pathTimer.getElapsedTime() < 1000)){
                         robot.intakeOUT();
                         robot.intakeServoIN();
-                        robot.hoodServo.setPosition(0.55);
+                  //      robot.hoodServo.setPosition(0.55);
                     }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.transferDOWN();
                     }
@@ -187,7 +198,7 @@ public class AutoRedFar extends OpMode {
                     }else if(pathTimer.getElapsedTime() < time+1750) {
                         robot.transferUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2250) {
+                    else if(pathTimer.getElapsedTime() < time+2000) {    //2250
                         robot.transferDOWN();
                     }
                     else if(pathTimer.getElapsedTime() < time+2750) {
@@ -208,16 +219,31 @@ public class AutoRedFar extends OpMode {
             case 5:
                 if (!follower.isBusy()) {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    robot.transferDOWN();
+                    robot.intakeIN();
+                    robot.hoodServo.setPosition(0.55);
+                    robot.intakeServoIN();
                     follower.followPath(goToPickup2, true);
-//                    follower.followPath(grabPickup2, true);
-                    setPathState(-1);
+                    follower.followPath(grabPickup2, true);
+                    setPathState(6);
                 }
                 break;
             case 6:
                 if (!follower.isBusy()) {
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup2, true);
-                    setPathState(7);
+                    if(pathTimer.getElapsedTime() > 4000) {  // 1000
+                        //            robot.intakeOUT();
+                        //            robot.intakeServoOUT();
+                    }
+                    if(pathTimer.getElapsedTime() > 5500) {  // 3500
+//                        robot.hoodServo.setPosition(0.46);
+//                        robot.intakeServoSTOP();
+                        robot.transferUP();
+                        secondTime = false;
+                        setPathState(1);
+
+                    }
+            //        setPathState(1);
                 }
                 break;
             case 7:
@@ -331,6 +357,8 @@ public class AutoRedFar extends OpMode {
      **/
     @Override
     public void init() {
+        firstTime = true;
+        secondTime = true;
         robot.init(hardwareMap);
         pathTimer = new Timer();
         opmodeTimer = new Timer();

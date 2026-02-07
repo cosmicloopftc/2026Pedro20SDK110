@@ -18,8 +18,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "Blue Close", group = "Examples")
-public class AutoBlueClose extends OpMode {
+@Autonomous(name = "Red Close", group = "Examples")
+public class AutoRedClose extends OpMode {
     private static boolean firstTime;
     private static boolean secondTime;
     private static boolean startRunningLimelight = false;
@@ -30,14 +30,16 @@ public class AutoBlueClose extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(58, 102, Math.toRadians(150));
-    private final Pose pickup1Pose = new Pose(46, 84, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(18, 84, Math.toRadians(180));
+    private final Pose startPose = new Pose(118, 130.5, Math.toRadians(216)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(86, 102, Math.toRadians(30));
+    private final Pose pickup1Pose = new Pose(98, 87, Math.toRadians(0)); //y = 84 Scoring Pose of our robot.
+    private final Pose pickup1Pose2 = new Pose(126, 87, Math.toRadians(0));
 
-    private final Pose pickup2Pose = new Pose(46, 57, Math.toRadians(180));
-    private final Pose pickup2Pose2 = new Pose(8, 57, Math.toRadians(180));
-    private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
+    private final Pose pickup2Pose = new Pose(98, 63, Math.toRadians(0));  // y = 57
+    private final Pose pickup2Pose2 = new Pose(136, 63, Math.toRadians(0));  // y = 57
+
+    private final Pose endPose = new Pose(105, 76, Math.toRadians(90));
+    private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, endAuto;
 
     public void buildPaths() {
         scorePreload = follower.pathBuilder()
@@ -82,8 +84,14 @@ public class AutoBlueClose extends OpMode {
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup2 = follower.pathBuilder()
-                .addPath( new BezierCurve(pickup2Pose2, new Pose(32.530, 55.939), scorePose))
+                .addPath( new BezierCurve(pickup2Pose2, new Pose(111.470, 55.939), scorePose))
                 .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
+                .setConstraints(Constants.pathConstraints)
+                .build();
+
+        endAuto = follower.pathBuilder()
+                .addPath( new BezierLine(scorePose, endPose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), endPose.getHeading())
                 .setConstraints(Constants.pathConstraints)
                 .build();
     }
@@ -101,10 +109,10 @@ public class AutoBlueClose extends OpMode {
                     if(pathTimer.getElapsedTime() > 250){
                         startRunningLimelight = true;
                     }
-                    if(pathTimer.getElapsedTime() > 2000) {
+                    if(pathTimer.getElapsedTime() > 1500) {
                         robot.transferUP();
                         robot.intakeServoIN();
-                        pathTimer.resetTimer();
+      //                  pathTimer.resetTimer();
                         setPathState(1);
                     }
 //                    telemetry.addData("Elapsed time", pathTimer.getElapsedTime());
@@ -142,7 +150,7 @@ public class AutoBlueClose extends OpMode {
                         }else if(secondTime){
                             setPathState(5);
                         }else{
-                            setPathState(-1);
+                            setPathState(12);
                         }
                     }
                 }
@@ -236,6 +244,8 @@ public class AutoBlueClose extends OpMode {
                     setPathState(11);
                 }
                 break;
+
+
             case 11:
                 if (!follower.isBusy()) {
                     if(pathTimer.getElapsedTime() > 3500){
@@ -243,6 +253,14 @@ public class AutoBlueClose extends OpMode {
                         robot.intakeOUT();
                         setPathState(1);
                     }
+                }
+                break;
+
+            case 12:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
+                if (!follower.isBusy()) {
+                    follower.followPath(endAuto, true);
+                    setPathState(-1);
                 }
                 break;
         }
@@ -305,7 +323,7 @@ public class AutoBlueClose extends OpMode {
         AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
         AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
 
-        AutoToTeleopData.limeLightPipeline = 1;
+        AutoToTeleopData.limeLightPipeline = 0;
         AutoToTeleopData.autoRan = true;
     }
 
@@ -326,7 +344,7 @@ public class AutoBlueClose extends OpMode {
         buildPaths();
         follower.setStartingPose(startPose);
 
-        robot.limelight.pipelineSwitch(1);
+        robot.limelight.pipelineSwitch(0);
 
         //Set up bulk data reading
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);

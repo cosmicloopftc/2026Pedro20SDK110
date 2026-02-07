@@ -8,14 +8,17 @@ import static org.firstinspires.ftc.teamcode.TeleOpV2.getLaunchAngle;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -58,6 +61,7 @@ public class HardwareMain {
 //    public CRServo intakeLeftTransfer = null;   OLD
 //    public CRServo intakeRightTransfer = null;  OLD
     public Servo spindexerServo = null;
+    public AnalogInput spindexerServoPosition = null;
     public Servo transferServo = null;
     public AnalogInput transferServoPosition = null;
 
@@ -67,6 +71,16 @@ public class HardwareMain {
     public Servo hoodServo = null;
 
     public static Limelight3A limelight = null;
+
+    public NormalizedColorSensor leftBallColorSensor = null;
+//    public DigitalChannel leftBallPin0 = null;
+//    public DigitalChannel leftBallPin1 = null;
+
+    public NormalizedColorSensor rightBallColorSensor = null;
+//    public DigitalChannel rightBallPin0 = null;
+//    public DigitalChannel rightBallPin1 = null;
+
+    public NormalizedColorSensor backBallColorSensor = null;
 
     double newForward = 0, newRight = 0, driveTheta = 0, r = 0 ;
 
@@ -116,10 +130,11 @@ public class HardwareMain {
 
         spindexerServo = hardwareMap.get(Servo.class,"spindexerServo");
         spindexerServo.setDirection(Servo.Direction.REVERSE);
+        spindexerServoPosition = hardwareMap.get(AnalogInput.class, "spindexerServoPosition");
 
 
         transferServo = hardwareMap.get(Servo.class, "transferServo");
-//        transferServoPosition = hardwareMap.get(AnalogInput.class, "transferServoPosition");
+        transferServoPosition = hardwareMap.get(AnalogInput.class, "transferServoPosition");
 
         intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
         intakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -163,7 +178,13 @@ public class HardwareMain {
         //limelight setup
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
-
+        leftBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "leftBallColorSensor");
+        rightBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "rightBallColorSensor");
+        backBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "backBallColorSensor");
+//         leftBallPin0 = hardwareMap.digitalChannel.get("leftBallPin0");
+//         leftBallPin1 = hardwareMap.digitalChannel.get("leftBallPin1");
+//         rightBallPin0 = hardwareMap.digitalChannel.get("rightBallPin0");
+//         rightBallPin1 = hardwareMap.digitalChannel.get("rightBallPin1");
 
 //?unknown source        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
         //batteryVoltageSensor = hardwareMap.voltageSensor.get("Expansion Hub 2");       //GeorgeFIRST kickoff video
@@ -244,10 +265,10 @@ public class HardwareMain {
         spindexerServo.setPosition(0);
     }
     public void spindexerPosition2(){
-        spindexerServo.setPosition(0.375);
+        spindexerServo.setPosition(0.38);
     }
     public void spindexerPosition3(){
-        spindexerServo.setPosition(0.75);
+        spindexerServo.setPosition(0.76);
     }
 
     public int getSpindexerPosition(){
@@ -342,6 +363,20 @@ public class HardwareMain {
         intakeServo.setPower(0);
     }
 
+    public double getSpindexerServoPosition(){
+        // get the voltage of our analog line
+        // divide by 3.3 (the max voltage) to get a value between 0 and 1
+        // multiply by 360 to convert it to 0 to 360
+        return spindexerServoPosition.getVoltage() / 3.3;
+    }
+
+    public double getTransferServoPosition(){
+        // get the voltage of our analog line
+        // divide by 3.3 (the max voltage) to get a value between 0 and 1
+        // multiply by 360 to convert it to 0 to 360
+        return transferServoPosition.getVoltage() / 3.3;
+    }
+
     public void auto3Shoot(){
         ElapsedTime timer = new ElapsedTime();
         timer.reset();
@@ -405,7 +440,7 @@ public class HardwareMain {
         double y = 27.25/39.37;
         double g = 9.8;
 
-        double v = 7.15;
+        double v = 7.3;
         if (getDistanceToGoal() < 80) {
             v = 6.2;
         }
@@ -436,7 +471,6 @@ public class HardwareMain {
     public void updateLimelight(double offset){
         LLResult result = limelight.getLatestResult();
         if(result.getTx() != 0 && turretMotor.getCurrentPosition() < 300 && turretMotor.getCurrentPosition() > -300) {
-            turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             double tx;
             tx = result.getTx() + offset;
 
@@ -453,9 +487,14 @@ public class HardwareMain {
             }
             turretMotor.setPower(steering_adjust);
         }else{
-            turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            turretMotor.setTargetPosition(0);
+            turretMotor.setPower(0);
         }
     }
 
+
+
+
 }
+
+
+
