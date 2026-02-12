@@ -435,6 +435,7 @@ public class HardwareMain {
 
     public void updateLimelight(double offset){
         LLResult result = limelight.getLatestResult();
+        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         if(result.getTx() != 0 && turretMotor.getCurrentPosition() < 300 && turretMotor.getCurrentPosition() > -300) {
             double tx;
             tx = result.getTx() + offset;

@@ -25,6 +25,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareDrivetrainNOTusingPedroPath;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -47,6 +48,10 @@ public class TeleOpV2 extends OpMode {
     boolean endGameRumble20secondsLeftOnce = true;
     boolean endGameRumble10secondsLeftOnce = true;
     Gamepad.RumbleEffect customRumbleEffect;
+
+    //Control
+    double yaw;
+    boolean deltaIMULock = false;
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -152,21 +157,40 @@ public class TeleOpV2 extends OpMode {
             telemetry.addData("Id", aprilTags.get(0).getFiducialId());
         }
         telemetry.addData("Auto pipeline", autoPipeline);
-        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
-            telemetry.addLine("ACCESSED");
+        if(!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1)){
+            yaw = robot.imu.getRobotYawPitchRollAngles().getYaw();
             if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(-3.5);
+                robot.updateLimelight(-3);
             }else{
                 robot.updateLimelight(0);
             }
-        }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
+        }else if(!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)){
+            yaw = robot.imu.getRobotYawPitchRollAngles().getYaw();
             if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(3.5);
+                robot.updateLimelight(3);
             }else{
                 robot.updateLimelight(0);
             }
         }else{
-            robot.turretMotor.setPower(0);
+            if(robot.turretMotor.getCurrentPosition() > -263 && robot.turretMotor.getCurrentPosition() < 245) {
+                robot.turretMotor.setTargetPosition((int) (-13.3 * deltaYaw()) + robot.turretMotor.getCurrentPosition());
+
+                telemetry.addData("yaw", yaw);
+
+                telemetry.addData("Delta yaw", deltaYaw());
+                telemetry.addData("Output position", (-13.3 * deltaYaw()) + robot.turretMotor.getCurrentPosition());
+                robot.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }else{
+                if(robot.turretMotor.getCurrentPosition() <= -263) {
+                    yaw = robot.imu.getRobotYawPitchRollAngles().getYaw();
+                    robot.turretMotor.setTargetPosition(-262);
+                    robot.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }else if(robot.turretMotor.getCurrentPosition() >= 245) {
+                    yaw = robot.imu.getRobotYawPitchRollAngles().getYaw();
+                    robot.turretMotor.setTargetPosition(244);
+                    robot.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+            }
         }
 
 //        if (gamepad2.a){
@@ -180,7 +204,7 @@ public class TeleOpV2 extends OpMode {
             case INTAKE:
                 robot.spindexerPosition1();
                 robot.transferDOWN();
-                if (gamepad2.b && (!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0))){
+                if (gamepad2.b && ((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0))) && (robot.limelight.isConnected() && robot.limelight.isRunning()))){
                     //robot.auto3Shoot();
                     shootingMode = "all3";
                     timer.reset();
@@ -246,7 +270,7 @@ public class TeleOpV2 extends OpMode {
                 }
                 else if (shootingMode.equals("manual")){
                     robot.intakeServoIN();
-                    if (gamepad2.right_bumper && (!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0))){
+                    if (gamepad2.right_bumper && ((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0))) && (robot.limelight.isConnected() && robot.limelight.isRunning()))){
                         robot.transferUP();
                         timer.reset();
                     }
@@ -445,6 +469,12 @@ public class TeleOpV2 extends OpMode {
         return -0.0312086*(Math.min(theta1, theta2) * 180/Math.PI)+1.80914 -0.01;
     }
 
+    public double deltaYaw(){
+        double currentYaw = robot.imu.getRobotYawPitchRollAngles().getYaw();
+        double deltaYaw = yaw - currentYaw;
+//        telemetry.addData("currentRoll", currentRoll);
+        return deltaYaw;
+    }
     public void rumble(){
         Gamepad.RumbleEffect customRumbleEffect;    // Use to build a custom rumble sequence.
         customRumbleEffect = new Gamepad.RumbleEffect.Builder()
