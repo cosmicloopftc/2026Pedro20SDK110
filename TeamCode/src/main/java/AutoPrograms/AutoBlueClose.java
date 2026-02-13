@@ -265,7 +265,7 @@ public class AutoBlueClose extends OpMode {
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 245 && robot.turretMotor.getCurrentPosition() > -263 && startRunningLimelight) {
-            double tx = result.getTx();
+            double tx = result.getTx()-3;
             double min_command = 0.02;
             double Kp = -0.015;
             double heading_error = -tx;

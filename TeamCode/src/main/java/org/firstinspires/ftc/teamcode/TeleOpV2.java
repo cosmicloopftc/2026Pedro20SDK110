@@ -41,8 +41,10 @@ import java.util.function.Supplier;
 @TeleOp(name = "TeleOpV2 v1")
 public class TeleOpV2 extends OpMode {
     int autoPipeline;
+    public static double distance = 0;
     public static boolean shooterOn = false;
     public static int currentSpeed = -210;
+    public static boolean test = false;
 
     boolean endGameRumble20secondsLeftOnce = true;
     boolean endGameRumble10secondsLeftOnce = true;
@@ -142,6 +144,7 @@ public class TeleOpV2 extends OpMode {
     }
     @Override
     public void loop() {
+        distance = HardwareMain.getDistanceToGoal();
         robot.hoodOutFar();
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
@@ -153,15 +156,14 @@ public class TeleOpV2 extends OpMode {
         }
         telemetry.addData("Auto pipeline", autoPipeline);
         if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
-            telemetry.addLine("ACCESSED");
             if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(-3.5);
+                robot.updateLimelight(-3);
             }else{
                 robot.updateLimelight(0);
             }
         }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
             if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(3.5);
+                robot.updateLimelight(3);
             }else{
                 robot.updateLimelight(0);
             }
@@ -278,7 +280,7 @@ public class TeleOpV2 extends OpMode {
 //            robot.hoodMID();
             //robot.shooterVELO(-210); // Far launch zone, overshoot
             //robot.shooterVELO(-200); // Far launch zone, almost over shoot
-            robot.shooterON(); // Far launch zone, bounce out
+//            robot.shooterON(); // Far launch zone, bounce out
             //robot.shooterVELO(-190); // Far launch zone, bounce out
             //robot.shooterVELO(-185); // Far launch zone, bounce out
             shooterOn = true;
@@ -286,7 +288,7 @@ public class TeleOpV2 extends OpMode {
         else if (gamepad2.dpad_down){
             robot.hoodMID();
             //robot.shooterVELO(-167); // Near launch zone, equivalent to 0.54 power
-            robot.shooterVELO(-160); // Near launch zone, equivalent to 0.52 power
+//            robot.shooterVELO(-160); // Near launch zone, equivalent to 0.52 power
             //robot.shooterVELO(-150); // Near launch zone, equivalent to 0.50 power
             //robot.shooterVELO(-145); // Near launch zone, equivalent to 0.48 power
             shooterOn = true;
@@ -298,20 +300,25 @@ public class TeleOpV2 extends OpMode {
             robot.hoodOutFar();
         }
         else if(gamepad2.dpad_right){
+            robot.shooterVELO(currentSpeed);
             shooterOn = true;
         }
         if(shooterOn){
-            if(getDistanceToGoal() > 80) {
-                robot.shooterVELO(-207);
+            if(getDistanceToGoal() > 80 && result.isValid()) {
                 currentSpeed = -207;
-            }else if(result.getTx() != 0){
-                robot.shooterVELO(-165);
+            }else if(result.isValid()){
                 currentSpeed = -165;
-            }else{
+            }
+            if(result.isValid()){
                 robot.shooterVELO(currentSpeed);
             }
+            telemetry.addData("Target speed", currentSpeed);
+            telemetry.addData("Result", result.isValid());
         }else{
             robot.shooterOFF();
+        }
+        if(currentSpeed == -165){
+            telemetry.addLine("SOMETHING IS WRONG");
         }
 //        if(gamepad2.dpad_down){
 //            robot.hoodIN();

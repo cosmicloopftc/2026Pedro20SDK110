@@ -22,6 +22,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.TeleOpV2;
 
 import java.util.List;
 
@@ -382,6 +383,9 @@ public class HardwareMain {
 
     public static double getDistanceToGoal(){
         LLResult result = limelight.getLatestResult();
+        if(!result.isValid()){
+            return TeleOpV2.distance;
+        }
         double targetOffsetAngle_Vertical = result.getTy();
         // how many degrees back is your limelight rotated from perfectly vertical?
         double limelightMountAngleDegrees = 19.48;  //32.39;
