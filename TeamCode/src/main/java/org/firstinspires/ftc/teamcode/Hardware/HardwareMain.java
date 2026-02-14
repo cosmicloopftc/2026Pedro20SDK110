@@ -5,6 +5,8 @@ package org.firstinspires.ftc.teamcode.Hardware;
 
 import static org.firstinspires.ftc.teamcode.TeleOpV2.getLaunchAngle;
 
+import android.graphics.Color;
+
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -19,6 +21,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -35,6 +38,7 @@ import java.util.List;
 //LinearOpMode structure: runOpMode(), waitForStart(), isStarted(), isStopRequested(), idle(), opModeIsActive(), opModeInInit()
 
 public class HardwareMain {
+    public int spindexerPosition = 1;
 //**ADD assignment of variables here for subsequent connected device.
 
 /* example use of enum from FTC Thunderbolts (Sacramento, CA) mentor's program structure
@@ -83,7 +87,17 @@ public class HardwareMain {
 
     public NormalizedColorSensor backBallColorSensor = null;
 
+
+    public DigitalChannel LEDrightGreen;
+    public DigitalChannel LEDrightRed;
+    public DigitalChannel LEDleftRed;
+    public DigitalChannel LEDleftGreen;
+
     double newForward = 0, newRight = 0, driveTheta = 0, r = 0 ;
+
+    final float[] right_hsvValues = new float[3];
+    final float[] left_hsvValues = new float[3];
+    final float[] back_hsvValues = new float[3];
 
 
 
@@ -182,10 +196,20 @@ public class HardwareMain {
         leftBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "leftBallColorSensor");
         rightBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "rightBallColorSensor");
         backBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "backBallColorSensor");
+        rightBallColorSensor.setGain(4.5F);
+        leftBallColorSensor.setGain(4.5F);
+        backBallColorSensor.setGain(4.5F);
 //         leftBallPin0 = hardwareMap.digitalChannel.get("leftBallPin0");
 //         leftBallPin1 = hardwareMap.digitalChannel.get("leftBallPin1");
 //         rightBallPin0 = hardwareMap.digitalChannel.get("rightBallPin0");
 //         rightBallPin1 = hardwareMap.digitalChannel.get("rightBallPin1");
+
+
+        LEDleftGreen = hardwareMap.get(DigitalChannel.class, "leftGreen");               //connect to Digital port 2
+        LEDleftRed = hardwareMap.get(DigitalChannel.class, "leftRed");                   //connect to Digital port 3
+
+        LEDrightGreen = hardwareMap.get(DigitalChannel.class, "rightGreen");             //connect to Digital port 0
+        LEDrightRed = hardwareMap.get(DigitalChannel.class, "rightRed");             //connect to Digital port 1
 
 //?unknown source        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
         //batteryVoltageSensor = hardwareMap.voltageSensor.get("Expansion Hub 2");       //GeorgeFIRST kickoff video
@@ -263,25 +287,33 @@ public class HardwareMain {
     }
 
     public void spindexerPosition1(){
+        spindexerPosition = 1;
         spindexerServo.setPosition(0);
     }
     public void spindexerPosition2(){
+        spindexerPosition = 2;
         spindexerServo.setPosition(0.38);
     }
     public void spindexerPosition3(){
+        spindexerPosition = 3;
         spindexerServo.setPosition(0.76);
     }
 
-    public int getSpindexerPosition(){
-        if(spindexerServo.getPosition() == 0) {
-            return 1;
-        } else if(spindexerServo.getPosition() == 0.375){
-            return 2;
-        }else if(spindexerServo.getPosition() == 0.75){
-            return 3;
-        } else{
-            return 4;
+    public void setSpindexerPosition(int position){
+        if(position == 1){
+            spindexerServo.setPosition(0);
+            spindexerPosition = 1;
+        }else if(position == 2){
+            spindexerServo.setPosition(0.38);
+            spindexerPosition = 2;
+        }else if(position == 3){
+            spindexerServo.setPosition(0.76);
+            spindexerPosition = 3;
         }
+    }
+
+    public int getSpindexerPosition(){
+        return spindexerPosition;
     }
 //    public void transferIN(){
 //        intakeLeftTransfer.setPower(0.8);
@@ -503,7 +535,64 @@ public class HardwareMain {
         }
     }
 
-
+    public int getSortingPosition(String[] target, String[] colors, int shotNumber){
+        if(getSpindexerPosition() == 1) {
+            if (colors[0].equals(target[shotNumber - 1])) {
+                return 1;
+            } else if (colors[1].equals(target[shotNumber - 1])) {
+                return 2;
+            }else if(colors[2].equals(target[shotNumber - 1])){
+                return 3;
+            }else if(colors[0].equals("NONE")){
+                if (!colors[1].equals("NONE")) {
+                    return 2;
+                }else if(!colors[2].equals("NONE")){
+                    return 3;
+                }else{
+                    return 1;
+                }
+            }else{
+                return 1;
+            }
+        }else if(getSpindexerPosition() == 2){
+            if (colors[0].equals(target[shotNumber - 1])) {
+                return 2;
+            } else if (colors[1].equals(target[shotNumber - 1])) {
+                return 3;
+            }else if(colors[2].equals(target[shotNumber - 1])){
+                return 1;
+            }else if(colors[0].equals("NONE")){
+                if (!colors[1].equals("NONE")) {
+                    return 3;
+                }else if(!colors[2].equals("NONE")){
+                    return 1;
+                }else{
+                    return 2;
+                }
+            }else{
+                return 2;
+            }
+        }else if(getSpindexerPosition() == 3){
+            if (colors[0].equals(target[shotNumber - 1])) {
+                return 3;
+            } else if (colors[1].equals(target[shotNumber - 1])) {
+                return 1;
+            }else if(colors[2].equals(target[shotNumber - 1])){
+                return 2;
+            }else if(colors[0].equals("NONE")){
+                if (!colors[2].equals("NONE")) {
+                    return 2;
+                }else if(!colors[1].equals("NONE")){
+                    return 1;
+                }else{
+                    return 3;
+                }
+            }else{
+                return 3;
+            }
+        }
+        return getSpindexerPosition();
+    }
 
 
 }

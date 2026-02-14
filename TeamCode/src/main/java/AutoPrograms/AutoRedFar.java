@@ -6,6 +6,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -17,6 +18,7 @@ import java.util.List;
 
 //@Autonomous(name = "Red Far", group = "Examples")
 public class AutoRedFar extends OpMode {
+    String[] target = {"PURPLE BALL", "PURPLE BALL", "PURPLE BALL"};
     private static boolean firstTime;
     private static boolean secondTime;
     private static boolean startRunningLimelight = false;
@@ -384,6 +386,18 @@ public class AutoRedFar extends OpMode {
      **/
     @Override
     public void init_loop() {
+        robot.limelight.pipelineSwitch(2);
+        LLResult result = robot.limelight.getLatestResult();
+        List<LLResultTypes.FiducialResult> aprilTags = result.getFiducialResults();
+        if(!aprilTags.isEmpty()){
+            if(aprilTags.get(0).getFiducialId() == 21){
+                target[0] = "GREEN BALL";
+            }else if(aprilTags.get(0).getFiducialId() == 22){
+                target[1] = "GREEN BALL";
+            }else if(aprilTags.get(0).getFiducialId() == 23){
+
+            }
+        }
     }
 
     /**
@@ -393,6 +407,7 @@ public class AutoRedFar extends OpMode {
     @Override
     public void start() {
         opmodeTimer.resetTimer();
+        robot.limelight.pipelineSwitch(0);
         robot.limelight.start();
         setPathState(0);
     }
