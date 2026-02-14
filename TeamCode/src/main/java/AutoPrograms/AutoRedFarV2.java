@@ -1,26 +1,38 @@
 package AutoPrograms; // make sure this aligns with class location
 
+import android.graphics.Color;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
+import org.firstinspires.ftc.teamcode.TeleOpV2;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
 @Autonomous(name = "Red Far", group = "Examples")
 public class AutoRedFarV2 extends OpMode {
+    String[] colors = new String[3];
+    String[] target = {"PURPLE BALL", "PURPLE BALL", "PURPLE BALL"};
     private static boolean firstTime;
     private static boolean secondTime;
+    private static boolean executeOnce = true;
     private static boolean startRunningLimelight = false;
+
+    final float[] right_hsvValues = new float[3];
+    final float[] left_hsvValues = new float[3];
+    final float[] back_hsvValues = new float[3];
 
     public static HardwareMain robot = new HardwareMain();
 
@@ -31,7 +43,7 @@ public class AutoRedFarV2 extends OpMode {
     private final Pose startPose = new Pose(88, 8, Math.toRadians(90)); // Start Pose of our robot.
     private final Pose pickup1Pose = new Pose(100, 35, Math.toRadians(0)); // Scoring Pose of our robot.
     private final Pose pickup1Pose2 = new Pose(140, 35, Math.toRadians(0));
-    private final Pose scorePose = new Pose(93, 15, Math.toRadians(60));  //93, 15
+    private final Pose scorePose = new Pose(89, 11, Math.toRadians(60));  //93, 15
 
     private final Pose pickup2Pose = new Pose(139, 28, Math.toRadians(270));
     private final Pose pickup2Pose2 = new Pose(139, 11, Math.toRadians(270));
@@ -98,7 +110,10 @@ public class AutoRedFarV2 extends OpMode {
         switch (pathState) {
             case 0:
                 if (!follower.isBusy()) {
-                    robot.spindexerPosition1();
+                    if(executeOnce) {
+                        executeOnce = false;
+                        robot.setSpindexerPosition(robot.getSortingPosition(target, colors, 1));
+                    }
                     robot.shooterVELO(-210);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
@@ -120,25 +135,34 @@ public class AutoRedFarV2 extends OpMode {
                 if (!follower.isBusy()) {
                     time = 1000;
                     if((pathTimer.getElapsedTime() < 1000)){
+                        executeOnce = true;
                         robot.transferUP();
                     }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.transferDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+1000) {
-                        robot.spindexerPosition2();
-                    }else if(pathTimer.getElapsedTime() < time+1750) {
+                    else if(pathTimer.getElapsedTime() < time + 1000) {
+                        if(executeOnce) {
+                            executeOnce = false;
+                            robot.setSpindexerPosition(robot.getSortingPosition(target, colors, 2));
+                        }
+                    }else if(pathTimer.getElapsedTime() < time+2150) {
+                        executeOnce = true;
                         robot.transferUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2000) {
+                    else if(pathTimer.getElapsedTime() < time+2300) {
                         robot.transferDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2750) {
-                        robot.spindexerPosition3();
+                    else if(pathTimer.getElapsedTime() < time+3050) {
+                        if(executeOnce) {
+                            executeOnce = false;
+                            robot.setSpindexerPosition(robot.getSortingPosition(target, colors, 3));
+                        }
                     }
-                    else if(pathTimer.getElapsedTime() < time+3250) {
+                    else if(pathTimer.getElapsedTime() < time+3550) {
+                        executeOnce = true;
                         robot.transferUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+4000) {
+                    else if(pathTimer.getElapsedTime() < time+3900) {
                         robot.transferDOWN();
                         robot.spindexerPosition1();
 //                        robot.shooterOFF();
@@ -147,7 +171,7 @@ public class AutoRedFarV2 extends OpMode {
                         }else if(secondTime){
                             setPathState(5);
                         }else{
-                            setPathState(12);
+                            setPathState(-1);
                         }
                     }
                 }
@@ -242,8 +266,8 @@ public class AutoRedFarV2 extends OpMode {
             case 11:
                 if (!follower.isBusy()) {
                     if(pathTimer.getElapsedTime() > 3500){
-                        robot.intakeServoOUT();
-                        robot.intakeOUT();
+//                        robot.intakeServoOUT();
+//                        robot.intakeOUT();
                         setPathState(1);
                     }
                 }
@@ -271,6 +295,16 @@ public class AutoRedFarV2 extends OpMode {
      **/
     @Override
     public void loop() {
+        NormalizedRGBA rightColor = robot.rightBallColorSensor.getNormalizedColors();
+        NormalizedRGBA leftColor = robot.leftBallColorSensor.getNormalizedColors();
+        NormalizedRGBA backColor = robot.backBallColorSensor.getNormalizedColors();
+        Color.colorToHSV(rightColor.toColor(), right_hsvValues);
+        Color.colorToHSV(leftColor.toColor(), left_hsvValues);
+        Color.colorToHSV(backColor.toColor(), back_hsvValues);
+        colors[0] = TeleOpV2.ColorBallDetected(back_hsvValues[0]);
+        colors[1] = TeleOpV2.ColorBallDetected(right_hsvValues[0]);
+        colors[2] = TeleOpV2.ColorBallDetected(left_hsvValues[0]);
+
         robot.hoodOutFar();
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
@@ -355,6 +389,39 @@ public class AutoRedFarV2 extends OpMode {
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.addData("Starting pose", follower.getPose());
+
+        robot.limelight.start();
+        robot.limelight.pipelineSwitch(2);
+        LLResult result = robot.limelight.getLatestResult();
+        List<LLResultTypes.FiducialResult> aprilTags = result.getFiducialResults();
+        if(!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() != 20 || aprilTags.get(0).getFiducialId() != 24)){
+            if(aprilTags.get(0).getFiducialId() == 21){
+                target[0] = "GREEN BALL";
+            }else if(aprilTags.get(0).getFiducialId() == 22){
+                target[1] = "GREEN BALL";
+            }else if(aprilTags.get(0).getFiducialId() == 23){
+                target[2] = "GREEN BALL";
+            }
+        }else if(!aprilTags.isEmpty() && aprilTags.size() > 1){
+            if(aprilTags.get(1).getFiducialId() == 21){
+                target[0] = "GREEN BALL";
+                target[1] = "PURPLE BALL";
+                target[2] = "PURPLE BALL";
+            }else if(aprilTags.get(1).getFiducialId() == 22){
+                target[0] = "PURPLE BALL";
+                target[1] = "GREEN BALL";
+                target[2] = "PURPLE BALL";
+            }else if(aprilTags.get(1).getFiducialId() == 23){
+                target[0] = "PURPLE BALL";
+                target[1] = "PURPLE BALL";
+                target[2] = "GREEN BALL";
+            }
+        }else{
+            target[0] = "GREEN BALL";
+            target[1] = "PURPLE BALL";
+            target[2] = "PURPLE BALL";
+        }
+        telemetry.addData("Target string", "[" + target[0] + ", " + target[1] + ", "+ target[2] + "]");
     }
 
     /**
@@ -364,7 +431,7 @@ public class AutoRedFarV2 extends OpMode {
     @Override
     public void start() {
         opmodeTimer.resetTimer();
-        robot.limelight.start();
+        robot.limelight.pipelineSwitch(0);
         setPathState(0);
     }
 
