@@ -70,12 +70,12 @@ public class TeleOpV2 extends OpMode {
     ElapsedTime timerLimelight = new ElapsedTime();
     private String shootingMode = "none";
     private String intakeMode = "normal";
-    public String detectedColor = "";
+    public static String detectedColor = "";
     final float[] right_hsvValues = new float[3];
     final float[] left_hsvValues = new float[3];
     final float[] back_hsvValues = new float[3];
 
-
+    public double shooterSpeed;
 
     public static HardwareMain robot = new HardwareMain();
     HardwareDrivetrainNOTusingPedroPath robotDrivetrain = new HardwareDrivetrainNOTusingPedroPath();
@@ -126,6 +126,7 @@ public class TeleOpV2 extends OpMode {
         //Stores pipeline from auto
         autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
 
+        //This has been moved to the HardwareMain class
         robot.rightBallColorSensor.setGain(4.5F);
         robot.leftBallColorSensor.setGain(4.5F);
         robot.backBallColorSensor.setGain(4.5F);
@@ -133,22 +134,27 @@ public class TeleOpV2 extends OpMode {
     }
 
     public void init_loop() {
-//        telemetry.addLine("G2.left_bumper to initialize RED Limelight");
-//        telemetry.addLine("");
-//        telemetry.addLine("G2.right_bumper to initialize RED Limelight");
-//        telemetry.addLine("");
-
+//        robot.limelight.pipelineSwitch(2);
+        robot.LEDrightGreen.setMode(DigitalChannel.Mode.OUTPUT);
+        robot.LEDrightRed.setMode(DigitalChannel.Mode.OUTPUT);
+        robot.LEDleftGreen.setMode(DigitalChannel.Mode.OUTPUT);
+        robot.LEDleftRed.setMode(DigitalChannel.Mode.OUTPUT);
+        robot.LEDrightGreen.setState(true);
+        robot.LEDleftGreen.setState(true);
+        robot.LEDrightRed.setState(true);
+        robot.LEDleftRed.setState(true);
         if(gamepad2.left_bumper){
             robot.limelight.pipelineSwitch(0);
+//            autoPipeline = 0;
             telemetry.addLine("Red pipeline initialized");
         }else if(gamepad2.right_bumper){
             robot.limelight.pipelineSwitch(1);
+//            autoPipeline = 1;
             telemetry.addLine("Blue pipeline initialized");
         }
         telemetry.addData("AutoPipeline", autoPipeline);
         telemetry.update();
         autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
-
     }
 
     @Override
@@ -160,6 +166,10 @@ public class TeleOpV2 extends OpMode {
         follower.update();
         robot.limelight.pipelineSwitch(3);
         robot.limelight.start();
+        robot.LEDrightGreen.setState(false);
+        robot.LEDleftGreen.setState(false);
+        robot.LEDrightRed.setState(false);
+        robot.LEDleftRed.setState(false);
     }
     @Override
     public void loop() {
@@ -183,13 +193,73 @@ public class TeleOpV2 extends OpMode {
             }
         }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
             if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(3);
+                robot.updateLimelight(2.75);
             }else{
                 robot.updateLimelight(0);
             }
         }else{
             robot.turretMotor.setPower(0);
         }
+
+        //close zone 163; far zone: 205
+        shooterSpeed = robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES);
+        if (shooterSpeed >= 195 && shooterSpeed <= 215 && !aprilTags.isEmpty()){
+            //detect AprilTag AND shooterSpeed is at HIGH speed target: GREEN, GREEN (both tag and high speed)
+            robot.LEDrightGreen.setState(true);
+            robot.LEDleftGreen.setState(true);
+            robot.LEDrightRed.setState(false);
+            robot.LEDleftRed.setState(false);
+        }
+        else if (shooterSpeed >= 155 && shooterSpeed <= 175 && !aprilTags.isEmpty()) {
+            //detect AprilTag AND shooterSpeed is at LOW speed target: GREEN, RED (both tag and low speed)
+            robot.LEDrightGreen.setState(false);
+            robot.LEDleftGreen.setState(true);
+            robot.LEDrightRed.setState(true);
+            robot.LEDleftRed.setState(false);
+        }
+        else if (!aprilTags.isEmpty()){
+            //detect AprilTag only: ORANGE, ORANGE
+            robot.LEDrightGreen.setState(true);
+            robot.LEDleftGreen.setState(true);
+            robot.LEDrightRed.setState(true);
+            robot.LEDleftRed.setState(true);
+        }
+        else{
+            //NO AprilTag AND not at any speed target: RED, RED  (don't bother shooting.)
+            robot.LEDrightGreen.setState(false);
+            robot.LEDleftGreen.setState(false);
+            robot.LEDrightRed.setState(true);
+            robot.LEDleftRed.setState(true);
+        }
+
+
+
+
+
+//        if (robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) >= 150 && robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) <= 220 && !aprilTags.isEmpty()){
+//            robot.LEDrightGreen.setState(true);
+//            robot.LEDleftGreen.setState(true);
+//            robot.LEDrightRed.setState(false);
+//            robot.LEDleftRed.setState(false);
+//        }
+//        else if(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) >= 150 && robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) <= 220){
+//            robot.LEDrightGreen.setState(true);
+//            robot.LEDleftGreen.setState(true);
+//            robot.LEDrightRed.setState(true);
+//            robot.LEDleftRed.setState(true);
+//        }
+//        else if(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) >= 150 && robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) <= 220){
+//            robot.LEDrightGreen.setState(true);
+//            robot.LEDleftGreen.setState(true);
+//            robot.LEDrightRed.setState(true);
+//            robot.LEDleftRed.setState(true);
+//        }
+//        else{
+//            robot.LEDrightGreen.setState(false);
+//            robot.LEDleftGreen.setState(false);
+//            robot.LEDrightRed.setState(true);
+//            robot.LEDleftRed.setState(true);
+//        }
 
 //        if (gamepad2.a){
 //            robot.transferDOWN();
@@ -202,12 +272,13 @@ public class TeleOpV2 extends OpMode {
             case INTAKE:
                 robot.spindexerPosition1();
                 robot.transferDOWN();
-                if (gamepad2.b && (!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0))){
+                if (gamepad2.b && (!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))){
                     //robot.auto3Shoot();
                     shootingMode = "all3";
                     timer.reset();
                     state = State.SHOOT;
                 }
+//TODO: WT: Sorting shooting
                 else if (gamepad2.right_bumper){
                     shootingMode = "manual";
                     state = State.SHOOT;
@@ -341,9 +412,10 @@ public class TeleOpV2 extends OpMode {
                         shootingMode = "none";
                     }
                 }
+//TODO: WT: Sorting shooting
                 else if (shootingMode.equals("manual")){
                     robot.intakeServoIN();
-                    if (gamepad2.right_bumper && (!aprilTags.isEmpty() && (aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0))){
+                    if (gamepad2.right_bumper && (!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))){
                         robot.transferUP();
                         shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                         timer.reset();
@@ -364,6 +436,22 @@ public class TeleOpV2 extends OpMode {
                         shootingMode = "none";
                     }
                 }
+//                else if (shootingMode.equals("color")){
+//                    robot.intakeServoIN();
+//                    NormalizedRGBA rightColor = robot.rightBallColorSensor.getNormalizedColors();
+//                    NormalizedRGBA leftColor = robot.leftBallColorSensor.getNormalizedColors();
+//                    NormalizedRGBA backColor = robot.backBallColorSensor.getNormalizedColors();
+//                    Color.colorToHSV(rightColor.toColor(), right_hsvValues);
+//                    Color.colorToHSV(leftColor.toColor(), left_hsvValues);
+//                    Color.colorToHSV(backColor.toColor(), back_hsvValues);
+//
+//                    if (gamepad2.right_trigger > 0.1 && (ColorBallDetected(right_hsvValues[0]).equals("GREEN") || ColorBallDetected(left_hsvValues[0]).equals("GREEN") || ColorBallDetected(back_hsvValues[0]).equals("GREEN"))){
+//
+//                    }
+//                    else if (gamepad2.left_trigger > 0.2){
+//
+//                    }
+//                }
                 if (shootingMode.equals("none")){
                     state = State.INTAKE;
                 }
@@ -493,6 +581,11 @@ public class TeleOpV2 extends OpMode {
         telemetry.addData("Angle to goal from lightlight", result.getTy());
         telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
         telemetry.addData("Shooter velocity TPS:", robot.leftShooterMotor.getVelocity());
+//        telemetry.addData("Spindexer position", robot.getSpindexerPosition());
+//        telemetry.addData("Spindexer position2", robot.spindexerServo.getPosition() == 0.38);
+//        String[] target = {"PURPLE BALL", "GREEN BALL", "PURPLE BALL"};
+//        telemetry.addData("Current sorted shot", robot.getSortingPosition(target, new String[3], 1));
+
 
         telemetry.addData("rightShooter AngVel (deg/s?): ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));
         telemetry.addData("leftShooter  AngVel (deg/s?): ", robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
@@ -505,15 +598,6 @@ public class TeleOpV2 extends OpMode {
 //        telemetry.addData("Left digital 1", robot.leftBallPin1.getState());
 //        telemetry.addData("Right digital 0", robot.rightBallPin0.getState());
 //        telemetry.addData("Right digital 1", robot.rightBallPin1.getState());
-        if (robot.rightBallColorSensor instanceof DistanceSensor) {
-            telemetry.addData("Right Slot Distance (cm)", "%.3f", ((DistanceSensor) robot.rightBallColorSensor).getDistance(DistanceUnit.CM));
-        }
-        if (robot.leftBallColorSensor instanceof DistanceSensor) {
-            telemetry.addData("Left Slot Distance (cm)", "%.3f", ((DistanceSensor) robot.leftBallColorSensor).getDistance(DistanceUnit.CM));
-        }
-        if (robot.backBallColorSensor instanceof DistanceSensor) {
-            telemetry.addData("Back Slot Distance (cm)", "%.3f", ((DistanceSensor) robot.backBallColorSensor).getDistance(DistanceUnit.CM));
-        }
         telemetry.addLine()
                 .addData("Hue", "%.3f", right_hsvValues[0])
                 .addData("Right BALL = ", ColorBallDetected(right_hsvValues[0]));
@@ -586,7 +670,7 @@ public class TeleOpV2 extends OpMode {
 
 
     //TODO:  need to adjust the Hue value limit based on testing at different light setting.
-    String ColorBallDetected(float hue){
+    public static String ColorBallDetected(float hue){
         if (hue > 200 && hue < 250) {
             detectedColor = "PURPLE BALL";
         } else if (hue > 150 && hue < 180) {
