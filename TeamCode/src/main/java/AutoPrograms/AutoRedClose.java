@@ -30,16 +30,14 @@ public class AutoRedClose extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(118, 130.5, Math.toRadians(216)); // Start Pose of our robot.
+    private final Pose startPose = new Pose(118, 130.5, Math.toRadians(-144)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(86, 102, Math.toRadians(30));
-    private final Pose pickup1Pose = new Pose(98, 87, Math.toRadians(0)); //y = 84 Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(126, 87, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(96, 84, Math.toRadians(0)); // Scoring Pose of our robot.
+    private final Pose pickup1Pose2 = new Pose(124, 84, Math.toRadians(0));
 
-    private final Pose pickup2Pose = new Pose(98, 63, Math.toRadians(0));  // y = 57
-    private final Pose pickup2Pose2 = new Pose(136, 63, Math.toRadians(0));  // y = 57
-
-    private final Pose endPose = new Pose(105, 76, Math.toRadians(90));
-    private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, endAuto;
+    private final Pose pickup2Pose = new Pose(96, 57, Math.toRadians(0));
+    private final Pose pickup2Pose2 = new Pose(133, 57, Math.toRadians(0));
+    private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
 
     public void buildPaths() {
         scorePreload = follower.pathBuilder()
@@ -84,14 +82,8 @@ public class AutoRedClose extends OpMode {
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup2 = follower.pathBuilder()
-                .addPath( new BezierCurve(pickup2Pose2, new Pose(111.470, 55.939), scorePose))
+                .addPath( new BezierCurve(pickup2Pose2, new Pose(111.47, 55.939), scorePose))
                 .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
-                .setConstraints(Constants.pathConstraints)
-                .build();
-
-        endAuto = follower.pathBuilder()
-                .addPath( new BezierLine(scorePose, endPose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), endPose.getHeading())
                 .setConstraints(Constants.pathConstraints)
                 .build();
     }
@@ -101,18 +93,19 @@ public class AutoRedClose extends OpMode {
         switch (pathState) {
             case 0:
                 if (!follower.isBusy()) {
+                    robot.hoodServo.setPosition(0.47);
                     robot.spindexerPosition1();
-                    robot.shooterVELO(-162);
+                    robot.shooterVELO(-157);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
                     if(pathTimer.getElapsedTime() > 250){
                         startRunningLimelight = true;
                     }
-                    if(pathTimer.getElapsedTime() > 1500) {
+                    if(pathTimer.getElapsedTime() > 2000) {
                         robot.transferUP();
                         robot.intakeServoIN();
-      //                  pathTimer.resetTimer();
+                        pathTimer.resetTimer();
                         setPathState(1);
                     }
 //                    telemetry.addData("Elapsed time", pathTimer.getElapsedTime());
@@ -150,7 +143,7 @@ public class AutoRedClose extends OpMode {
                         }else if(secondTime){
                             setPathState(5);
                         }else{
-                            setPathState(12);
+                            setPathState(-1);
                         }
                     }
                 }
@@ -244,8 +237,6 @@ public class AutoRedClose extends OpMode {
                     setPathState(11);
                 }
                 break;
-
-
             case 11:
                 if (!follower.isBusy()) {
                     if(pathTimer.getElapsedTime() > 3500){
@@ -253,14 +244,6 @@ public class AutoRedClose extends OpMode {
                         robot.intakeOUT();
                         setPathState(1);
                     }
-                }
-                break;
-
-            case 12:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if (!follower.isBusy()) {
-                    follower.followPath(endAuto, true);
-                    setPathState(-1);
                 }
                 break;
         }
@@ -279,7 +262,6 @@ public class AutoRedClose extends OpMode {
      **/
     @Override
     public void loop() {
-        robot.hoodOutFar();
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 245 && robot.turretMotor.getCurrentPosition() > -263 && startRunningLimelight) {
@@ -323,7 +305,7 @@ public class AutoRedClose extends OpMode {
         AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
         AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
 
-        AutoToTeleopData.limeLightPipeline = 0;
+        AutoToTeleopData.limeLightPipeline = 1;
         AutoToTeleopData.autoRan = true;
     }
 
@@ -344,8 +326,8 @@ public class AutoRedClose extends OpMode {
         buildPaths();
         follower.setStartingPose(startPose);
 
-        robot.limelight.pipelineSwitch(0);
 
+        robot.limelight.pipelineSwitch(0);
         //Set up bulk data reading
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {

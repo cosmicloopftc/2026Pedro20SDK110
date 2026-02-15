@@ -8,7 +8,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
@@ -16,8 +16,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "Blue Far", group = "Examples")
-public class AutoBlueFar extends OpMode {
+@Autonomous(name = "Blue Far Human Player", group = "Examples")
+public class AutoBlueFarHumanPlayer extends OpMode {
     private static boolean firstTime;
     private static boolean secondTime;
     private static boolean startRunningLimelight = false;
@@ -30,12 +30,12 @@ public class AutoBlueFar extends OpMode {
     private int pathState;
     private final Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.
     private final Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(180));
+    private final Pose pickup1Pose2 = new Pose(20, 35, Math.toRadians(180));
     private final Pose scorePose = new Pose(56, 13, Math.toRadians(120));
     private final Pose parkPose = new Pose(47,19, Math.toRadians(90));
 
-    private final Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
-    private final Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
+    private final Pose pickup2Pose = new Pose(14, 28, Math.toRadians(270-45));
+    private final Pose pickup2Pose2 = new Pose(7.5, 11, Math.toRadians(270));
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
 
     public void buildPaths() {
@@ -146,10 +146,13 @@ public class AutoBlueFar extends OpMode {
                         robot.transferDOWN();
                         robot.spindexerPosition1();
 //                        robot.shooterOFF();
-                        if(firstTime) {
-                            setPathState(2);
-                        }else if(secondTime){
+                        if(firstTime){
                             setPathState(5);
+                        }else if(secondTime){
+//                            robot.shooterOFF();
+//                            robot.intakeOFF();
+//                            robot.intakeServoSTOP();
+                            setPathState(2);
                         }else{
                             setPathState(12);
                         }
@@ -181,7 +184,7 @@ public class AutoBlueFar extends OpMode {
 //                        robot.hoodServo.setPosition(0.46);
 //                        robot.intakeServoSTOP();
                         robot.transferUP();
-                        firstTime = false;
+                        secondTime = false;
                         setPathState(1);
                     }
                 }
@@ -239,16 +242,16 @@ public class AutoBlueFar extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
                     follower.followPath(scorePickup2, true);
-                    robot.intakeServoOUT();
-                    robot.intakeOUT();
-                    secondTime = false;
+
+                    firstTime = false;
                     setPathState(11);
                 }
                 break;
             case 11:
                 if (!follower.isBusy()) {
                     if(pathTimer.getElapsedTime() > 3500){
-
+                        robot.intakeServoOUT();
+                        robot.intakeOUT();
                         setPathState(1);
                     }
                 }

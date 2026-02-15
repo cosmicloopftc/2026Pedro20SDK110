@@ -32,11 +32,11 @@ public class AutoBlueClose extends OpMode {
     private int pathState;
     private final Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(58, 102, Math.toRadians(150));
-    private final Pose pickup1Pose = new Pose(46, 84, Math.toRadians(180)); // Scoring Pose of our robot.
+    private final Pose pickup1Pose = new Pose(48, 84, Math.toRadians(180)); // Scoring Pose of our robot.
     private final Pose pickup1Pose2 = new Pose(18, 84, Math.toRadians(180));
 
-    private final Pose pickup2Pose = new Pose(46, 57, Math.toRadians(180));
-    private final Pose pickup2Pose2 = new Pose(8, 57, Math.toRadians(180));
+    private final Pose pickup2Pose = new Pose(48, 57, Math.toRadians(180));
+    private final Pose pickup2Pose2 = new Pose(12, 57, Math.toRadians(180));
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
 
     public void buildPaths() {
@@ -93,8 +93,9 @@ public class AutoBlueClose extends OpMode {
         switch (pathState) {
             case 0:
                 if (!follower.isBusy()) {
+                    robot.hoodServo.setPosition(0.47);
                     robot.spindexerPosition1();
-                    robot.shooterVELO(-162);
+                    robot.shooterVELO(-157);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
@@ -261,7 +262,6 @@ public class AutoBlueClose extends OpMode {
      **/
     @Override
     public void loop() {
-        robot.hoodOutFar();
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 245 && robot.turretMotor.getCurrentPosition() > -263 && startRunningLimelight) {

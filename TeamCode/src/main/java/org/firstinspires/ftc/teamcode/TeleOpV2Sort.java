@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 //             in HardwareMain, and in TeleOpV2.java
 
 
+import static org.firstinspires.ftc.teamcode.Hardware.HardwareMain.getDistanceToGoal;
+
 import android.graphics.Color;
 
 import com.bylazar.configurables.annotations.Configurable;
@@ -18,19 +20,16 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareDrivetrainNOTusingPedroPath;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -45,8 +44,8 @@ import java.util.function.Supplier;
  */
 
 @Configurable
-@TeleOp(name = "TeleOpV2 v1")
-public class TeleOpV2 extends OpMode {
+@TeleOp(name = "TeleOpV2Sort v1")
+public class TeleOpV2Sort extends OpMode {
     public static double distance;
     int autoPipeline;
     public static boolean shooterOn = false;
@@ -74,6 +73,12 @@ public class TeleOpV2 extends OpMode {
     final float[] right_hsvValues = new float[3];
     final float[] left_hsvValues = new float[3];
     final float[] back_hsvValues = new float[3];
+
+    String[] colors = new String[3];
+    String[] target = {"PURPLE BALL", "PURPLE BALL", "PURPLE BALL"};
+    double imuHeading;
+
+
 
     public double shooterSpeed;
 
@@ -120,8 +125,8 @@ public class TeleOpV2 extends OpMode {
 //            robot.turretMotor.setTargetPosition(AutoToTeleopData.turretMotorPos);
 //            robot.limelight.pipelineSwitch(AutoToTeleopData.limeLightPipeline);
 //        } else {
-            follower.setPose(new Pose(0, 0, 0));
- //       }
+        follower.setPose(new Pose(0, 0, 0));
+        //       }
 
         //Stores pipeline from auto
         autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
@@ -140,9 +145,15 @@ public class TeleOpV2 extends OpMode {
         robot.LEDleftGreen.setMode(DigitalChannel.Mode.OUTPUT);
         robot.LEDleftRed.setMode(DigitalChannel.Mode.OUTPUT);
         robot.LEDrightGreen.setState(true);
-        robot.LEDleftGreen.setState(true);
         robot.LEDrightRed.setState(true);
+        robot.LEDleftGreen.setState(true);
         robot.LEDleftRed.setState(true);
+//TODO: add in center LED
+        robot.LEDcenterGreen.setMode(DigitalChannel.Mode.OUTPUT);
+        robot.LEDcenterRed.setMode(DigitalChannel.Mode.OUTPUT);
+        robot.LEDcenterGreen.setState(true);
+        robot.LEDcenterRed.setState(true);
+
         if(gamepad2.left_bumper){
             robot.limelight.pipelineSwitch(0);
 //            autoPipeline = 0;
@@ -167,13 +178,23 @@ public class TeleOpV2 extends OpMode {
         robot.limelight.pipelineSwitch(3);
         robot.limelight.start();
         robot.LEDrightGreen.setState(false);
-        robot.LEDleftGreen.setState(false);
         robot.LEDrightRed.setState(false);
+        robot.LEDleftGreen.setState(false);
         robot.LEDleftRed.setState(false);
+
+//TODO: add in center LED
+        robot.LEDcenterGreen.setState(false);
+        robot.LEDcenterRed.setState(false);
+
     }
     @Override
     public void loop() {
-        distance = HardwareMain.getDistanceToGoal();
+
+        imuHeading = robot.imu.getRobotYawPitchRollAngles()
+                .getYaw(AngleUnit.RADIANS);
+
+
+        distance = getDistanceToGoal();
         robot.hoodOutFar();
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
@@ -204,35 +225,55 @@ public class TeleOpV2 extends OpMode {
         //close zone 163; far zone: 205
         shooterSpeed = robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES);
         if (shooterSpeed >= 195 && shooterSpeed <= 215 && !aprilTags.isEmpty()){
-            //detect AprilTag AND shooterSpeed is at HIGH speed target: GREEN, GREEN (both tag and high speed)
+            //detect AprilTag AND shooterSpeed is at HIGH speed target: GREEN, GREEN, GREEN (both tag and high speed)
             robot.LEDrightGreen.setState(true);
-            robot.LEDleftGreen.setState(true);
             robot.LEDrightRed.setState(false);
+            robot.LEDleftGreen.setState(true);
             robot.LEDleftRed.setState(false);
+            //TODO: add in center LED
+            robot.LEDcenterGreen.setState(true);
+            robot.LEDcenterRed.setState(false);
         }
         else if (shooterSpeed >= 155 && shooterSpeed <= 175 && !aprilTags.isEmpty()) {
-            //detect AprilTag AND shooterSpeed is at LOW speed target: GREEN, RED (both tag and low speed)
-            robot.LEDrightGreen.setState(false);
+            //detect AprilTag AND shooterSpeed is at LOW speed target: GREEN, RED, GREEN (both tag and low speed)
+            robot.LEDrightGreen.setState(true);
+            robot.LEDrightRed.setState(false);
             robot.LEDleftGreen.setState(true);
-            robot.LEDrightRed.setState(true);
             robot.LEDleftRed.setState(false);
+            //TODO: add in center LED
+            robot.LEDcenterGreen.setState(false);
+            robot.LEDcenterRed.setState(true);
         }
         else if (!aprilTags.isEmpty()){
-            //detect AprilTag only: ORANGE, ORANGE
-            robot.LEDrightGreen.setState(true);
-            robot.LEDleftGreen.setState(true);
+            //detect AprilTag only: RED, RED, GREEN
+            robot.LEDrightGreen.setState(false);
             robot.LEDrightRed.setState(true);
+            robot.LEDleftGreen.setState(false);
             robot.LEDleftRed.setState(true);
+            //TODO: add in center LED
+            robot.LEDcenterGreen.setState(true);
+            robot.LEDcenterRed.setState(false);
         }
         else{
-            //NO AprilTag AND not at any speed target: RED, RED  (don't bother shooting.)
+            //NO AprilTag AND not at any speed target: RED, RED, RED  (don't bother shooting.)
             robot.LEDrightGreen.setState(false);
-            robot.LEDleftGreen.setState(false);
             robot.LEDrightRed.setState(true);
+            robot.LEDleftGreen.setState(false);
             robot.LEDleftRed.setState(true);
+            //TODO: add in center LED
+            robot.LEDcenterGreen.setState(false);
+            robot.LEDcenterRed.setState(true);
         }
 
+//TODO: WT if no Limelight signal and drivetrain heading (imuHeading) is between -45 degree and 45 degree,
+//      turn turret aim at 0 degree.  need to test that it can read the AprilTag when in near zone
+//TODO: ideally would want to have it aim to direction of drivetrain heading.
 
+        if ((imuHeading > -45) && (imuHeading < 45) && aprilTags.isEmpty()) {
+            robot.turretMotor.setTargetPosition(0);
+            robot.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.turretMotor.setPower(0.2);
+        }
 
 
 
@@ -272,12 +313,13 @@ public class TeleOpV2 extends OpMode {
             case INTAKE:
                 robot.spindexerPosition1();
                 robot.transferDOWN();
-                if (gamepad2.b && (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isConnected() && robot.limelight.isRunning()))){
+                if (gamepad2.b && (!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))){
                     //robot.auto3Shoot();
                     shootingMode = "all3";
                     timer.reset();
                     state = State.SHOOT;
                 }
+//TODO: WT: Sorting shooting
                 else if (gamepad2.right_bumper){
                     shootingMode = "manual";
                     state = State.SHOOT;
@@ -288,35 +330,35 @@ public class TeleOpV2 extends OpMode {
                     robot.intakeIN();
                     robot.intakeServoIN();
                 }
-//                else if (gamepad1.left_trigger > 0.2){
-//                    intakeMode = "colorDistance";
-//                }
+                else if (gamepad1.left_trigger > 0.2){
+                    intakeMode = "colorDistance";
+                }
                 else if (gamepad1.dpad_down){
                     intakeMode = "normal";
                     robot.intakeOUT();
                     robot.intakeServoOUT();
                 }
-//                if (intakeMode.equals("colorDistance")){
-////                    if (((DistanceSensor) robot.backBallColorSensor).getDistance(DistanceUnit.CM) < 3 && ((DistanceSensor) robot.leftBallColorSensor).getDistance(DistanceUnit.CM) < 10 && ((DistanceSensor) robot.rightBallColorSensor).getDistance(DistanceUnit.CM) < 10){
-////                        robot.intakeOUT();
-////                        robot.intakeServoOUT();
-////                    }
-//                    NormalizedRGBA rightColor = robot.rightBallColorSensor.getNormalizedColors();
-//                    NormalizedRGBA leftColor = robot.leftBallColorSensor.getNormalizedColors();
-//                    NormalizedRGBA backColor = robot.backBallColorSensor.getNormalizedColors();
-//                    Color.colorToHSV(rightColor.toColor(), right_hsvValues);
-//                    Color.colorToHSV(leftColor.toColor(), left_hsvValues);
-//                    Color.colorToHSV(backColor.toColor(), back_hsvValues);
-//
-//                    if (!(ColorBallDetected(right_hsvValues[0]).equals("NONE")) && !(ColorBallDetected(left_hsvValues[0]).equals("NONE")) && !(ColorBallDetected(back_hsvValues[0]).equals("NONE"))){
+                if (intakeMode.equals("colorDistance")){
+//                    if (((DistanceSensor) robot.backBallColorSensor).getDistance(DistanceUnit.CM) < 3 && ((DistanceSensor) robot.leftBallColorSensor).getDistance(DistanceUnit.CM) < 10 && ((DistanceSensor) robot.rightBallColorSensor).getDistance(DistanceUnit.CM) < 10){
 //                        robot.intakeOUT();
 //                        robot.intakeServoOUT();
 //                    }
-//                    else {
-//                        robot.intakeIN();
-//                        robot.intakeServoIN();
-//                    }
-                //}
+                    NormalizedRGBA rightColor = robot.rightBallColorSensor.getNormalizedColors();
+                    NormalizedRGBA leftColor = robot.leftBallColorSensor.getNormalizedColors();
+                    NormalizedRGBA backColor = robot.backBallColorSensor.getNormalizedColors();
+                    Color.colorToHSV(rightColor.toColor(), right_hsvValues);
+                    Color.colorToHSV(leftColor.toColor(), left_hsvValues);
+                    Color.colorToHSV(backColor.toColor(), back_hsvValues);
+
+                    if (!(ColorBallDetected(right_hsvValues[0]).equals("NONE")) && !(ColorBallDetected(left_hsvValues[0]).equals("NONE")) && !(ColorBallDetected(back_hsvValues[0]).equals("NONE"))){
+                        robot.intakeOUT();
+                        robot.intakeServoOUT();
+                    }
+                    else {
+                        robot.intakeIN();
+                        robot.intakeServoIN();
+                    }
+                }
 
                 if (gamepad1.dpad_left || gamepad1.dpad_right || gamepad1.left_bumper) {
                     intakeMode = "normal";
@@ -411,9 +453,10 @@ public class TeleOpV2 extends OpMode {
                         shootingMode = "none";
                     }
                 }
+//TODO: WT: Sorting shooting
                 else if (shootingMode.equals("manual")){
                     robot.intakeServoIN();
-                    if (gamepad2.right_bumper && (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isRunning() && robot.limelight.isConnected()))){
+                    if (gamepad2.right_bumper && (!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))){
                         robot.transferUP();
                         shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                         timer.reset();
@@ -433,7 +476,91 @@ public class TeleOpV2 extends OpMode {
                     if (gamepad1.dpad_up || gamepad2.x){
                         shootingMode = "none";
                     }
+
+                    //TODO:  read ball color at each position on spindexer
+                    NormalizedRGBA rightColor = robot.rightBallColorSensor.getNormalizedColors();
+                    NormalizedRGBA leftColor = robot.leftBallColorSensor.getNormalizedColors();
+                    NormalizedRGBA backColor = robot.backBallColorSensor.getNormalizedColors();
+                    Color.colorToHSV(rightColor.toColor(), right_hsvValues);
+                    Color.colorToHSV(leftColor.toColor(), left_hsvValues);
+                    Color.colorToHSV(backColor.toColor(), back_hsvValues);
+                    colors[0] = TeleOpV2.ColorBallDetected(back_hsvValues[0]);
+                    colors[1] = TeleOpV2.ColorBallDetected(right_hsvValues[0]);
+                    colors[2] = TeleOpV2.ColorBallDetected(left_hsvValues[0]);
+                    telemetry.addData("Ball position", "[" + colors[0] + ", " + colors[1] + ", "+ colors[2] + "]");
+
+                    //TODO: shoot PURPLE BALL, need to check position 0,1,2
+                    if (gamepad2.dpad_left && (!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))){
+                        for (int i=0; i <= 2; i=i+1){
+                            //back color (position 2)
+                            if (colors[0] == "PURPLE") {
+                                robot.spindexerPosition2();
+                                break;
+                            }
+                            //left position color (position 1)
+                            else if (colors[2] == "PURPLE") {
+                                robot.spindexerPosition1();
+                                break;
+                                //right position color (position 1)
+                            }
+                            else if (colors[1] == "PURPLE"){
+                                robot.spindexerPosition3();
+                                break;
+                            }
+                            else{
+                                //no PURPLE ball
+                                rumble();
+                                telemetry.addLine("No PURPLE BALL");
+                            }
+
+                        }
+
+                        robot.transferUP();
+                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                        timer.reset();
+                    }
+                    else if(timer.milliseconds() > 200) {
+                        robot.transferDOWN();
+                    }
+
+
+                    //TODO: shoot GREEN BALL, need to check position 0,1,2
+                    if (gamepad2.dpad_right && (!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))){
+                        for (int i=0; i <= 2; i=i+1){
+                            //back color (position 2)
+                            if (colors[0] == "GREEN") {
+                                robot.spindexerPosition2();
+                                break;
+                            }
+                            //left position color (position 1)
+                            else if (colors[2] == "GREEN") {
+                                robot.spindexerPosition1();
+                                break;
+                                //right position color (position 1)
+                            }
+                            else if (colors[1] == "GREEN"){
+                                robot.spindexerPosition3();
+                                break;
+                            }
+                            else{
+                                //no PURPLE ball
+                                rumble();
+                                telemetry.addLine("No GREEN");
+                            }
+                        }
+                        robot.transferUP();
+                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                        timer.reset();
+                    }
+                    else if(timer.milliseconds() > 200) {
+                        robot.transferDOWN();
+                    }
                 }
+
+
+
+
+
 //                else if (shootingMode.equals("color")){
 //                    robot.intakeServoIN();
 //                    NormalizedRGBA rightColor = robot.rightBallColorSensor.getNormalizedColors();
@@ -539,14 +666,14 @@ public class TeleOpV2 extends OpMode {
 
         if ((runtime.seconds() > 100) && endGameRumble20secondsLeftOnce) {
             rumble();
-            telemetry.addLine("20 SECONDS LEFT");
+            telemetry.addLine("20 SECONDS LEFT, START END GAME");
             endGameRumble20secondsLeftOnce = false;
         }
 
-        //3 rumble for 8 seconds left for hanging
+        //3 rumble for 8 seconds left
         if ((runtime.seconds() > 110) && endGameRumble10secondsLeftOnce) {
             rumble();
-            telemetry.addLine("10 SECONDS");
+            telemetry.addLine("10 SECONDS, PARK NOW");
             endGameRumble10secondsLeftOnce = false;
         }
 
@@ -575,7 +702,7 @@ public class TeleOpV2 extends OpMode {
         telemetry.addData("Is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
         telemetry.addData("Hood position", robot.hoodServo.getPosition());
         telemetry.addData("Launch angle", HardwareMain.getLaunchAngle());
-        telemetry.addData("Distance to goal", HardwareMain.getDistanceToGoal());
+        telemetry.addData("Distance to goal", getDistanceToGoal());
         telemetry.addData("Angle to goal from lightlight", result.getTy());
         telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
         telemetry.addData("Shooter velocity TPS:", robot.leftShooterMotor.getVelocity());
@@ -596,15 +723,15 @@ public class TeleOpV2 extends OpMode {
 //        telemetry.addData("Left digital 1", robot.leftBallPin1.getState());
 //        telemetry.addData("Right digital 0", robot.rightBallPin0.getState());
 //        telemetry.addData("Right digital 1", robot.rightBallPin1.getState());
-//        telemetry.addLine()
-//                .addData("Hue", "%.3f", right_hsvValues[0])
-//                .addData("Right BALL = ", ColorBallDetected(right_hsvValues[0]));
-//        telemetry.addLine()
-//                .addData("Hue", "%.3f", left_hsvValues[0])
-//                .addData("Left BALL = ", ColorBallDetected(left_hsvValues[0]));
-//        telemetry.addLine()
-//                .addData("Hue", "%.3f", back_hsvValues[0])
-//                .addData("Back BALL = ", ColorBallDetected(back_hsvValues[0]));
+        telemetry.addLine()
+                .addData("Hue", "%.3f", right_hsvValues[0])
+                .addData("Right BALL = ", ColorBallDetected(right_hsvValues[0]));
+        telemetry.addLine()
+                .addData("Hue", "%.3f", left_hsvValues[0])
+                .addData("Left BALL = ", ColorBallDetected(left_hsvValues[0]));
+        telemetry.addLine()
+                .addData("Hue", "%.3f", back_hsvValues[0])
+                .addData("Back BALL = ", ColorBallDetected(back_hsvValues[0]));
 
     }
 
