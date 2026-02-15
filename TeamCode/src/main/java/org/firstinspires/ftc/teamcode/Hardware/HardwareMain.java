@@ -113,7 +113,7 @@ public class HardwareMain {
 
     /* Initialize standard Hardware interface */
     public void init(HardwareMap hardwareMap)    {
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(105, 0.003, 0.005, 13.9);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(270, 0.0001, 0.0002, 13.94);
 
         //Save reference to Hardware map
         //Sensor.init(hardwareMap);
@@ -482,8 +482,10 @@ public class HardwareMain {
             double g = 9.8;
 
             double v = 7.3;
-            if (getDistanceToGoal() < 80) {
+            if (getDistanceToGoal() < 80 && getDistanceToGoal() > 47) {
                 v = 6.2;
+            }else if(getDistanceToGoal() < 47){
+                v = 5.8;
             }
 
             //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
@@ -503,8 +505,8 @@ public class HardwareMain {
 
             if (result < 0) {
                 result = 0;
-            } else if (result >= 0.86) {
-                result = 0.84;
+            } else if (result >= 0.81) {
+                result = 0.78;
             }
             return result;
         } catch (Exception e) {

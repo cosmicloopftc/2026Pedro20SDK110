@@ -487,8 +487,10 @@ public class TeleOpV2 extends OpMode {
         if(shooterOn){
             if(getDistanceToGoal() > 80 && result.isValid()) {
                 currentSpeed = -208;
-            }else if(result.isValid()){
+            }else if(result.isValid() && getDistanceToGoal() > 47){
                 currentSpeed = -165;
+            }else if(result.isValid()){
+                currentSpeed = -155;
             }
             if(result.isValid()){
                 robot.shooterVELO(currentSpeed);

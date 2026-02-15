@@ -29,12 +29,12 @@ public class AutoBlueFar extends OpMode {
 
     private int pathState;
     private final Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose pickup1Pose = new Pose(44, 35, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(4, 35, Math.toRadians(180));
-    private final Pose scorePose = new Pose(51, 15, Math.toRadians(120));
+    private final Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(180)); // Scoring Pose of our robot.
+    private final Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(180));
+    private final Pose scorePose = new Pose(56, 13, Math.toRadians(120));
 
-    private final Pose pickup2Pose = new Pose(3, 35, Math.toRadians(270));
-    private final Pose pickup2Pose2 = new Pose(3, 11, Math.toRadians(270));
+    private final Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
+    private final Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
 
     public void buildPaths() {
@@ -92,11 +92,12 @@ public class AutoBlueFar extends OpMode {
             case 0:
                 if (!follower.isBusy()) {
                     robot.spindexerPosition1();
-                    robot.shooterVELO(-210);
+                    robot.hoodServo.setPosition(0.75);
+                    robot.shooterVELO(-208);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
-                    if(pathTimer.getElapsedTime() > 250){
+                    if(pathTimer.getElapsedTime() > 150){
                         startRunningLimelight = true;
                     }
                     if(pathTimer.getElapsedTime() > 2000) {
@@ -113,9 +114,12 @@ public class AutoBlueFar extends OpMode {
                 if (!follower.isBusy()) {
                     time = 1000;
                     if((pathTimer.getElapsedTime() < 1000)){
+                        robot.intakeOUT();
+                        robot.intakeServoOUT();
                         robot.transferUP();
                     }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.transferDOWN();
+                        robot.intakeServoIN();
                     }
                     else if(pathTimer.getElapsedTime() < time+1000) {
                         robot.spindexerPosition2();
@@ -161,7 +165,7 @@ public class AutoBlueFar extends OpMode {
                 if (!follower.isBusy()) {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
-                    robot.shooterVELO(-210);
+                    robot.shooterVELO(-208);
                     if(pathTimer.getElapsedTime() > 4000) {
                         robot.intakeOUT();
                         robot.intakeServoOUT();
@@ -235,8 +239,8 @@ public class AutoBlueFar extends OpMode {
             case 11:
                 if (!follower.isBusy()) {
                     if(pathTimer.getElapsedTime() > 3500){
-                        robot.intakeServoOUT();
-                        robot.intakeOUT();
+//                        robot.intakeServoOUT();
+//                        robot.intakeOUT();
                         setPathState(1);
                     }
                 }
@@ -257,7 +261,6 @@ public class AutoBlueFar extends OpMode {
      **/
     @Override
     public void loop() {
-        robot.hoodOutFar();
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -233 && startRunningLimelight) {
@@ -317,6 +320,7 @@ public class AutoBlueFar extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+        robot.transferDOWN();
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();

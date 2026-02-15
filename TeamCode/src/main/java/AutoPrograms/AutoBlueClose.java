@@ -93,8 +93,9 @@ public class AutoBlueClose extends OpMode {
         switch (pathState) {
             case 0:
                 if (!follower.isBusy()) {
+                    robot.hoodServo.setPosition(0.47);
                     robot.spindexerPosition1();
-                    robot.shooterVELO(-162);
+                    robot.shooterVELO(-157);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
@@ -261,7 +262,6 @@ public class AutoBlueClose extends OpMode {
      **/
     @Override
     public void loop() {
-        robot.hoodOutFar();
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 245 && robot.turretMotor.getCurrentPosition() > -263 && startRunningLimelight) {
