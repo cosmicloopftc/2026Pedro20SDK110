@@ -43,9 +43,9 @@ public class AutoBlueFarSorting extends OpMode {
 
     private int pathState;
     private final Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(0)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(0));
-    private final Pose scorePose = new Pose(56, 13, Math.toRadians(60));
+    private final Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(180)); // Scoring Pose of our robot.
+    private final Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(180));
+    private final Pose scorePose = new Pose(56, 13, Math.toRadians(120));
     private final Pose parkPose = new Pose(47, 19, Math.toRadians(90));
 
     private final Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
@@ -184,6 +184,7 @@ public class AutoBlueFarSorting extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(goToPickup1, true);
                     follower.followPath(grabPickup1, true);
+                    executeOnce = true;
                     setPathState(3);
                 }
                 break;
@@ -192,9 +193,14 @@ public class AutoBlueFarSorting extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
                     robot.shooterVELO(-208);
+                    if(executeOnce) {
+                        spindexerPosition = robot.getSortingPosition(target, colors, 1);
+                    }
                     if(pathTimer.getElapsedTime() > 4000) {
+                        executeOnce = false;
                         robot.intakeOUT();
                         robot.intakeServoOUT();
+                        robot.setSpindexerPosition(spindexerPosition);
                     }
                     if(pathTimer.getElapsedTime() > 5500) {
 //                        robot.hoodServo.setPosition(0.46);
@@ -261,6 +267,9 @@ public class AutoBlueFarSorting extends OpMode {
                     robot.intakeServoOUT();
                     robot.intakeOUT();
                     secondTime = false;
+                    if(executeOnce) {
+                        spindexerPosition = robot.getSortingPosition(target, colors, 1);
+                    }
                     setPathState(11);
                 }
                 break;
@@ -269,6 +278,7 @@ public class AutoBlueFarSorting extends OpMode {
                     if(pathTimer.getElapsedTime() > 3500){
 //                        robot.intakeServoOUT();
 //                        robot.intakeOUT();
+                        robot.setSpindexerPosition(spindexerPosition);
                         setPathState(1);
                     }
                 }
@@ -309,7 +319,7 @@ public class AutoBlueFarSorting extends OpMode {
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -233 && startRunningLimelight) {
-            double tx = result.getTx() + 3;
+            double tx = result.getTx() - 3.5;
             double min_command = 0.02;
             double Kp = -0.015;
             double heading_error = -tx;
@@ -371,7 +381,7 @@ public class AutoBlueFarSorting extends OpMode {
         buildPaths();
         follower.setStartingPose(startPose);
 
-        robot.limelight.pipelineSwitch(0);
+        robot.limelight.pipelineSwitch(1);
 
         //Set up bulk data reading
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
@@ -438,7 +448,7 @@ public class AutoBlueFarSorting extends OpMode {
     @Override
     public void start() {
         opmodeTimer.resetTimer();
-        robot.limelight.pipelineSwitch(0);
+        robot.limelight.pipelineSwitch(1);
         setPathState(0);
     }
 
