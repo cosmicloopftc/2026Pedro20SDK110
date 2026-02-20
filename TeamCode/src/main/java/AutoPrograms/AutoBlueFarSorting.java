@@ -21,8 +21,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "Red Far Sorting", group = "Examples")
-public class AutoRedFarV2Sorting extends OpMode {
+@Autonomous(name = "Blue Far Sorting", group = "Examples")
+public class AutoBlueFarSorting extends OpMode {
     public static int spindexerPosition;
 
     String[] colors = new String[3];
@@ -42,14 +42,14 @@ public class AutoRedFarV2Sorting extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(88, 8, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose pickup1Pose = new Pose(92.5, 35, Math.toRadians(0)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(132.5, 35, Math.toRadians(0));
-    private final Pose scorePose = new Pose(88, 13, Math.toRadians(60));
-    private final Pose parkPose = new Pose(97, 19, Math.toRadians(90));
+    private final Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.
+    private final Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(0)); // Scoring Pose of our robot.
+    private final Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(0));
+    private final Pose scorePose = new Pose(56, 13, Math.toRadians(60));
+    private final Pose parkPose = new Pose(47, 19, Math.toRadians(90));
 
-    private final Pose pickup2Pose = new Pose(135, 35, Math.toRadians(270));
-    private final Pose pickup2Pose2 = new Pose(135, 11, Math.toRadians(270));
+    private final Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
+    private final Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
 
     public void buildPaths() {
