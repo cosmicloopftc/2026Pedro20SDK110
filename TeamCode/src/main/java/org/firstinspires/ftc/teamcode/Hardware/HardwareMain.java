@@ -62,13 +62,11 @@ public class HardwareMain {
     public IMU imu;
 
     public DcMotorEx intakeMotor = null;
-    public CRServo intakeServo = null;
+    public CRServo transferServo = null;
 //    public CRServo intakeLeftTransfer = null;   OLD
 //    public CRServo intakeRightTransfer = null;  OLD
     public Servo spindexerServo = null;
     public AnalogInput spindexerServoPosition = null;
-    public Servo transferServo = null;
-    public AnalogInput transferServoPosition = null;
 
     public DcMotorEx rightShooterMotor = null;
     public static DcMotorEx leftShooterMotor = null;
@@ -77,15 +75,15 @@ public class HardwareMain {
 
     public static Limelight3A limelight = null;
 
-    public NormalizedColorSensor leftBallColorSensor = null;
-//    public DigitalChannel leftBallPin0 = null;
-//    public DigitalChannel leftBallPin1 = null;
+    //public NormalizedColorSensor leftBallColorSensor = null;
+    public DigitalChannel leftColorPin0 = null;
+    public DigitalChannel leftColorPin1 = null;
 
-    public NormalizedColorSensor rightBallColorSensor = null;
-//    public DigitalChannel rightBallPin0 = null;
-//    public DigitalChannel rightBallPin1 = null;
+    //public NormalizedColorSensor rightBallColorSensor = null;
+    public DigitalChannel rightColorPin0 = null;
+    public DigitalChannel rightColorPin1 = null;
 
-    public NormalizedColorSensor backBallColorSensor = null;
+    //public NormalizedColorSensor backBallColorSensor = null;
 
 
     public DigitalChannel LEDrightGreen;
@@ -150,11 +148,8 @@ public class HardwareMain {
         spindexerServoPosition = hardwareMap.get(AnalogInput.class, "spindexerServoPosition");
 
 
-        transferServo = hardwareMap.get(Servo.class, "transferServo");
-        transferServoPosition = hardwareMap.get(AnalogInput.class, "transferServoPosition");
-
-        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
-        intakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        transferServo = hardwareMap.get(CRServo.class, "transferServo");
+        transferServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //map and setup mode of Shooter motor
         rightShooterMotor = hardwareMap.get(DcMotorEx.class, "rightShooterMotor");
@@ -195,16 +190,16 @@ public class HardwareMain {
         //limelight setup
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
-        leftBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "leftBallColorSensor");
-        rightBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "rightBallColorSensor");
-        backBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "backBallColorSensor");
-        rightBallColorSensor.setGain(4.5F);
-        leftBallColorSensor.setGain(4.5F);
-        backBallColorSensor.setGain(4.5F);
-//         leftBallPin0 = hardwareMap.digitalChannel.get("leftBallPin0");
-//         leftBallPin1 = hardwareMap.digitalChannel.get("leftBallPin1");
-//         rightBallPin0 = hardwareMap.digitalChannel.get("rightBallPin0");
-//         rightBallPin1 = hardwareMap.digitalChannel.get("rightBallPin1");
+//        leftBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "leftBallColorSensor");
+//        rightBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "rightBallColorSensor");
+//        backBallColorSensor = hardwareMap.get(NormalizedColorSensor.class, "backBallColorSensor");
+//        rightBallColorSensor.setGain(4.5F);
+//        leftBallColorSensor.setGain(4.5F);
+//        backBallColorSensor.setGain(4.5F);
+         leftColorPin0 = hardwareMap.digitalChannel.get("leftColorPin0");
+         leftColorPin1 = hardwareMap.digitalChannel.get("leftColorPin1");
+         rightColorPin0 = hardwareMap.digitalChannel.get("rightColorPin0");
+         rightColorPin1 = hardwareMap.digitalChannel.get("rightColorPin1");
 
         LEDcenterGreen = hardwareMap.get(DigitalChannel.class, "centerGreen");               //connect to Digital port 4
         LEDcenterRed = hardwareMap.get(DigitalChannel.class, "centerRed");                   //connect to Digital port 5
@@ -290,31 +285,46 @@ public class HardwareMain {
 
     }
 
-    public void spindexerPosition1(){
+    public void spindexerIntakeSlot1(){
         spindexerPosition = 1;
         spindexerServo.setPosition(0);
     }
-    public void spindexerPosition2(){
+    public void spindexerIntakeSlot2(){
         spindexerPosition = 2;
         spindexerServo.setPosition(0.37);
     }
-    public void spindexerPosition3(){
+    public void spindexerIntakeSlot3(){
         spindexerPosition = 3;
         spindexerServo.setPosition(0.74);
     }
 
-    public void setSpindexerPosition(int position){
-        if(position == 1){
-            spindexerServo.setPosition(0);
-            spindexerPosition = 1;
-        }else if(position == 2){
-            spindexerServo.setPosition(0.37);
-            spindexerPosition = 2;
-        }else if(position == 3){
-            spindexerServo.setPosition(0.74);
-            spindexerPosition = 3;
-        }
+    public void spindexerShootingSlot1(){
+        spindexerPosition = 1;
+        spindexerServo.setPosition(0.925);
     }
+    public void spindexerShootingSlot2(){
+        spindexerPosition = 2;
+        spindexerServo.setPosition(0.555);
+    }
+    public void spindexerShootingSlot3(){
+        spindexerPosition = 3;
+        spindexerServo.setPosition(0.185);
+
+    }
+
+
+//    public void setSpindexerPosition(int position){
+//        if(position == 1){
+//            spindexerServo.setPosition(0);
+//            spindexerPosition = 1;
+//        }else if(position == 2){
+//            spindexerServo.setPosition(0.37);
+//            spindexerPosition = 2;
+//        }else if(position == 3){
+//            spindexerServo.setPosition(0.74);
+//            spindexerPosition = 3;
+//        }
+//    }
 
     public int getSpindexerPosition(){
         return spindexerPosition;
@@ -356,11 +366,14 @@ public class HardwareMain {
     }
 
     public void transferUP(){
-        transferServo.setPosition(0);
+        transferServo.setPower(0.8);
 
     }
     public void transferDOWN(){
-        transferServo.setPosition(0.24);
+        transferServo.setPower(-0.8);
+    }
+    public void transferSTOP(){
+        transferServo.setPower(0);
     }
 
     public void hoodOUT(){
@@ -394,66 +407,12 @@ public class HardwareMain {
         }
     }
 
-    public void intakeServoIN(){
-        intakeServo.setPower(0.7);
-    }
-    public void intakeServoOUT(){
-        intakeServo.setPower(-0.7);
-    }
-    public void intakeServoSTOP(){
-        intakeServo.setPower(0);
-    }
 
     public double getSpindexerServoPosition(){
         // get the voltage of our analog line
         // divide by 3.3 (the max voltage) to get a value between 0 and 1
         // multiply by 360 to convert it to 0 to 360
         return spindexerServoPosition.getVoltage() / 3.3;
-    }
-
-    public double getTransferServoPosition(){
-        // get the voltage of our analog line
-        // divide by 3.3 (the max voltage) to get a value between 0 and 1
-        // multiply by 360 to convert it to 0 to 360
-        return transferServoPosition.getVoltage() / 3.3;
-    }
-
-    public void auto3Shoot(){
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        if (timer.milliseconds() > 0 && timer.milliseconds() < 800){
-            spindexerPosition1();
-            //move kicker up?
-        }
-        else if(timer.milliseconds() >= 400 && timer.milliseconds() < 800){
-            spindexerPosition1();
-            //move kicker down?
-        }
-        else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1200){
-            spindexerPosition2();
-        }
-        else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1600){
-            spindexerPosition2();
-            //move kicker up?
-        }
-        else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 2000){
-            spindexerPosition2();
-            //move kicker down?
-        }
-        else if(timer.milliseconds() >= 2000 && timer.milliseconds() < 2400){
-            spindexerPosition3();
-        }
-        else if(timer.milliseconds() >= 2400 && timer.milliseconds() < 2800){
-            spindexerPosition3();
-            //move kicker up?
-        }
-        else if(timer.milliseconds() >= 2800 && timer.milliseconds() < 3200){
-            spindexerPosition3();
-            //move kicker down?
-        }
-//        else{
-//            spindexerPosition1();
-//        }
     }
 
     public static double getDistanceToGoal(){

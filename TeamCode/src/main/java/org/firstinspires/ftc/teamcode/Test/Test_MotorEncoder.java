@@ -1,14 +1,11 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Test;
 
 
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 
 import java.util.List;
@@ -19,9 +16,9 @@ import java.util.List;
 //LinearOpMode structure: runOpMode(), waitForStart(), isStarted(), isStopRequested(), idle(), opModeIsActive(), opModeInInit()
 
 
-@TeleOp (name= "MotorEncoder_Test", group = "Test")
+@TeleOp (name= "Test_MotorEncoder V1.0", group = "Test")
 
-public class MotorEncoderTest extends OpMode {
+public class Test_MotorEncoder extends OpMode {
     //This method will be called once, when the INIT button is pressed.
     public static HardwareMain robot = new HardwareMain();
 
