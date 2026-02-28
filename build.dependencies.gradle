@@ -20,5 +20,7 @@ dependencies {
     implementation 'com.pedropathing:telemetry:1.0.0'
     //implementation 'com.bylazar:fullpanels:1.0.6'
     implementation 'com.bylazar:fullpanels:1.0.12'                  //updated 1/18/2026 for "Full Panels" Core Plugins
+
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'             // limelight for panels 2/28/26
 }
 
