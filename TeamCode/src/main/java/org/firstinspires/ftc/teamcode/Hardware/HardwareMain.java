@@ -4,9 +4,11 @@ package org.firstinspires.ftc.teamcode.Hardware;
  */
 
 import static org.firstinspires.ftc.teamcode.TeleOpV2.getLaunchAngle;
+import static org.firstinspires.ftc.teamcode.TeleOpV2.robot;
 
 import android.graphics.Color;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -27,7 +29,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcontroller.external.samples.SensorGoBildaPinpoint;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.TeleOpV2;
 
 import java.util.List;
@@ -60,6 +64,7 @@ public class HardwareMain {
 
     //*Setup IMU sensor object.
     public IMU imu;
+    public GoBildaPinpointDriver pinpoint;
 
     public DcMotorEx intakeMotor = null;
     public CRServo transferServo = null;
@@ -117,7 +122,7 @@ public class HardwareMain {
 
         //Save reference to Hardware map
         //Sensor.init(hardwareMap);
-
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         //TODO: Define and initialize IMU sensor on new Control Hub--new orientation of the control hub
         imu = hardwareMap.get(IMU.class, "imu");
@@ -492,6 +497,27 @@ public class HardwareMain {
                     steering_adjust = Kp * heading_error + min_command;
                 } else {
                     steering_adjust = Kp * heading_error - min_command;
+                }
+            }
+            turretMotor.setPower(steering_adjust);
+        }else{
+            turretMotor.setPower(0);
+        }
+    }
+
+    public void updateLimelightWithXVel(double offset){
+        LLResult result = limelight.getLatestResult();
+        if(result.getTx() != 0 && turretMotor.getCurrentPosition() < 833 && turretMotor.getCurrentPosition() > -833) {
+            double tx = result.getTx() + offset;
+            double min_command = 0.027;
+            double Kp = -0.024;
+            double heading_error = -tx;
+            double steering_adjust = 0.0;
+            if (Math.abs(heading_error) > 1.0) {
+                if (heading_error < 0) {
+                    steering_adjust = (Kp * heading_error + min_command) - (pinpoint.getVelX(DistanceUnit.INCH) * 0.02);
+                } else {
+                    steering_adjust = Kp * heading_error - min_command - (pinpoint.getVelX(DistanceUnit.INCH) * 0.02);
                 }
             }
             turretMotor.setPower(steering_adjust);

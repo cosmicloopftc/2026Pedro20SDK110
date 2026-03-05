@@ -198,15 +198,15 @@ public class TeleOpV2 extends OpMode {
         if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
             telemetry.addLine("ACCESSED");
             if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(-3.5);
+                robot.updateLimelightWithXVel(-3.5);
             }else{
-                robot.updateLimelight(0);
+                robot.updateLimelightWithXVel(0);
             }
         }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
             if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(2.75);
+                robot.updateLimelightWithXVel(2.75);
             }else{
-                robot.updateLimelight(0);
+                robot.updateLimelightWithXVel(0);
             }
         }else{
             robot.turretMotor.setPower(0);
@@ -541,6 +541,9 @@ public class TeleOpV2 extends OpMode {
         telemetry.addData("Distance to goal", HardwareMain.getDistanceToGoal());
         telemetry.addData("Angle to goal from lightlight", result.getTy());
         telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
+        telemetry.addData("Pinpoint offset 0.1", robot.pinpoint.getVelX(DistanceUnit.MM)*0.1);
+        telemetry.addData("Pinpoint offset 0.01", robot.pinpoint.getVelX(DistanceUnit.MM)*0.01);
+        telemetry.addData("Pinpoint offset 0.001", robot.pinpoint.getVelX(DistanceUnit.MM)*0.001);
         telemetry.addData("Shooter velocity TPS:", robot.leftShooterMotor.getVelocity());
 //        telemetry.addData("Spindexer position", robot.getSpindexerPosition());
 //        telemetry.addData("Spindexer position2", robot.spindexerServo.getPosition() == 0.38);
