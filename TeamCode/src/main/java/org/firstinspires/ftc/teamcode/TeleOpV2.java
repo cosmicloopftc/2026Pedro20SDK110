@@ -47,6 +47,9 @@ import java.util.function.Supplier;
 @Configurable
 @TeleOp(name = "TeleOpV2 v1")
 public class TeleOpV2 extends OpMode {
+
+    private TurretMechanism turret = new TurretMechanism();
+
     public static double distance;
     int autoPipeline;
     public static boolean shooterOn = false;
@@ -80,6 +83,10 @@ public class TeleOpV2 extends OpMode {
     final float[] back_hsvValues = new float[3];
     public String[] balls = {"NONE", "NONE", "NONE"};
     public int currentSlot = 1;
+    public boolean intakeSlotPosition = true;
+
+    //Analog spindexer non-intaking position ranges
+
 
     public double shooterSpeed;
 
@@ -99,6 +106,9 @@ public class TeleOpV2 extends OpMode {
     public void init() {
         robot.init(hardwareMap);
         robotDrivetrain.init(hardwareMap);
+
+        turret.init(hardwareMap);
+
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
         follower.update();
@@ -140,6 +150,8 @@ public class TeleOpV2 extends OpMode {
     }
 
     public void init_loop() {
+        telemetryM.addLine("Initialized all mechanisms");
+
 //        robot.limelight.pipelineSwitch(2);
         robot.LEDrightGreen.setMode(DigitalChannel.Mode.OUTPUT);
         robot.LEDrightRed.setMode(DigitalChannel.Mode.OUTPUT);
@@ -151,22 +163,28 @@ public class TeleOpV2 extends OpMode {
         robot.LEDleftRed.setState(true);
         if(gamepad2.left_bumper){
             robot.limelight.pipelineSwitch(0);
-//            autoPipeline = 0;
+// TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
+            autoPipeline = 0;
             telemetry.addLine("Red pipeline initialized");
         }else if(gamepad2.right_bumper){
             robot.limelight.pipelineSwitch(1);
-//            autoPipeline = 1;
+// TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
+            autoPipeline = 1;
             telemetry.addLine("Blue pipeline initialized");
         }
         telemetry.addData("AutoPipeline", autoPipeline);
         telemetry.update();
-        autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
+
+// TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
+//        autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
+
+
     }
 
     @Override
     public void start() {
         resetRuntime();
-
+        turret.resetTimer();
         //The parameter controls whether the Follower should use break mode on the motors (using it is recommended).
         //In order to use float mode, add .useBrakeModeInTeleOp(true); to your Drivetrain Constants in Constant.java (for Mecanum)
         //If you don't pass anything in, it uses the default (false)
@@ -189,28 +207,50 @@ public class TeleOpV2 extends OpMode {
         //AprilTagTracking
         LLResult result = robot.limelight.getLatestResult();
         List<LLResultTypes.FiducialResult> aprilTags = result.getFiducialResults();
-        telemetry.addData("Tx", result.getTx());
-        telemetry.addData("Is empty", aprilTags.isEmpty());
+        telemetryM.addData("Tx", result.getTx());
+        telemetryM.addData("Is empty", aprilTags.isEmpty());
         if(!aprilTags.isEmpty()) {
-            telemetry.addData("Id", aprilTags.get(0).getFiducialId());
+            telemetryM.addData("Id", aprilTags.get(0).getFiducialId());
         }
-        telemetry.addData("Auto pipeline", autoPipeline);
+        telemetryM.addData("Auto pipeline", autoPipeline);
+
+ //TODO: Dominic's method to aim turret to goal (autoPipeline 0=red goal, 1=blue goal)
+//        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
+//            telemetry.addLine("ACCESSED");
+//            if(getDistanceToGoal() > 80) {
+//                robot.updateLimelightWithXVel(-3.5);
+//            }else{
+//                robot.updateLimelightWithXVel(0);
+//            }
+//        }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
+//            if(getDistanceToGoal() > 80) {
+//                robot.updateLimelightWithXVel(2.75);
+//            }else{
+//                robot.updateLimelightWithXVel(0);
+//            }
+//        }else{
+//            robot.turretMotor.setPower(0);
+//        }
+
         if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
             telemetry.addLine("ACCESSED");
-            if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(-3.5);
-            }else{
-                robot.updateLimelight(0);
-            }
+            turret.update(result);
         }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
-            if(getDistanceToGoal() > 80) {
-                robot.updateLimelight(2.75);
-            }else{
-                robot.updateLimelight(0);
-            }
+            turret.update(result);
         }else{
             robot.turretMotor.setPower(0);
         }
+
+
+
+
+
+
+
+
+
+
+
 
         //close zone 163; far zone: 205
         shooterSpeed = robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES);
@@ -281,27 +321,51 @@ public class TeleOpV2 extends OpMode {
 
         switch (state) {
             case INTAKE:
-
-                robot.transferSTOP();
-                if (currentSlot == 1){
-                    robot.spindexerIntakeSlot1();
-                }
-                else if (currentSlot == 2){
-                    robot.spindexerIntakeSlot2();
-                }
-                else if (currentSlot == 3 && balls[2].equals("NONE")){
-                    robot.spindexerIntakeSlot3();
-                }
-
-                String ball = ballDetected();
-
-                if (!(ball.equals("NONE"))){
-                    balls[currentSlot - 1] = ball;
-                    if (currentSlot < 3) {
-                        currentSlot += 1;
+                robot.kickerDOWN();
+                if (intakeMode.equals("normal")) {
+                    double spindexerServoPosition = robot.getSpindexerServoPosition();
+                    if ((spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0) || (spindexerServoPosition > 0.37 && spindexerServoPosition < 0.4 && robot.spindexerServo.getPosition() == 0.37) || (spindexerServoPosition > 0.7 && spindexerServoPosition < 0.75 && robot.spindexerServo.getPosition() == 0.74)) {
+                        intakeSlotPosition = true;
+                    } else {
+                        intakeSlotPosition = false;
                     }
-                    else{
-                        robot.spindexerShootingSlot1(); // TODO: switch to shooting state? intake out? stop intake?
+
+
+                    if (currentSlot == 1) {
+                        robot.spindexerIntakeSlot1();
+                    } else if (currentSlot == 2) {
+                        robot.spindexerIntakeSlot2();
+                    } else if (currentSlot == 3 && balls[2].equals("NONE")) {
+                        robot.spindexerIntakeSlot3();
+                    }
+
+                    String ball = "NONE";
+                    if (intakeSlotPosition) {
+                        ball = ballDetected();
+                    } else {
+                        ball = "NONE";
+                    }
+
+                    if (!(ball.equals("NONE"))) {
+                        balls[currentSlot - 1] = ball;
+                        if (currentSlot < 2) {
+                            currentSlot = 2;
+                        } else if (currentSlot < 3) {
+                            currentSlot = 3;
+                        } else {
+                            robot.spindexerShootingSlot1(); // TODO: switch to shooting state? intake out? stop intake?
+                        }
+                    }
+                }
+                if (intakeMode.equals("manual")){
+                    if (gamepad1.left_trigger >= 0.2){
+                        robot.spindexerIntakeSlot1();
+                    }
+                    else if (gamepad1.left_bumper){
+                        robot.spindexerIntakeSlot2();
+                    }
+                    else if(gamepad1.right_trigger >= 0.2){
+                        robot.spindexerIntakeSlot3();
                     }
                 }
 
@@ -309,13 +373,15 @@ public class TeleOpV2 extends OpMode {
                     intakeMode = "normal";
                     robot.intakeIN();
                 }
+                else if (gamepad1.dpad_right){
+                    intakeMode = "manual";
+                    robot.intakeIN();
+                }
                 else if (gamepad1.dpad_down){
-                    intakeMode = "normal";
                     robot.intakeOUT();
                 }
 
-                else if (gamepad1.dpad_left || gamepad1.dpad_right || gamepad1.left_bumper) {
-                    intakeMode = "normal";
+                else if (gamepad1.dpad_left) {
                     robot.intakeSTOP();
                 }
                 else if (gamepad1.a){
@@ -324,11 +390,17 @@ public class TeleOpV2 extends OpMode {
 
                 if (gamepad2.b && (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isConnected() && robot.limelight.isRunning()))){
                     //robot.auto3Shoot();
+                    currentSlot = 4;
+                    robot.spindexerShootingSlot1();
+                    shootingMode = "all3check";
+
+                }
+                if (shootingMode.equals("all3check") && robot.getSpindexerServoPosition() > 0.87){
                     shootingMode = "all3";
                     timer.reset();
                     state = State.SHOOT;
                 }
-                else if (gamepad2.right_bumper){
+                else if (gamepad2.left_trigger >= 0.2 || gamepad2.left_bumper || gamepad2.right_trigger >= 0.2){
                     shootingMode = "manual";
                     state = State.SHOOT;
                 }
@@ -336,83 +408,69 @@ public class TeleOpV2 extends OpMode {
                 break;
             case SHOOT:
                 // Old version of all 3:
-//                if (shootingMode.equals("all3")){
-//                    if (timer.milliseconds() > 0 && timer.milliseconds() < 250){
-//                        robot.spindexerPosition1();
-//                        robot.transferUP();
-//                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
-//                    }
-//                    else if(timer.milliseconds() >= 250 && timer.milliseconds() < 450){
-//                        robot.spindexerPosition1();
-//                        robot.transferDOWN();
-//                    }
-//                    else if(timer.milliseconds() >= 450 && timer.milliseconds() < 900){
-//                        robot.spindexerPosition2();
-//                    }
-//                    else if(timer.milliseconds() >= 900 && timer.milliseconds() < 1150){
-//                        robot.spindexerPosition2();
-//                        robot.transferUP();
-//                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
-//                    }
-//                    else if(timer.milliseconds() >= 1150 && timer.milliseconds() < 1350){
-//                        robot.spindexerPosition2();
-//                        robot.transferDOWN();
-//                    }
-//                    else if(timer.milliseconds() >= 1350 && timer.milliseconds() < 1850){
-//                        robot.spindexerPosition3();
-//                    }
-//                    else if(timer.milliseconds() >= 1850 && timer.milliseconds() < 2150){
-//                        robot.spindexerPosition3();
-//                        robot.transferUP();
-//                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
-//                    }
-//                    else if(timer.milliseconds() >= 2150 && timer.milliseconds() < 2350){
-//                        robot.spindexerPosition3();
-//                        robot.transferDOWN();
-//                    }
-//                    else if(timer.milliseconds() > 2350){
-//                        robot.spindexerPosition1();
-//                        shootingMode = "none";
-//                    }
-//                }
-//                else if (shootingMode.equals("manual")){
-//                    if (gamepad2.right_bumper && (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isRunning() && robot.limelight.isConnected()))){
-//                        robot.transferUP();
-//                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
-//                        timer.reset();
-//                    }
-//                    else if(timer.milliseconds() > 200){
-//                        robot.transferDOWN();
-//                    }
-//                    if (gamepad2.left_trigger >= 0.2){
-//                        robot.spindexerPosition1();
-//                    }
-//                    else if (gamepad2.left_bumper){
-//                        robot.spindexerPosition2();
-//                    }
-//                    else if(gamepad2.right_trigger >= 0.2){
-//                        robot.spindexerPosition3();
-//                    }
-//                    if (gamepad1.dpad_up || gamepad2.x){
-//                        shootingMode = "none";
-//                    }
-//                }
-//                else if (shootingMode.equals("color")){
-//                    robot.intakeServoIN();
-//                    NormalizedRGBA rightColor = robot.rightBallColorSensor.getNormalizedColors();
-//                    NormalizedRGBA leftColor = robot.leftBallColorSensor.getNormalizedColors();
-//                    NormalizedRGBA backColor = robot.backBallColorSensor.getNormalizedColors();
-//                    Color.colorToHSV(rightColor.toColor(), right_hsvValues);
-//                    Color.colorToHSV(leftColor.toColor(), left_hsvValues);
-//                    Color.colorToHSV(backColor.toColor(), back_hsvValues);
-//
-//                    if (gamepad2.right_trigger > 0.1 && (ColorBallDetected(right_hsvValues[0]).equals("GREEN") || ColorBallDetected(left_hsvValues[0]).equals("GREEN") || ColorBallDetected(back_hsvValues[0]).equals("GREEN"))){
-//
-//                    }
-//                    else if (gamepad2.left_trigger > 0.2){
-//
-//                    }
-//                }
+                if (shootingMode.equals("all3")){
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 200){
+                        robot.spindexerShootingSlot1();
+                        robot.kickerUP();
+                        //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                    }
+                    else if(timer.milliseconds() >= 200 && timer.milliseconds() < 400){
+                        robot.spindexerShootingSlot1();
+                        robot.kickerDOWN();
+                    }
+                    else if(timer.milliseconds() >= 400 && timer.milliseconds() < 600){
+                        robot.spindexerShootingSlot2();
+                    }
+                    else if(timer.milliseconds() >= 600 && timer.milliseconds() < 800){
+                        robot.spindexerShootingSlot2();
+                        robot.kickerUP();
+                        //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                    }
+                    else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1000){
+                        robot.spindexerShootingSlot2();
+                        robot.kickerDOWN();
+                    }
+                    else if(timer.milliseconds() >= 1000 && timer.milliseconds() < 1200){
+                        robot.spindexerShootingSlot3();
+                    }
+                    else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1400){
+                        robot.spindexerShootingSlot3();
+                        robot.kickerUP();
+                        //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                    }
+                    else if(timer.milliseconds() >= 1400 && timer.milliseconds() < 1600){
+                        robot.spindexerShootingSlot3();
+                        robot.kickerDOWN();
+                    }
+                    else if(timer.milliseconds() > 1600){
+                        robot.spindexerShootingSlot3();
+                        currentSlot = 1;
+                        intakeSlotPosition = false;
+                        shootingMode = "none";
+                    }
+                }
+                else if (shootingMode.equals("manual")){
+                    if (gamepad2.right_bumper && (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isRunning() && robot.limelight.isConnected()))){
+                        robot.kickerUP();
+                        shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                        timer.reset();
+                    }
+                    else if(timer.milliseconds() > 150){
+                        robot.kickerDOWN();
+                    }
+                    if (gamepad2.left_trigger >= 0.2){
+                        robot.spindexerShootingSlot1();
+                    }
+                    else if (gamepad2.left_bumper){
+                        robot.spindexerShootingSlot2();
+                    }
+                    else if(gamepad2.right_trigger >= 0.2){
+                        robot.spindexerShootingSlot3();
+                    }
+                    if (gamepad1.dpad_up || gamepad2.x){
+                        shootingMode = "none";
+                    }
+                }
                 if (shootingMode.equals("none")){
                     state = State.INTAKE;
                 }
@@ -456,8 +514,8 @@ public class TeleOpV2 extends OpMode {
             if(result.isValid()){
                 robot.shooterVELO(currentSpeed);
             }
-            telemetry.addData("Target speed", currentSpeed);
-            telemetry.addData("Result", result.isValid());
+            telemetryM.addData("Target speed", currentSpeed);
+            telemetryM.addData("Result", result.isValid());
         }else{
             robot.shooterOFF();
         }
@@ -479,7 +537,8 @@ public class TeleOpV2 extends OpMode {
 
         //Call this once per loop
         follower.update();
-        telemetryM.update();
+        //telemetryM.update();
+
         if (!automatedDrive) {
             //Make the last parameter false for field-centric
             //In case the drivers want to use a "slowMode" you can scale the vectors
@@ -502,14 +561,14 @@ public class TeleOpV2 extends OpMode {
 
         if ((runtime.seconds() > 100) && endGameRumble20secondsLeftOnce) {
             rumble();
-            telemetry.addLine("20 SECONDS LEFT");
+            telemetryM.addLine("20 SECONDS LEFT");
             endGameRumble20secondsLeftOnce = false;
         }
 
         //3 rumble for 8 seconds left for hanging
         if ((runtime.seconds() > 110) && endGameRumble10secondsLeftOnce) {
             rumble();
-            telemetry.addLine("10 SECONDS");
+            telemetryM.addLine("10 SECONDS");
             endGameRumble10secondsLeftOnce = false;
         }
 
@@ -535,40 +594,58 @@ public class TeleOpV2 extends OpMode {
 //        if (gamepad2.yWasPressed()) {
 //            slowModeMultiplier -= 0.25;
 //        }
-        telemetry.addData("Is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
-        telemetry.addData("Hood position", robot.hoodServo.getPosition());
-        telemetry.addData("Launch angle", HardwareMain.getLaunchAngle());
-        telemetry.addData("Distance to goal", HardwareMain.getDistanceToGoal());
-        telemetry.addData("Angle to goal from lightlight", result.getTy());
-        telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
-        telemetry.addData("Shooter velocity TPS:", robot.leftShooterMotor.getVelocity());
+        telemetryM.addData("Is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
+//        telemetryM.addData("Hood position", robot.hoodServo.getPosition());
+//        telemetryM.addData("Launch angle", HardwareMain.getLaunchAngle());
+//        telemetryM.addData("Distance to goal", HardwareMain.getDistanceToGoal());
+//        telemetryM.addData("Angle to goal from lightlight", result.getTy());
+        telemetryM.addData("Hood position", Math.round(robot.hoodServo.getPosition()* 100)/100);
+        telemetryM.addData("Launch angle", Math.round(HardwareMain.getLaunchAngle()* 100)/100);
+        telemetryM.addData("Distance to goal",   Math.round( HardwareMain.getDistanceToGoal()* 10)/10);
+        telemetryM.addData("Angle to goal from lightlight", Math.round(result.getTx()* 10)/10);
+
+
+
+//TODO: comment out for now to use turret 360 degree PID method instead of previous one from Dominic
+//        telemetry.addData("Turret Motor Position:", robot.turretMotor.getCurrentPosition());
+//        telemetry.addData("Pinpoint offset 0.1", robot.pinpoint.getVelX(DistanceUnit.MM)*0.1);
+//        telemetry.addData("Pinpoint offset 0.01", robot.pinpoint.getVelX(DistanceUnit.MM)*0.01);
+//        telemetry.addData("Pinpoint offset 0.001", robot.pinpoint.getVelX(DistanceUnit.MM)*0.001);
+//        telemetry.addData("Shooter velocity TPS:", robot.leftShooterMotor.getVelocity());
+
+
 //        telemetry.addData("Spindexer position", robot.getSpindexerPosition());
 //        telemetry.addData("Spindexer position2", robot.spindexerServo.getPosition() == 0.38);
 //        String[] target = {"PURPLE BALL", "GREEN BALL", "PURPLE BALL"};
 //        telemetry.addData("Current sorted shot", robot.getSortingPosition(target, new String[3], 1));
 
+        telemetryM.addLine("");
+        telemetryM.addData("rightShooter AngVel (deg/s?): ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));
+        telemetryM.addData("leftShooter  AngVel (deg/s?): ", robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
 
-        telemetry.addData("rightShooter AngVel (deg/s?): ", robot.rightShooterMotor.getVelocity(AngleUnit.DEGREES));
-        telemetry.addData("leftShooter  AngVel (deg/s?): ", robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
 
-        telemetryM.debug("position", follower.getPose());
-        telemetryM.debug("velocity", follower.getVelocity());
-        telemetryM.debug("automatedDrive", automatedDrive);
-
-        telemetry.addData("Left digital 0", robot.leftColorPin0.getState());
-        telemetry.addData("Left digital 1", robot.leftColorPin1.getState());
-        telemetry.addData("Right digital 0: 5 mm away", robot.rightColorPin0.getState());
-        telemetry.addData("Right digital 1: 10 mm away", robot.rightColorPin1.getState());
-        telemetry.addData("BALL = ", ballDetected());
-        telemetry.addData("Slot 1 = ", balls[0]);
-        telemetry.addData("Slot 2 = ", balls[1]);
-        telemetry.addData("Slot 3 = ", balls[2]);
+        telemetryM.addData("Left digital 0", robot.leftColorPin0.getState());
+        telemetryM.addData("Left digital 1", robot.leftColorPin1.getState());
+        telemetryM.addData("Right digital 0: 5 mm away", robot.rightColorPin0.getState());
+        telemetryM.addData("Right digital 1: 10 mm away", robot.rightColorPin1.getState());
+        telemetryM.addData("BALL = ", ballDetected());
+        telemetryM.addData("Slot 1 = ", balls[0]);
+        telemetryM.addData("Slot 2 = ", balls[1]);
+        telemetryM.addData("Slot 3 = ", balls[2]);
+//        telemetryM.addData("Spindexer Analog Position: ", robot.getSpindexerServoPosition());
+        telemetryM.addData("Spindexer Analog Position: ", (double) Math.round(robot.getSpindexerServoPosition() * 100) / 100);
 
         telemetryM.addLine("");
-        telemetryM.debug("loopCycleTime (ms): " + (double) Math.round(loopCycleTime.milliseconds() * 100) / 100);
+        telemetryM.debug("loopCycleTime (ms): " + (double) Math.round(loopCycleTime.milliseconds()));
+
+        telemetryM.addLine("");
+        telemetryM.debug("position", follower.getPose());
+        telemetryM.debug("velocity", follower.getVelocity());
+        telemetryM.debug("automatedDrive: " + automatedDrive);
+
 
         telemetryM.update(telemetry);
-        telemetry.update();
+//        telemetry.update();
 
 //        telemetry.addLine()
 //                .addData("Hue", "%.3f", left_hsvValues[0])
@@ -581,8 +658,8 @@ public class TeleOpV2 extends OpMode {
 
     @Override
     public void stop(){
-        telemetry.addData("", shootingResults);
-        telemetry.update();
+        telemetryM.addData("", shootingResults);
+        telemetryM.update(telemetry);
     }
 
 

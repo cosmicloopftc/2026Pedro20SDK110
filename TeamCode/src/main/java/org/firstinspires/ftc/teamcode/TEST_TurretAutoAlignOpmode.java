@@ -118,7 +118,7 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
         }
 
         telemetryM.addLine("---------------------------------");
-        telemetry.addLine(turret.getPIDmethod());
+        telemetryM.addLine(turret.getPIDmethod());
         telemetry.addData("Tuning P", "%.5f (D-Pad L/R)", turret.getkP());
         telemetry.addData("Tuning D", "%.5f (D-Pad U/D)", turret.getkD());
         telemetry.addData("Step Size for P", "%.5f (Y Button)", PstepSizes[PstepIndex]);

@@ -35,8 +35,8 @@ public class TurretMechanism {
     private String PIDmethod;
     private DcMotorEx turretMotor;
 
-    public static double kP = 0.028;
-    public static double kD = 0.00008;
+    public static double kP = 0.023;
+    public static double kD = 0.00023;
 
     private double goalX = 0;
     private double lastError = 0;
