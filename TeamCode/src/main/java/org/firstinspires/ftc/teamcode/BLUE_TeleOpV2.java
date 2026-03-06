@@ -3,8 +3,6 @@ package org.firstinspires.ftc.teamcode;
 //             in HardwareMain, and in TeleOpV2.java
 
 
-import android.graphics.Color;
-
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -18,24 +16,20 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareDrivetrainNOTusingPedroPath;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -45,13 +39,14 @@ import java.util.function.Supplier;
  */
 
 @Configurable
-@TeleOp(name = "TeleOpV2 v1")
-public class TeleOpV2 extends OpMode {
+@TeleOp(name = "BLUE TeleOpV2 v1", group = "BLUE")
+public class BLUE_TeleOpV2 extends OpMode {
 
     private TurretMechanism turret = new TurretMechanism();
 
     public static double distance;
-    int autoPipeline;
+    int autoPipeline =1;                    // TODO: set pipeline to blue
+
     public static boolean shooterOn = false;
     public static int currentSpeed = -210;
 
@@ -140,7 +135,9 @@ public class TeleOpV2 extends OpMode {
  //       }
 
         //Stores pipeline from auto
-        autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
+ //       autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
+//        autoPipeline = 1;  // TODO: set pipeline to blue
+        robot.limelight.pipelineSwitch(autoPipeline);
 
         //This has been moved to the HardwareMain class
 //        robot.rightBallColorSensor.setGain(4.5F);
@@ -161,22 +158,22 @@ public class TeleOpV2 extends OpMode {
         robot.LEDleftGreen.setState(true);
         robot.LEDrightRed.setState(true);
         robot.LEDleftRed.setState(true);
-        if(gamepad2.left_bumper){
-            robot.limelight.pipelineSwitch(0);
-// TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
-            autoPipeline = 0;
-            telemetry.addLine("Red pipeline initialized");
-        }else if(gamepad2.right_bumper){
-            robot.limelight.pipelineSwitch(1);
-// TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
-            autoPipeline = 1;
-            telemetry.addLine("Blue pipeline initialized");
-        }
+//        if(gamepad2.left_bumper){
+//            robot.limelight.pipelineSwitch(0);
+//// TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
+//            autoPipeline = 0;
+//            telemetry.addLine("Red pipeline initialized");
+//        }else if(gamepad2.right_bumper){
+//            robot.limelight.pipelineSwitch(1);
+//// TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
+//            autoPipeline = 1;
+//            telemetry.addLine("Blue pipeline initialized");
+//        }
         telemetry.addData("AutoPipeline", autoPipeline);
         telemetry.update();
 
 // TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
-//        autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
+  //      autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
 
 
     }
@@ -190,8 +187,8 @@ public class TeleOpV2 extends OpMode {
         //If you don't pass anything in, it uses the default (false)
         follower.startTeleopDrive();
         follower.update();
-        robot.limelight.pipelineSwitch(3);
         robot.limelight.start();
+//        robot.limelight.pipelineSwitch(1);
         robot.LEDrightGreen.setState(false);
         robot.LEDleftGreen.setState(false);
         robot.LEDrightRed.setState(false);
@@ -324,36 +321,45 @@ public class TeleOpV2 extends OpMode {
                 robot.kickerDOWN();
                 if (intakeMode.equals("normal")) {
                     double spindexerServoPosition = robot.getSpindexerServoPosition();
-                    if ((spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0) || (spindexerServoPosition > 0.37 && spindexerServoPosition < 0.4 && robot.spindexerServo.getPosition() == 0.37) || (spindexerServoPosition > 0.7 && spindexerServoPosition < 0.75 && robot.spindexerServo.getPosition() == 0.74)) {
-                        intakeSlotPosition = true;
-                    } else {
-                        intakeSlotPosition = false;
+//                    if ((spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0) || (spindexerServoPosition > 0.37 && spindexerServoPosition < 0.4 && robot.spindexerServo.getPosition() == 0.37) || (spindexerServoPosition > 0.7 && spindexerServoPosition < 0.75 && robot.spindexerServo.getPosition() == 0.74)) {
+//                        intakeSlotPosition = true;
+//                    } else {
+//                        intakeSlotPosition = false;
+//                    }
+                    if (spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0){
+                        currentSlot = 1;
+                    }
+                    else if (spindexerServoPosition > 0.37 && spindexerServoPosition < 0.4 && robot.spindexerServo.getPosition() == 0.37){
+                        currentSlot = 2;
+                    }
+                    else if (spindexerServoPosition > 0.7 && spindexerServoPosition < 0.75 && robot.spindexerServo.getPosition() == 0.74){
+                        currentSlot = 3;
                     }
 
-
-                    if (currentSlot == 1) {
+                    if (currentSlot == 1 && balls[0].equals("NONE")) {
                         robot.spindexerIntakeSlot1();
-                    } else if (currentSlot == 2) {
-                        robot.spindexerIntakeSlot2();
-                    } else if (currentSlot == 3 && balls[2].equals("NONE")) {
-                        robot.spindexerIntakeSlot3();
-                    }
+                    } //else if (currentSlot == 2) {
+//                        robot.spindexerIntakeSlot2();
+//                    } else if (currentSlot == 3 && balls[2].equals("NONE")) {
+//                        robot.spindexerIntakeSlot3();
+//                    }
 
-                    String ball = "NONE";
-                    if (intakeSlotPosition) {
-                        ball = ballDetected();
-                    } else {
-                        ball = "NONE";
-                    }
+                    String ball = ballDetected();
+//                    if (intakeSlotPosition) {
+//                        ball = ballDetected();
+//                    } else {
+//                        ball = "NONE";
+//                    }
 
                     if (!(ball.equals("NONE"))) {
                         balls[currentSlot - 1] = ball;
-                        if (currentSlot < 2) {
-                            currentSlot = 2;
-                        } else if (currentSlot < 3) {
-                            currentSlot = 3;
+                        if (currentSlot == 1) {
+                            robot.spindexerIntakeSlot2();
+                        } else if (currentSlot == 2) {
+                            robot.spindexerIntakeSlot3();
                         } else {
                             robot.spindexerShootingSlot1(); // TODO: switch to shooting state? intake out? stop intake?
+
                         }
                     }
                 }
@@ -369,7 +375,7 @@ public class TeleOpV2 extends OpMode {
                     }
                 }
 
-                if (gamepad1.dpad_up){
+                if (gamepad1.dpad_up && !(robot.getSpindexerServoPosition() > 0.87)){
                     intakeMode = "normal";
                     robot.intakeIN();
                 }
@@ -383,6 +389,14 @@ public class TeleOpV2 extends OpMode {
 
                 else if (gamepad1.dpad_left) {
                     robot.intakeSTOP();
+                }
+                else if (robot.getSpindexerServoPosition() > 0.87){
+                    if (gamepad1.dpad_down){
+                        robot.intakeOUT();
+                    }
+                    else{
+                        robot.intakeSTOP();
+                    }
                 }
                 else if (gamepad1.a){
                     state = State.SHOOT;
@@ -418,37 +432,80 @@ public class TeleOpV2 extends OpMode {
                         robot.spindexerShootingSlot1();
                         robot.kickerDOWN();
                     }
-                    else if(timer.milliseconds() >= 400 && timer.milliseconds() < 600){
+                    else if(timer.milliseconds() >= 400 && timer.milliseconds() < 700){
                         robot.spindexerShootingSlot2();
                     }
-                    else if(timer.milliseconds() >= 600 && timer.milliseconds() < 800){
+                    else if(timer.milliseconds() >= 700 && timer.milliseconds() < 900){
                         robot.spindexerShootingSlot2();
                         robot.kickerUP();
                         //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                     }
-                    else if(timer.milliseconds() >= 800 && timer.milliseconds() < 1000){
+                    else if(timer.milliseconds() >= 900 && timer.milliseconds() < 1100){
                         robot.spindexerShootingSlot2();
                         robot.kickerDOWN();
                     }
-                    else if(timer.milliseconds() >= 1000 && timer.milliseconds() < 1200){
+                    else if(timer.milliseconds() >= 1100 && timer.milliseconds() < 1400){
                         robot.spindexerShootingSlot3();
-                    }
-                    else if(timer.milliseconds() >= 1200 && timer.milliseconds() < 1400){
-                        robot.spindexerShootingSlot3();
-                        robot.kickerUP();
-                        //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                     }
                     else if(timer.milliseconds() >= 1400 && timer.milliseconds() < 1600){
                         robot.spindexerShootingSlot3();
+                        robot.kickerUP();
+                        //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+                    }
+                    else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 1800){
+                        robot.spindexerShootingSlot3();
                         robot.kickerDOWN();
                     }
-                    else if(timer.milliseconds() > 1600){
+                    else if(timer.milliseconds() > 1800){
                         robot.spindexerShootingSlot3();
+                        Arrays.fill(balls, "NONE");
                         currentSlot = 1;
                         intakeSlotPosition = false;
                         shootingMode = "none";
                     }
                 }
+//                else if (shootingMode.equals("all3analog")){
+//                    if (timer.milliseconds() > 0 && timer.milliseconds() < 200){
+//                        robot.spindexerShootingSlot1();
+//                        robot.kickerUP();
+//                        //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+//                    }
+//                    else if(timer.milliseconds() >= 200 && timer.milliseconds() < 400){
+//                        robot.spindexerShootingSlot1();
+//                        robot.kickerDOWN();
+//                    }
+//                    else if(timer.milliseconds() >= 400 && timer.milliseconds() < 700){
+//                        robot.spindexerShootingSlot2();
+//                    }
+//                    else if(timer.milliseconds() >= 700 && timer.milliseconds() < 900){
+//                        robot.spindexerShootingSlot2();
+//                        robot.kickerUP();
+//                        //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+//                    }
+//                    else if(timer.milliseconds() >= 900 && timer.milliseconds() < 1100){
+//                        robot.spindexerShootingSlot2();
+//                        robot.kickerDOWN();
+//                    }
+//                    else if(timer.milliseconds() >= 1100 && timer.milliseconds() < 1400){
+//                        robot.spindexerShootingSlot3();
+//                    }
+//                    else if(timer.milliseconds() >= 1400 && timer.milliseconds() < 1600){
+//                        robot.spindexerShootingSlot3();
+//                        robot.kickerUP();
+//                        //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+//                    }
+//                    else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 1800){
+//                        robot.spindexerShootingSlot3();
+//                        robot.kickerDOWN();
+//                    }
+//                    else if(timer.milliseconds() > 1800){
+//                        robot.spindexerShootingSlot3();
+//                        Arrays.fill(balls, "NONE");
+//                        currentSlot = 1;
+//                        intakeSlotPosition = false;
+//                        shootingMode = "none";
+//                    }
+//                }
                 else if (shootingMode.equals("manual")){
                     if (gamepad2.right_bumper && (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isRunning() && robot.limelight.isConnected()))){
                         robot.kickerUP();
@@ -467,9 +524,9 @@ public class TeleOpV2 extends OpMode {
                     else if(gamepad2.right_trigger >= 0.2){
                         robot.spindexerShootingSlot3();
                     }
-                    if (gamepad1.dpad_up || gamepad2.x){
-                        shootingMode = "none";
-                    }
+                }
+                if (gamepad1.dpad_up || gamepad2.x){
+                    shootingMode = "none";
                 }
                 if (shootingMode.equals("none")){
                     state = State.INTAKE;
@@ -507,9 +564,9 @@ public class TeleOpV2 extends OpMode {
         }
         if(shooterOn){
             if(getDistanceToGoal() > 80 && result.isValid()) {
-                currentSpeed = -208;
+                currentSpeed = -214;
             }else if(result.isValid()){
-                currentSpeed = -165;
+                currentSpeed = -168;
             }
             if(result.isValid()){
                 robot.shooterVELO(currentSpeed);
