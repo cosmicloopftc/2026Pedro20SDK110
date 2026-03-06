@@ -4,23 +4,33 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.PathChain;
+import com.pedropathing.util.PoseHistory;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.Hardware.HardwareDrivetrainNOTusingPedroPath;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 @Configurable
-@TeleOp(name= "TEST_TurretAutoAlign V1", group = "Test")
+@TeleOp(name= "TEST_TurretAutoAlign V1.1", group = "Test")
 
 public class TEST_TurretAutoAlignOpmode extends OpMode {
 
     public static HardwareMain robot = new HardwareMain();
+    HardwareDrivetrainNOTusingPedroPath robotDrivetrain = new HardwareDrivetrainNOTusingPedroPath();
     private TurretMechanism turret = new TurretMechanism();
 
     @IgnoreConfigurable
@@ -35,17 +45,41 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
     int PstepIndex = 2;
     int DstepIndex = 2;
 
+    int maxAllowTurretTick = 829, minAllowTurretTick = - -840, turretTickAt90Degree = 667;       //set limit of Turret position on robot
+    double turretAngleRelativeToRobot_Deg, turretAngleRelativeToField_Deg;
 
-
+    private Follower follower;
+    public static Pose startingPose; //See ExampleAuto to understand how to use this
+    private boolean automatedDrive;
+    private Supplier<PathChain> pathChain;
+    @IgnoreConfigurable
+    static PoseHistory poseHistory;
+    public static double distance;
+    int autoPipeline =0;                    // TODO: set pipeline to red
 
 
     @Override
     public void init() {
-
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         robot.init(hardwareMap);
         //robot.turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robotDrivetrain.init(hardwareMap);
+
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+        follower.update();
+        poseHistory = follower.getPoseHistory();
+        //Set up bulk data reading
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+        follower.setPose(new Pose(0, 0, 0));
+
+
+
+
 
         robot.limelight.pipelineSwitch(0);
         turret.init(hardwareMap);
@@ -74,6 +108,16 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
         turret.resetTimer();
         robot.limelight.start();
         resetRuntime();
+
+
+        //The parameter controls whether the Follower should use break mode on the motors (using it is recommended).
+        //In order to use float mode, add .useBrakeModeInTeleOp(true); to your Drivetrain Constants in Constant.java (for Mecanum)
+        //If you don't pass anything in, it uses the default (false)
+        follower.startTeleopDrive();
+        follower.update();
+
+
+
     }
 
     @Override
@@ -84,7 +128,25 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
         LLResult id24 = robot.limelight.getLatestResult();
         List<LLResultTypes.FiducialResult> aprilTags = id24.getFiducialResults();
 
-        turret.update(id24);
+
+
+
+
+
+//TODO: testing turret aiming by LimeLight vs. Pedropathing location
+        //turret.update(id24);
+        double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
+                .getYaw(AngleUnit.DEGREES);
+        double robotPedroPathHeadingDeg = Math.toDegrees(follower.getPose().getHeading());
+        turretAngleRelativeToRobot_Deg = robot.turretMotor.getCurrentPosition()*90/turretTickAt90Degree;
+        turretAngleRelativeToField_Deg =  robotPedroPathHeadingDeg - turretAngleRelativeToRobot_Deg;
+
+        //turret.updateByPedroPath(turretAngleRelativeToField_Deg);
+
+
+
+
+
 
 
         if (gamepad1.yWasPressed()) {
@@ -118,7 +180,7 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
         }
 
         telemetryM.addLine("---------------------------------");
-        telemetryM.addLine(turret.getPIDmethod());
+        //telemetryM.addLine(turret.getPIDmethod());
         telemetry.addData("Tuning P", "%.5f (D-Pad L/R)", turret.getkP());
         telemetry.addData("Tuning D", "%.5f (D-Pad U/D)", turret.getkD());
         telemetry.addData("Step Size for P", "%.5f (Y Button)", PstepSizes[PstepIndex]);
@@ -148,7 +210,17 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
         telemetryM.addData("RunTime (s): ", (double) Math.round(getRuntime()* 10) / 10);
         telemetryM.debug("loopCycleTime (ms): " + (double) Math.round(loopCycleTime.milliseconds() * 100) / 100);
 
+
+        telemetryM.addLine("");
+        telemetryM.addLine("");
+
+        telemetryM.addData("robotImuHeadingDeg (degrees) = ",  (double) Math.round(robotImuHeadingDeg) * 10 / 10);
+        telemetryM.addData("robotPedroPathHeadingDeg (degrees) = ",  (double) Math.round(robotPedroPathHeadingDeg) * 10 / 10);
+        telemetryM.addLine("");
+        telemetryM.addData("turretAngleRelativeToField_Deg = ", (double) Math.round(turretAngleRelativeToField_Deg) * 10 / 10);
+
         telemetryM.update(telemetry);
+
 
 //        telemetry.addData("Tuning P", "%.5f (D-Pad L/R)", turret.getkP());
 //        telemetry.addData("Tuning D", "%.5f (D-Pad U/D)", turret.getkD());
