@@ -3,9 +3,13 @@ package org.firstinspires.ftc.teamcode;
 /** copy over from Marcus' branch 1/18/2026
  */
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+
 import android.sax.StartElementListener;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -13,7 +17,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 //FTC Thunderbolts (S0acramento, CA) mentor program structure
@@ -24,12 +31,17 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 
 public class TurretMechanism {
-//TODO: this is for PID method 2--difficult to tune
+    private double correctedTurretAngleWhileMoving = 0;     //TODO: negative when aiming to right goal
+    private double xVel_Robot = 0;
 
+//TODO: this is for PID method 2--difficult to tune
 //    private double accumulatedError = 0;
 //    private double lastTime = 0;
 //    private double kI = 0;
 //    boolean firstDetectID = false;
+
+
+    private double goalTurretAngleRelField = -14.0;
 
 
     private String PIDmethod;
@@ -51,6 +63,7 @@ public class TurretMechanism {
     public void init(HardwareMap hardwareMap) {
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretMotor");
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
     }
 
 
@@ -85,6 +98,19 @@ public class TurretMechanism {
     public void update(LLResult curID) {
         double deltaTime = timer.seconds();
         timer.reset();
+
+
+
+
+        //TODO: calculate turret angle adjustment in order to shoot while moving.
+//        double xVel_Robot = follower.getVelocity().getXComponent();
+//        LLResultTypes.FiducialResult tag = curID.getFiducialResults().get(0);
+//        Pose3D pose = tag.getTargetPoseCameraSpace();
+//        double x = pose.getPosition().x;
+//        double y = pose.getPosition().y;
+//        double angleToTag = Math.toDegrees(Math.atan2(y, x));
+ //       telemetryM.addData("angleToTag", angleToTag);
+
 
 //        //TODO: testing of turret turning based on lastError when limeLight no longer detect the tag when robot turn quickly.
 //        if ((firstDetectID = true) && (curID == null)){
@@ -161,9 +187,40 @@ public class TurretMechanism {
 
         turretMotor.setPower(power);
         lastError = error;
-
-
     }
+
+
+    public void updateByPedroPath(double currentTurretAngleRelField_Deg, double goalTurretAngleRelField_Deg) {
+        double deltaTime = timer.seconds();
+        timer.reset();
+//TODO: PID controller method 1
+        // ------------ start PD controller -------------
+        PIDmethod = "PD w/ feed forward controller ";
+        double error = goalTurretAngleRelField_Deg - currentTurretAngleRelField_Deg;
+        double pTerm = error * kP;
+        double dTerm = 0;
+        if (deltaTime > 0) {
+            dTerm = ((error - lastError) / deltaTime) * kD;
+        }
+        if (Math.abs(error) < angleTolerance){
+            power = 0;
+        } else {
+            power = -Range.clip(
+                    (0.05)*Math.signum(error) + pTerm + dTerm,
+                    -MAX_POWER, MAX_POWER);
+            //Math.signum(d)
+            //1.0 (or 1.0f) if the number passed is greater than zero.
+            //-1.0 (or -1.0f) if the number passed is less than zero.
+            //0.0 (or 0.0f) if the number passed is equal to zero.
+        }
+
+        turretMotor.setPower(power);
+        lastError = error;
+    }
+
+
+
+
 
 
 //    public void update(AprilTagDetection curID) {

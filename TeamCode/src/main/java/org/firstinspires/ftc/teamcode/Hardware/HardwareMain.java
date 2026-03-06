@@ -3,16 +3,9 @@ package org.firstinspires.ftc.teamcode.Hardware;
 /** copy over from Marcus' branch 1/18/2026
  */
 
-import static org.firstinspires.ftc.teamcode.TeleOpV2.getLaunchAngle;
-import static org.firstinspires.ftc.teamcode.TeleOpV2.robot;
-
-import android.graphics.Color;
-
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -22,19 +15,13 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SensorGoBildaPinpoint;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.TeleOpV2;
-
-import java.util.List;
+import org.firstinspires.ftc.teamcode.BLUE_TeleOpV2;
 
 //modified from FTC Thunderbolts (Sacramento, CA) mentor's program structure
 //***This was setup for OpMode but can be it used for LinearOpMode also?
@@ -117,7 +104,7 @@ public class HardwareMain {
 
     /* Initialize standard Hardware interface */
     public void init(HardwareMap hardwareMap)    {
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(270, 0.0001, 0.0002, 13.94);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(50, 0.0001, 0.0005, 12.1);
 
         //Save reference to Hardware map
         //Sensor.init(hardwareMap);
@@ -127,7 +114,7 @@ public class HardwareMain {
         imu = hardwareMap.get(IMU.class, "imu");
         //Define how the hub is mounted on robot to get correct Yaw, Pitch and Roll values.
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.DOWN;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         //Initialize IMU with this mounting orientation
         imu.initialize(new IMU.Parameters(orientationOnRobot));
@@ -422,7 +409,7 @@ public class HardwareMain {
     public static double getDistanceToGoal(){
         LLResult result = limelight.getLatestResult();
         if(!result.isValid()){
-            return TeleOpV2.distance;
+            return BLUE_TeleOpV2.distance;
         }
         double targetOffsetAngle_Vertical = result.getTy();
         // how many degrees back is your limelight rotated from perfectly vertical?
@@ -449,10 +436,13 @@ public class HardwareMain {
             double g = 9.8;
 
             double v = 7.3;
-            if (getDistanceToGoal() < 80 && getDistanceToGoal() > 47) {
+            if (getDistanceToGoal() < 80
+//                    && getDistanceToGoal() > 47
+                   )
+            {
                 v = 6.2;
-            }else if(getDistanceToGoal() < 47){
-                v = 5.8;
+//            }else if(getDistanceToGoal() < 47){
+//                v = 5.8;
             }
 
             //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
@@ -467,13 +457,13 @@ public class HardwareMain {
 
             double result = -0.0312086 * (Math.min(theta1, theta2) * 180 / Math.PI) + 1.80914;
             if (getDistanceToGoal() > 80) {
-                result = result - 0.03;
+                result = result - 0.04;
             }
 
             if (result < 0) {
                 result = 0;
-            } else if (result >= 0.81) {
-                result = 0.78;
+            } else if (result >= 0.76) {
+                result = 0.76;
             }
             return result;
         } catch (Exception e) {

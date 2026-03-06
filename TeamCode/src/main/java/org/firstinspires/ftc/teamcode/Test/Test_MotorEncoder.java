@@ -1,6 +1,11 @@
 package org.firstinspires.ftc.teamcode.Test;
 
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+
+import com.bylazar.configurables.annotations.IgnoreConfigurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -21,6 +26,8 @@ import java.util.List;
 public class Test_MotorEncoder extends OpMode {
     //This method will be called once, when the INIT button is pressed.
     public static HardwareMain robot = new HardwareMain();
+    @IgnoreConfigurable
+    public static TelemetryManager telemetryM;
 
     ElapsedTime runtime = new ElapsedTime(); ;
     ElapsedTime lastButtonPushTimeA;
@@ -29,7 +36,8 @@ public class Test_MotorEncoder extends OpMode {
 
     private boolean isPushed_dPad_up, isPushed_dPad_down;
     int  currentEncoder;
-
+    int maxAllowTurretTick = 829, minAllowTurretTick = - -840, turretTickAt90Degree = 667;       //set limit of Turret position on robot
+    double turretAngleRelativeToRobot;
 
     public void init() {
         robot.init(hardwareMap);
@@ -38,14 +46,15 @@ public class Test_MotorEncoder extends OpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
+        telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     }
 
     public void init_loop () {
 
-        telemetry.addData("Motor encoder value at start = ", robot.turretMotor.getCurrentPosition());
-        telemetry.addLine("Press dPad_up to increase (Gamepad 1.");
-        telemetry.addLine("Press dPad_down to increase.");
-        telemetry.update();
+        telemetryM.addData("Motor encoder value at start = ", robot.turretMotor.getCurrentPosition());
+        telemetryM.addLine("Press dPad_up to increase (Gamepad 1.");
+        telemetryM.addLine("Press dPad_down to increase.");
+        telemetryM.update(telemetry);
         }
 
     public void start () {
@@ -77,8 +86,9 @@ public class Test_MotorEncoder extends OpMode {
 
         robot.turretMotor.setPower(gamepad1.left_stick_y);
 
-        telemetry.addData("Motor encoder value at start = ", robot.turretMotor.getCurrentPosition());
-        telemetry.update();
+        telemetryM.addData("Motor encoder value at start = ", robot.turretMotor.getCurrentPosition());
+        telemetryM.addData("turretAngleRelRobot = ", robot.turretMotor.getCurrentPosition()*90/turretTickAt90Degree);
+        telemetryM.update(telemetry);
 
 
     }
