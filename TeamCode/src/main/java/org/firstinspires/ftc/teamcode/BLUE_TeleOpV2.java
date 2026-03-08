@@ -369,6 +369,10 @@ public class BLUE_TeleOpV2 extends OpMode {
 //            robot.transferUP();
 //        }
 
+        if(gamepad1.leftBumperWasPressed()){
+            robot.spindexerServo.setPosition(robot.spindexerServo.getPosition() + 0.01);
+        }
+
         switch (state) {
             case INTAKE:
                 robot.kickerDOWN();

@@ -285,32 +285,29 @@ public class HardwareMain {
     }
 
     public void spindexerIntakeSlot1(){
-        spindexerPosition = 1;
         spindexerServo.setPosition(0);
     }
     public void spindexerIntakeSlot2(){
-        spindexerPosition = 2;
         spindexerServo.setPosition(0.37);
     }
     public void spindexerIntakeSlot3(){
-        spindexerPosition = 3;
         spindexerServo.setPosition(0.74);
     }
 
     public void spindexerShootingSlot1(){
-        spindexerPosition = 1;
         spindexerServo.setPosition(0.925);
     }
     public void spindexerShootingSlot2(){
-        spindexerPosition = 2;
         spindexerServo.setPosition(0.555);
     }
     public void spindexerShootingSlot3(){
-        spindexerPosition = 3;
         spindexerServo.setPosition(0.185);
 
     }
 
+    public void spindexerShootingSlot2Auto(){
+        spindexerServo.setPosition(0.58);
+    }
 
 //    public void setSpindexerPosition(int position){
 //        if(position == 1){

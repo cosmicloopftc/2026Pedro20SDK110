@@ -4,6 +4,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -60,6 +61,7 @@ public class AutoBlueFar extends OpMode {
                 .addPath(new BezierLine(pickup1Pose, pickup1Pose2))
                 .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose2.getHeading())
                 .setConstraints(Constants.pathConstraints)
+                .setVelocityConstraint(2.5)
                 .build();
 
         /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -102,7 +104,7 @@ public class AutoBlueFar extends OpMode {
         switch (pathState) {
             case 0:
                 if (!follower.isBusy()) {
-                    robot.spindexerIntakeSlot1();
+                    robot.spindexerShootingSlot1();
                     robot.hoodServo.setPosition(0.75);
                     robot.shooterVELO(-208);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
@@ -112,7 +114,7 @@ public class AutoBlueFar extends OpMode {
                         startRunningLimelight = true;
                     }
                     if(pathTimer.getElapsedTime() > 2000) {
-                        robot.transferUP();
+                        robot.kickerUP();
 //                        robot.intakeServoIN();
                         pathTimer.resetTimer();
                         setPathState(1);
@@ -123,38 +125,38 @@ public class AutoBlueFar extends OpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    time = 1000;
-                    if((pathTimer.getElapsedTime() < 1000)){
-                        robot.intakeOUT();
+                    time = 750;
+                    if((pathTimer.getElapsedTime() < time)){
+                        robot.intakeIN();
 //                        robot.intakeServoOUT();
-                        robot.transferUP();
-                    }else if(pathTimer.getElapsedTime() < time+250) {
-                        robot.transferDOWN();
+                        robot.kickerUP();
+                    }else if(pathTimer.getElapsedTime() < time+200) {
+                        robot.kickerDOWN();
 //                        robot.intakeServoIN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+1000) {
-                        robot.spindexerIntakeSlot2();
-                    }else if(pathTimer.getElapsedTime() < time+1750) {
-                        robot.transferUP();
+                    else if(pathTimer.getElapsedTime() < time+400) {
+                        robot.spindexerShootingSlot2();
+                    }else if(pathTimer.getElapsedTime() < time+1700) {
+                        robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2000) {
-                        robot.transferDOWN();
+                    else if(pathTimer.getElapsedTime() < time+1900) {
+                        robot.kickerDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2750) {
-                        robot.spindexerIntakeSlot3();
+                    else if(pathTimer.getElapsedTime() < time+2300) {
+                        robot.spindexerShootingSlot3();
                     }
-                    else if(pathTimer.getElapsedTime() < time+3250) {
-                        robot.transferUP();
+                    else if(pathTimer.getElapsedTime() < time+2600) {
+                        robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+4000) {
-                        robot.transferDOWN();
+                    else if(pathTimer.getElapsedTime() < time+2900) {
+                        robot.kickerDOWN();
                         robot.spindexerIntakeSlot1();
-
+                        robot.intakeOUT();
 //                        robot.shooterOFF();
                         if(firstTime) {
                             setPathState(2);
                         }else if(secondTime){
-                            setPathState(5);
+                            setPathState(12);
                         }else{
                             setPathState(12);
                         }
@@ -162,7 +164,7 @@ public class AutoBlueFar extends OpMode {
                 }
                 break;
             case 2:
-                robot.transferDOWN();
+                robot.kickerDOWN();
                 robot.intakeIN();
 
                 //Intake code
@@ -179,7 +181,7 @@ public class AutoBlueFar extends OpMode {
                     currentSlot = 3;
                 }
 
-                String ball = BLUE_TeleOpV2.ballDetected();
+                String ball = ballDetected();
 
                 if (currentSlot == 1 && balls[0].equals("NONE")) {
                     robot.spindexerIntakeSlot1();
@@ -217,7 +219,7 @@ public class AutoBlueFar extends OpMode {
                     if(pathTimer.getElapsedTime() > 5500) {
 //                        robot.hoodServo.setPosition(0.46);
 //                        robot.intakeServoSTOP();
-                        robot.transferUP();
+                        robot.kickerUP();
                         firstTime = false;
                         setPathState(1);
                     }
@@ -232,24 +234,24 @@ public class AutoBlueFar extends OpMode {
                         robot.intakeOUT();
 //                        robot.intakeServoIN();
                     }else if(pathTimer.getElapsedTime() < time+250) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                     }
                     else if(pathTimer.getElapsedTime() < time+1000) {
-                        robot.spindexerIntakeSlot2();
+                        robot.spindexerShootingSlot2();
                     }else if(pathTimer.getElapsedTime() < time+1750) {
-                        robot.transferUP();
+                        robot.kickerUP();
                     }
                     else if(pathTimer.getElapsedTime() < time+2250) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                     }
                     else if(pathTimer.getElapsedTime() < time+2750) {
-                        robot.spindexerIntakeSlot3();
+                        robot.spindexerShootingSlot3();
                     }
                     else if(pathTimer.getElapsedTime() < time+3250) {
-                        robot.transferUP();
+                        robot.kickerUP();
                     }
                     else if(pathTimer.getElapsedTime() < time+3750) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                         robot.spindexerIntakeSlot1();
 //                        robot.intakeServoSTOP();
                         setPathState(5);
@@ -400,7 +402,7 @@ public class AutoBlueFar extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        robot.transferDOWN();
+        robot.kickerDOWN();
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
@@ -443,5 +445,26 @@ public class AutoBlueFar extends OpMode {
      **/
     @Override
     public void stop() {
+    }
+
+    public static String ballDetected(){
+        String detectedBall = "";
+//        if (hue > 200 && hue < 250) {
+//            detectedColor = "PURPLE BALL";
+//        } else if (hue > 150 && hue < 180) {
+//            detectedColor = "GREEN BALL";
+//        } else if (hue < 150) {
+//            detectedColor = "NONE";
+//        }
+        if (robot.leftColorPin0.getState() == true) {
+            detectedBall = "PURPLE BALL";
+        } else if (robot.leftColorPin1.getState() == true) {
+            detectedBall = "GREEN BALL";
+        } else if (robot.rightColorPin1.getState() == true) {
+            detectedBall = "BALL";
+        } else{
+            detectedBall = "NONE";
+        }
+        return detectedBall;
     }
 }
