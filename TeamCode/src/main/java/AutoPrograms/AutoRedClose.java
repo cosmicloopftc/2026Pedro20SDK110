@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "Red Close", group = "Examples")
+@Autonomous(name = "Red Close V1.0", group = "Examples")
 public class AutoRedClose extends OpMode {
     private static boolean firstTime;
     private static boolean secondTime;

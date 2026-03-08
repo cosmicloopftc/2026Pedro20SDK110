@@ -56,7 +56,7 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
     static PoseHistory poseHistory;
     public static double distance;
     int autoPipeline =0;                    // TODO: set pipeline to red
-
+    String turrentAimingMethod;
 
     @Override
     public void init() {
@@ -135,14 +135,44 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
 
 //TODO: testing turret aiming by LimeLight vs. Pedropathing location
         //turret.update(id24);
+        //DATA for use with Turret aiming--by PedroPathing coordinate
+        //  (remember this is based on starting pose--see line 112 (robot at red endgame box, and both robot and turret point straight forward)
+        //IMU yaw=0 is set at initial robot heading when robot is initial turned on.
+        //    This orientation is carried to all programs later if robot is not turned off.
+        //Here, fField angle is set to be
         double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
                 .getYaw(AngleUnit.DEGREES);
         double robotPedroPathHeadingDeg = Math.toDegrees(follower.getPose().getHeading());
+        turretTickAt90Degree = 667;       //set limit of Turret position on robot
         turretAngleRelativeToRobot_Deg = robot.turretMotor.getCurrentPosition()*90/turretTickAt90Degree;
         turretAngleRelativeToField_Deg =  robotPedroPathHeadingDeg - turretAngleRelativeToRobot_Deg;
+        double GoalX = 129;                    //RED goal coordinates
+        double GoalY = 128;
+        double goalTurretAngleRelField_Deg = Math.toDegrees(Math.atan((GoalY - follower.getPose().getY())/(GoalX - follower.getPose().getX())));
 
-        //turret.updateByPedroPath(turretAngleRelativeToField_Deg);
-
+        if ((turretAngleRelativeToRobot_Deg > -120) && (turretAngleRelativeToRobot_Deg < 120)) {
+            if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) {
+                telemetryM.addLine("ACCESSED BLUE");
+                turret.update(id24);
+                turrentAimingMethod = "Aim turret using LimeLight";
+            } else if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0) {
+                telemetryM.addLine("ACCESSED RED");
+                turret.update(id24);
+                turrentAimingMethod = "Aim turret using LimeLight";
+                //TODO: need to confirm below, because it can detect the
+                //TODO:***** using odometry to aim turret--use next set of codes and commented out set just above***
+            } else if ((aprilTags.isEmpty())
+                    || !(aprilTags.get(0).getFiducialId() == 20)
+                    || !(aprilTags.get(0).getFiducialId() == 24)){
+                //run this PedroPahting method if turret is within robot oriented angle limits; no detected aprilTags; AND not ID 20 or 24.
+                turret.updateByPedroPath(turretAngleRelativeToField_Deg, goalTurretAngleRelField_Deg);
+                turrentAimingMethod = "Aim turret using PedroPathing";
+            } else {
+                robot.turretMotor.setPower(0);
+                turrentAimingMethod = "No Turret Aim";
+                return;
+            }
+        }
 
 
 
@@ -213,17 +243,21 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
 
         telemetryM.addLine("");
         telemetryM.addLine("");
-
-        telemetryM.addData("robotImuHeadingDeg (degrees) = ",  (double) Math.round(robotImuHeadingDeg) * 10 / 10);
-        telemetryM.addData("robotPedroPathHeadingDeg (degrees) = ",  (double) Math.round(robotPedroPathHeadingDeg) * 10 / 10);
+        telemetryM.addData("Goal X", GoalX);
+        telemetryM.addData("Goal Y", GoalY);
+        telemetryM.addData("current Pose X",(double) Math.round(follower.getPose().getX()) * 10 / 10);
+        telemetryM.addData("current Pose Y", (double) Math.round(follower.getPose().getY()) * 10 / 10);
+        telemetryM.addData("Cur robotImuHeadingDeg = ",  (double) Math.round(robotImuHeadingDeg) * 10 / 10);
+        telemetryM.addData("Cur robotPedroPathHeadingDeg = ",  (double) Math.round(robotPedroPathHeadingDeg) * 10 / 10);
         telemetryM.addLine("");
-        telemetryM.addData("turretAngleRelativeToField_Deg = ", (double) Math.round(turretAngleRelativeToField_Deg) * 10 / 10);
-
+        telemetryM.addLine("");
+        double leftFlywheelVelocity = robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES);
+        telemetryM.addData("Right Flywheel/Shooter (deg/sec) = ", (double) Math.round(leftFlywheelVelocity) * 10 / 10);
+        telemetryM.addData("Cur turretAngleRelativeToField_Deg = ", (double) Math.round(turretAngleRelativeToField_Deg) * 10 / 10);
+        telemetryM.addData("Goal turretAngleRelativeToField_Deg = ", (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
+        telemetryM.addData("Tx by LimeLight",  (double) Math.round(id24.getTx() * 100 / 100));
+        telemetryM.addLine(turrentAimingMethod);
         telemetryM.update(telemetry);
 
-
-//        telemetry.addData("Tuning P", "%.5f (D-Pad L/R)", turret.getkP());
-//        telemetry.addData("Tuning D", "%.5f (D-Pad U/D)", turret.getkD());
-//        telemetry.addData("Step Size", "%.5f (Y Button)", stepSizes[stepIndex]);
     }
 }

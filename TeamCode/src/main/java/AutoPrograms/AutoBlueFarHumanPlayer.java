@@ -16,7 +16,7 @@
 //
 //import java.util.List;
 //
-//@Autonomous(name = "Blue Far Human Player", group = "Examples")
+//@Autonomous(name = "Blue Far Human Player V1.0", group = "Examples")
 //public class AutoBlueFarHumanPlayer extends OpMode {
 //    private static boolean firstTime;
 //    private static boolean secondTime;

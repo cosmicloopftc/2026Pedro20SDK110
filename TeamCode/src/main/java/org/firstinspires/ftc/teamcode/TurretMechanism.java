@@ -47,8 +47,8 @@ public class TurretMechanism {
     private String PIDmethod;
     private DcMotorEx turretMotor;
 
-    public static double kP = 0.023;
-    public static double kD = 0.00023;
+    public static double kP = 0.024;            //pre 3/6/2025 scrimmage: kP = 0.023
+    public static double kD = 0.00023;          //pre 3/6/2025 scrimmage: kD = 0.00023
 
     private double goalX = 0;
     private double lastError = 0;
@@ -119,7 +119,7 @@ public class TurretMechanism {
             power = 0;
         } else {
             power = -Range.clip(
-                    (0.05)*Math.signum(error) + pTerm + dTerm,
+                    (0.04)*Math.signum(error) + pTerm + dTerm,
                     -MAX_POWER, MAX_POWER);
             //Math.signum(d)
             //1.0 (or 1.0f) if the number passed is greater than zero.
@@ -128,7 +128,7 @@ public class TurretMechanism {
         }
 
 
-          //TODO: PID controller method 2--does not work well, hard to tune
+        //TODO: PID controller method 2--does not work well, hard to tune
 //        //------------ start PD controller with feed forward and time slope method
 //        PIDmethod = "PD controller w/ feed forward, by time slope";
 //        //P

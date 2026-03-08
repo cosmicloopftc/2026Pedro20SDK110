@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "Blue Close", group = "Examples")
+@Autonomous(name = "Blue Close V1.0", group = "Examples")
 public class AutoBlueClose extends OpMode {
     private static boolean firstTime;
     private static boolean secondTime;

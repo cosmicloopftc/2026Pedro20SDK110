@@ -22,9 +22,9 @@ import java.util.List;
 //LinearOpMode structure: runOpMode(), waitForStart(), isStarted(), isStopRequested(), idle(), opModeIsActive(), opModeInInit()
 
 
-@TeleOp (name= "Shooter_Test", group = "Test")
+@TeleOp (name= "Test_ShooterPID", group = "Test")
 
-public class ShooterTest extends OpMode {
+public class TEST_ShooterPID extends OpMode {
     //Flywheel PF controller
     double P = 0;
     double I = 0;

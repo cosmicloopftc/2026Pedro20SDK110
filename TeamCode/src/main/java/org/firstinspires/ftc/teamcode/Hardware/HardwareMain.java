@@ -58,7 +58,8 @@ public class HardwareMain {
 
     public DcMotorEx intakeMotor = null;
     public CRServo transferServo = null;
-    public Servo kickerServo = null;
+    public Servo leftKickerServo = null;
+    public Servo rightKickerServo = null;
     public Servo spindexerServo = null;
     public AnalogInput spindexerServoPosition = null;
 
@@ -147,8 +148,10 @@ public class HardwareMain {
         transferServo = hardwareMap.get(CRServo.class, "transferServo");
         transferServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        kickerServo = hardwareMap.get(Servo.class,"kickerServo");
-        kickerServo.setDirection(Servo.Direction.FORWARD);
+        leftKickerServo = hardwareMap.get(Servo.class,"leftKickerServo");
+        leftKickerServo.setDirection(Servo.Direction.FORWARD);
+        rightKickerServo = hardwareMap.get(Servo.class,"rightKickerServo");
+        rightKickerServo.setDirection(Servo.Direction.REVERSE);
 
         //map and setup mode of Shooter motor
         rightShooterMotor = hardwareMap.get(DcMotorEx.class, "rightShooterMotor");
@@ -285,32 +288,29 @@ public class HardwareMain {
     }
 
     public void spindexerIntakeSlot1(){
-        spindexerPosition = 1;
         spindexerServo.setPosition(0);
     }
     public void spindexerIntakeSlot2(){
-        spindexerPosition = 2;
         spindexerServo.setPosition(0.37);
     }
     public void spindexerIntakeSlot3(){
-        spindexerPosition = 3;
         spindexerServo.setPosition(0.74);
     }
 
     public void spindexerShootingSlot1(){
-        spindexerPosition = 1;
         spindexerServo.setPosition(0.925);
     }
     public void spindexerShootingSlot2(){
-        spindexerPosition = 2;
         spindexerServo.setPosition(0.555);
     }
     public void spindexerShootingSlot3(){
-        spindexerPosition = 3;
         spindexerServo.setPosition(0.185);
 
     }
 
+    public void spindexerShootingSlot2Auto(){
+        spindexerServo.setPosition(0.58);
+    }
 
 //    public void setSpindexerPosition(int position){
 //        if(position == 1){
@@ -366,10 +366,12 @@ public class HardwareMain {
 
     //For kicker servo transfer:
     public void kickerUP(){
-        kickerServo.setPosition(0.14);
+        leftKickerServo.setPosition(0.19);
+        rightKickerServo.setPosition(0.19);
     }
     public void kickerDOWN(){
-        kickerServo.setPosition(0);
+        leftKickerServo.setPosition(0.02);
+        rightKickerServo.setPosition(0.02);
     }
 
     public void hoodOUT(){

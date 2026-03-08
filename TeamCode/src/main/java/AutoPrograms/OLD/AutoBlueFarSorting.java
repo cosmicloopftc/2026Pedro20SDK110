@@ -21,7 +21,7 @@
 //
 //import java.util.List;
 //
-//@Autonomous(name = "Blue Far Sorting", group = "Examples")
+//@Autonomous(name = "Blue Far Sorting V1.0", group = "Examples")
 //public class AutoBlueFarSorting extends OpMode {
 //    public static int spindexerPosition;
 //

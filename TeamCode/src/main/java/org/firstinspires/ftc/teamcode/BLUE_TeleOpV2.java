@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 //             in HardwareMain, and in TeleOpV2.java
 
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -39,14 +41,15 @@ import java.util.function.Supplier;
  */
 
 @Configurable
-@TeleOp(name = "BLUE TeleOpV2 v1", group = "BLUE")
+@TeleOp(name = "BLUE TeleOpV2 v1.3", group = "A")
 public class BLUE_TeleOpV2 extends OpMode {
 
     private TurretMechanism turret = new TurretMechanism();
 
     int maxAllowTurretTick = 829, minAllowTurretTick = - -840, turretTickAt90Degree = 667;       //set limit of Turret position on robot
     double turretAngleRelativeToRobot_Deg, turretAngleRelativeToField_Deg;
-    double GoalX = 15 , GoalY = 128;
+    double GoalX = 15 , GoalY = 128;        // TODO: need to confirm with Dominic
+    String turrentAimingMethod;
 
     public static double distance;
     int autoPipeline =1;                    // TODO: set pipeline to blue
@@ -60,13 +63,14 @@ public class BLUE_TeleOpV2 extends OpMode {
     Gamepad.RumbleEffect customRumbleEffect;
 
     private ElapsedTime runtime = new ElapsedTime();
-//TODO:  edit END_GAME_TIME
+    //TODO:  edit END_GAME_TIME
     private final static double END_GAME_TIME = 30 - 20;
     private ElapsedTime loopCycleTime = new ElapsedTime();
 
 
     private Follower follower;
-    public static Pose startingPose; //See ExampleAuto to understand how to use this
+    public Pose startingPose = new Pose(38,33, Math.toRadians(90));; //See ExampleAuto to understand how to use this
+
     private boolean automatedDrive;
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
@@ -106,10 +110,16 @@ public class BLUE_TeleOpV2 extends OpMode {
     public void init() {
         robot.init(hardwareMap);
         robotDrivetrain.init(hardwareMap);
-
         turret.init(hardwareMap);
 
-        startingPose = new Pose(105,33, Math.toRadians(90));
+        //TODO: need to adjust this starting point--for now it is at BLUE endgame box--robot and turret point straight forward.
+        //TODO: set startingPose to start TeleOp--tx from Auto?
+        //blue Endgame box = (105, 33, ...); //red Endgame box = (38, 33, ....)
+        //TODO: need to confirm with Dominic:  BLUE goal ?? (14,128);   RED goal (129, 128)
+        //For now, at start of TeleOp, set BLUE FAR robot to be at BLUE Endgame box = (38, 33, ....) and point up to goal Y direction
+        //For now, at start of TeleOp, set BLUE NEAR robot to be at ??? and point up to goal Y direction
+        //startingPose = new Pose(38,33, Math.toRadians(90));
+
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
         follower.update();
@@ -138,12 +148,12 @@ public class BLUE_TeleOpV2 extends OpMode {
 //            robot.turretMotor.setTargetPosition(AutoToTeleopData.turretMotorPos);
 //            robot.limelight.pipelineSwitch(AutoToTeleopData.limeLightPipeline);
 //        } else {
-            //follower.setPose(new Pose(0, 0, 0));
+        //follower.setPose(new Pose(0, 0, 0));
         follower.setPose(startingPose);
- //       }
+        //       }
 
         //Stores pipeline from auto
- //       autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
+        //       autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
 //        autoPipeline = 1;  // TODO: set pipeline to blue
         robot.limelight.pipelineSwitch(autoPipeline);
 
@@ -194,12 +204,13 @@ public class BLUE_TeleOpV2 extends OpMode {
         double goalTurretAngleRelField_Deg = Math.toDegrees(Math.atan((GoalY - follower.getPose().getY())/(GoalX - follower.getPose().getX())));
         telemetryM.addData("Cur turret motor encoder = ", (double) Math.round(robot.turretMotor.getCurrentPosition()));
         telemetryM.addData("Cur turretAngleRelativeToField_Deg = ", (double) Math.round(turretAngleRelativeToField_Deg) * 10 / 10);
-        telemetryM.addData("Goal TurretAngRelField_Deg = ", goalTurretAngleRelField_Deg);
+        telemetryM.addData("Goal TurretAngRelField_Deg = ",  (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
+        telemetryM.addData("Goal TurretAngRelField_Deg = ",  (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
 
         telemetryM.update(telemetry);
 
 // TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
-  //      autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
+        //      autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
 
 
     }
@@ -242,7 +253,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         }
         telemetryM.addData("Auto pipeline", autoPipeline);
 
- //TODO: Dominic's method to aim turret to goal (autoPipeline 0=red goal, 1=blue goal)
+        //TODO: Dominic's method to aim turret to goal (autoPipeline 0=red goal, 1=blue goal)
 //        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
 //            telemetry.addLine("ACCESSED");
 //            if(getDistanceToGoal() > 80) {
@@ -261,6 +272,8 @@ public class BLUE_TeleOpV2 extends OpMode {
 //        }
 
 
+
+
         //DATA for use with Turret aiming--by PedroPathing coordinate
         //  (remember this is based on starting pose--see line 112 (robot at red endgame box, and both robot and turret point straight forward)
         //IMU yaw=0 is set at initial robot heading when robot is initial turned on.
@@ -274,28 +287,61 @@ public class BLUE_TeleOpV2 extends OpMode {
         turretAngleRelativeToField_Deg =  robotPedroPathHeadingDeg - turretAngleRelativeToRobot_Deg;
         double goalTurretAngleRelField_Deg = Math.toDegrees(Math.atan((GoalY - follower.getPose().getY())/(GoalX - follower.getPose().getX())));
 
-//TODO: testing turret Limelight vs. turretAngleRelativeToField_Deg
-        //TODO:***** using Limelight to aim turret--use next set of codes and commented out set just below
-        if ((turretAngleRelativeToRobot_Deg > -110) && (turretAngleRelativeToRobot_Deg < 110)) {
 
+
+//TODO: Testing turret Limelight vs. turretAngleRelativeToField_Deg
+        //TODO:***** using Limelight to aim turret--use next set of codes and commented out set just below
+        //set limit on turret angle relative to robot.
+//        if ((turretAngleRelativeToRobot_Deg < -105) || (turretAngleRelativeToRobot_Deg > 105)) {
+//            robot.turretMotor.setPower(0);
+//            return;
+//        } else if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) {
+//                telemetryM.addLine("ACCESSED BLUE");
+//                turret.update(result);
+//                turrentAimingMethod = "Aim turret using LimeLight";
+//        } else if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0) {
+//                telemetryM.addLine("ACCESSED RED");
+//                turret.update(result);
+//                turrentAimingMethod = "Aim turret using LimeLight";
+//        //TODO: need to confirm below, because it can detect the
+//        //TODO:***** using odometry to aim turret--use next set of codes and commented out set just above***
+//        } else if ((aprilTags.isEmpty())) {
+////                || !(aprilTags.get(0).getFiducialId() == 20)
+////                || !(aprilTags.get(0).getFiducialId() == 24)){
+//            //run this PedroPahting method if turret is within robot oriented angle limits; no detected aprilTags; AND not ID 20 or 24.
+//            turret.updateByPedroPath(turretAngleRelativeToField_Deg, goalTurretAngleRelField_Deg);
+//            turrentAimingMethod = "Aim turret using PedroPathing";
+//        } else {
+//            robot.turretMotor.setPower(0);
+//            turrentAimingMethod = "No Turret Aim";
+//            return;
+//        }
+
+
+        if ((turretAngleRelativeToRobot_Deg > -120) && (turretAngleRelativeToRobot_Deg < 120)) {
             if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) {
-                telemetry.addLine("ACCESSED");
+                telemetryM.addLine("ACCESSED BLUE");
                 turret.update(result);
+                turrentAimingMethod = "Aim turret using LimeLight";
             } else if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0) {
+                telemetryM.addLine("ACCESSED RED");
                 turret.update(result);
+                turrentAimingMethod = "Aim turret using LimeLight";
+                //TODO: need to confirm below, because it can detect the
+                //TODO:***** using odometry to aim turret--use next set of codes and commented out set just above***
+            } else if ((aprilTags.isEmpty())
+                    || !(aprilTags.get(0).getFiducialId() == 20)
+                    || !(aprilTags.get(0).getFiducialId() == 24)){
+                //run this PedroPahting method if turret is within robot oriented angle limits; no detected aprilTags; AND not ID 20 or 24.
+                turret.updateByPedroPath(turretAngleRelativeToField_Deg, goalTurretAngleRelField_Deg);
+                turrentAimingMethod = "Aim turret using PedroPathing";
             } else {
                 robot.turretMotor.setPower(0);
+                turrentAimingMethod = "No Turret Aim";
+                return;
             }
-        }else{
-            robot.turretMotor.setPower(0);
         }
 
-        //TODO:***** using odometry to aim turret--use next set of codes and commented out set just above***
-//        if ((turretAngleRelativeToRobot_Deg > -110) && (turretAngleRelativeToRobot_Deg < 110)) {
-//            turret.updateByPedroPath(turretAngleRelativeToField_Deg, goalTurretAngleRelField_Deg);
-//        }else{
-//            robot.turretMotor.setPower(0);
-//        }
 
 
 
@@ -406,7 +452,7 @@ public class BLUE_TeleOpV2 extends OpMode {
 
                     if (!(ball.equals("NONE"))) {
                         if (currentSlot >= 0 && currentSlot < 3){
-                        balls[currentSlot - 1] = ball;
+                            balls[currentSlot - 1] = ball;
                         }
                         if (currentSlot == 1) {
                             robot.spindexerIntakeSlot2();
@@ -478,40 +524,40 @@ public class BLUE_TeleOpV2 extends OpMode {
             case SHOOT:
                 // Old version of all 3:
                 if (shootingMode.equals("all3")){
-                    if (timer.milliseconds() > 0 && timer.milliseconds() < 200){
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 150){
                         robot.spindexerShootingSlot1();
                         robot.kickerUP();
                         //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                     }
-                    else if(timer.milliseconds() >= 200 && timer.milliseconds() < 400){
+                    else if(timer.milliseconds() >= 150 && timer.milliseconds() < 350){
                         robot.spindexerShootingSlot1();
                         robot.kickerDOWN();
                     }
-                    else if(timer.milliseconds() >= 400 && timer.milliseconds() < 700){
+                    else if(timer.milliseconds() >= 350 && timer.milliseconds() < 650){
                         robot.spindexerShootingSlot2();
                     }
-                    else if(timer.milliseconds() >= 700 && timer.milliseconds() < 900){
+                    else if(timer.milliseconds() >= 650 && timer.milliseconds() < 850){
                         robot.spindexerShootingSlot2();
                         robot.kickerUP();
                         //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                     }
-                    else if(timer.milliseconds() >= 900 && timer.milliseconds() < 1100){
+                    else if(timer.milliseconds() >= 850 && timer.milliseconds() < 1000){
                         robot.spindexerShootingSlot2();
                         robot.kickerDOWN();
                     }
-                    else if(timer.milliseconds() >= 1100 && timer.milliseconds() < 1400){
+                    else if(timer.milliseconds() >= 1000 && timer.milliseconds() < 1300){
                         robot.spindexerShootingSlot3();
                     }
-                    else if(timer.milliseconds() >= 1400 && timer.milliseconds() < 1600){
+                    else if(timer.milliseconds() >= 1300 && timer.milliseconds() < 1450){
                         robot.spindexerShootingSlot3();
                         robot.kickerUP();
                         //shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                     }
-                    else if(timer.milliseconds() >= 1600 && timer.milliseconds() < 1800){
+                    else if(timer.milliseconds() >= 1450 && timer.milliseconds() < 1600){
                         robot.spindexerShootingSlot3();
                         robot.kickerDOWN();
                     }
-                    else if(timer.milliseconds() > 1800){
+                    else if(timer.milliseconds() > 1600){
                         robot.spindexerShootingSlot3();
                         Arrays.fill(balls, "NONE");
                         currentSlot = 1;
@@ -770,7 +816,13 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Cur robotImuHeadingDeg = ",  (double) Math.round(robotImuHeadingDeg) * 10 / 10);
         telemetryM.addData("Cur robotPedroPathHeadingDeg = ",  (double) Math.round(robotPedroPathHeadingDeg) * 10 / 10);
         telemetryM.addLine("");
+        telemetryM.addLine("");
+        double leftFlywheelVelocity = robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES);
+        telemetryM.addData("Right Flywheel/Shooter (deg/sec) = ", (double) Math.round(leftFlywheelVelocity) * 10 / 10);
         telemetryM.addData("Cur turretAngleRelativeToField_Deg = ", (double) Math.round(turretAngleRelativeToField_Deg) * 10 / 10);
+        telemetryM.addData("Goal turretAngleRelativeToField_Deg = ", (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
+        telemetryM.addData("Tx by LimeLight",  (double) Math.round(result.getTx() * 100 / 100));
+        telemetryM.addLine(turrentAimingMethod);
 
         telemetryM.update(telemetry);
 
