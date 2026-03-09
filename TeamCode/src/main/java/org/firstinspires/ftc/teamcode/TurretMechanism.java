@@ -95,7 +95,7 @@ public class TurretMechanism {
         timer.reset();
     }
 
-    public void update(LLResult curID) {
+    public void update(LLResult curID, double velocityOffset) {
         double deltaTime = timer.seconds();
         timer.reset();
         if (curID == null) {
@@ -109,7 +109,7 @@ public class TurretMechanism {
         //TODO: PID controller method 1
         // ------------ start PD controller -------------
         PIDmethod = "PD w/ feed forward controller ";
-        double error = goalX - curID.getTx();
+        double error = goalX - (velocityOffset) - curID.getTx();
         double pTerm = error * kP;
         double dTerm = 0;
         if (deltaTime > 0) {

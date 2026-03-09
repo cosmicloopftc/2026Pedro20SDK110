@@ -153,11 +153,11 @@ public class TEST_TurretAutoAlignOpmode extends OpMode {
         if ((turretAngleRelativeToRobot_Deg > -120) && (turretAngleRelativeToRobot_Deg < 120)) {
             if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) {
                 telemetryM.addLine("ACCESSED BLUE");
-                turret.update(id24);
+                turret.update(id24, 0);
                 turrentAimingMethod = "Aim turret using LimeLight";
             } else if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0) {
                 telemetryM.addLine("ACCESSED RED");
-                turret.update(id24);
+                turret.update(id24, 0);
                 turrentAimingMethod = "Aim turret using LimeLight";
                 //TODO: need to confirm below, because it can detect the
                 //TODO:***** using odometry to aim turret--use next set of codes and commented out set just above***

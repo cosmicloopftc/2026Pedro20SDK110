@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import java.util.List;
 
 @Configurable
-@TeleOp(name= "RED_TeleOpV2 V1.3", group = "A")
+@TeleOp(name= "RED_TeleOpV2 V1.3", group = "C")
 
 public class RED_TeleOpV2 extends BLUE_TeleOpV2 {
 
@@ -29,11 +29,12 @@ public class RED_TeleOpV2 extends BLUE_TeleOpV2 {
         //For now, at start of TeleOp, set RED FAR robot to be at BLUE Endgame box = (38. 33, ....) and point up to goal Y direction
         //For now, at start of TeleOp, set RED NEAR robot to be at ??? and point up to goal Y direction
 
-        autoPipeline = 0;  // TODO: set pipeline to Red
-        GoalX = 129;                    //RED goal coordinates
-        GoalY = 128;
+        autoPipeline = 0;  // TODO: set pipeline to RED
+        GoalX = 135;                    //RED goal coordinates
+        GoalY = 142;
         startingPose = new Pose(105,33, Math.toRadians(90)); //    Consider having the robot at this BLUE endgame box area.
         super.init();
+        robot.imu.resetYaw();
     }
 
     @Override
