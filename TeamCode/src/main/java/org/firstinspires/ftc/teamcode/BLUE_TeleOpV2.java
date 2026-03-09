@@ -77,7 +77,7 @@ public class BLUE_TeleOpV2 extends OpMode {
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.2;
     ElapsedTime timer = new ElapsedTime();
-    ElapsedTime timerLimelight = new ElapsedTime();
+    ElapsedTime bumpCorrectionTimer = new ElapsedTime();
 
     private String shootingMode = "none";
     private String intakeMode = "normal";
@@ -90,17 +90,18 @@ public class BLUE_TeleOpV2 extends OpMode {
     public boolean intakeSlotPosition = true;
 
     //Analog spindexer non-intaking position ranges
-
+    public static double yaw;
+    boolean executeOnce = true;
 
     public double shooterSpeed;
 
     public static HardwareMain robot = new HardwareMain();
     HardwareDrivetrainNOTusingPedroPath robotDrivetrain = new HardwareDrivetrainNOTusingPedroPath();
-    enum State{
+    public enum State{
         INTAKE,
         SPINDEXER_STATE_ACTION, SHOOT
     }
-    State state = State.INTAKE;
+    public static State state = State.INTAKE;
     @IgnoreConfigurable
     static PoseHistory poseHistory;
 
@@ -254,22 +255,22 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Auto pipeline", autoPipeline);
 
         //TODO: Dominic's method to aim turret to goal (autoPipeline 0=red goal, 1=blue goal)
-//        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
-//            telemetry.addLine("ACCESSED");
-//            if(getDistanceToGoal() > 80) {
-//                robot.updateLimelightWithXVel(-3.5);
-//            }else{
-//                robot.updateLimelightWithXVel(0);
-//            }
-//        }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
-//            if(getDistanceToGoal() > 80) {
-//                robot.updateLimelightWithXVel(2.75);
-//            }else{
-//                robot.updateLimelightWithXVel(0);
-//            }
-//        }else{
-//            robot.turretMotor.setPower(0);
-//        }
+        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
+            telemetry.addLine("ACCESSED");
+            if(getDistanceToGoal() > 80) {
+                robot.updateLimelightWithXVel(-3.5);
+            }else{
+                robot.updateLimelightWithXVel(0);
+            }
+        }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
+            if(getDistanceToGoal() > 80) {
+                robot.updateLimelightWithXVel(2.75);
+            }else{
+                robot.updateLimelightWithXVel(0);
+            }
+        }else{
+            robot.turretMotor.setPower(0);
+        }
 
 
 
@@ -279,14 +280,15 @@ public class BLUE_TeleOpV2 extends OpMode {
         //IMU yaw=0 is set at initial robot heading when robot is initial turned on.
         //    This orientation is carried to all programs later if robot is not turned off.
         //Here, fField angle is set to be
-        double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
-                .getYaw(AngleUnit.DEGREES);
-        double robotPedroPathHeadingDeg = Math.toDegrees(follower.getPose().getHeading());
-        turretTickAt90Degree = 667;       //set limit of Turret position on robot
-        turretAngleRelativeToRobot_Deg = robot.turretMotor.getCurrentPosition()*90/turretTickAt90Degree;
-        turretAngleRelativeToField_Deg =  robotPedroPathHeadingDeg - turretAngleRelativeToRobot_Deg;
-        double goalTurretAngleRelField_Deg = Math.toDegrees(Math.atan((GoalY - follower.getPose().getY())/(GoalX - follower.getPose().getX())));
-
+        /***
+//        double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
+//                .getYaw(AngleUnit.DEGREES);
+//        double robotPedroPathHeadingDeg = Math.toDegrees(follower.getPose().getHeading());
+//        turretTickAt90Degree = 667;       //set limit of Turret position on robot
+//        turretAngleRelativeToRobot_Deg = robot.turretMotor.getCurrentPosition()*90/turretTickAt90Degree;
+//        turretAngleRelativeToField_Deg =  robotPedroPathHeadingDeg - turretAngleRelativeToRobot_Deg;
+//        double goalTurretAngleRelField_Deg = Math.toDegrees(Math.atan((GoalY - follower.getPose().getY())/(GoalX - follower.getPose().getX())));
+*/
 
 
 //TODO: Testing turret Limelight vs. turretAngleRelativeToField_Deg
@@ -317,7 +319,7 @@ public class BLUE_TeleOpV2 extends OpMode {
 //            return;
 //        }
 
-
+        /***
         if ((turretAngleRelativeToRobot_Deg > -120) && (turretAngleRelativeToRobot_Deg < 120)) {
             if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) {
                 telemetryM.addLine("ACCESSED BLUE");
@@ -341,6 +343,7 @@ public class BLUE_TeleOpV2 extends OpMode {
                 return;
             }
         }
+         */
 
 
 
@@ -417,6 +420,7 @@ public class BLUE_TeleOpV2 extends OpMode {
 
         switch (state) {
             case INTAKE:
+                executeOnce = true;
                 robot.kickerDOWN();
                 if (intakeMode.equals("normal")) {
                     double spindexerServoPosition = robot.getSpindexerServoPosition();
@@ -522,6 +526,13 @@ public class BLUE_TeleOpV2 extends OpMode {
 
                 break;
             case SHOOT:
+                //This is for bump correction
+                if(executeOnce){
+                    yaw = robot.imu.getRobotYawPitchRollAngles().getYaw();
+                    executeOnce = false;
+//                    bumpCorrectionTimer.reset();
+                }
+
                 // Old version of all 3:
                 if (shootingMode.equals("all3")){
                     if (timer.milliseconds() > 0 && timer.milliseconds() < 150){
@@ -768,6 +779,8 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Distance to goal",   Math.round( HardwareMain.getDistanceToGoal()* 10)/10);
         telemetryM.addData("Angle to goal from lightlight", Math.round(result.getTx()* 100)/100);
 
+        telemetryM.addData("Yaw", robot.imu.getRobotYawPitchRollAngles().getYaw());
+
 
 
 //TODO: comment out for now to use turret 360 degree PID method instead of previous one from Dominic
@@ -807,6 +820,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive: " + automatedDrive);
 
+        /***
         telemetryM.addLine("");
         telemetryM.addLine("");
         telemetryM.addData("Goal X", GoalX);
@@ -823,6 +837,8 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Goal turretAngleRelativeToField_Deg = ", (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
         telemetryM.addData("Tx by LimeLight",  (double) Math.round(result.getTx() * 100 / 100));
         telemetryM.addLine(turrentAimingMethod);
+
+        */
 
         telemetryM.update(telemetry);
 

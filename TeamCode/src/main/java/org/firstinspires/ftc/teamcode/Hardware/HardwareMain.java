@@ -33,6 +33,7 @@ import java.util.Arrays;
 
 public class HardwareMain {
     public int spindexerPosition = 1;
+    public static double imuOffset;
 //**ADD assignment of variables here for subsequent connected device.
 
 /* example use of enum from FTC Thunderbolts (Sacramento, CA) mentor's program structure
@@ -486,13 +487,11 @@ public class HardwareMain {
             double g = 9.8;
 
             double v = 7.3;
-            if (getDistanceToGoal() < 80
-//                    && getDistanceToGoal() > 47
-                   )
+            if (getDistanceToGoal() < 80 && getDistanceToGoal() > 47)
             {
                 v = 6.2;
-//            }else if(getDistanceToGoal() < 47){
-//                v = 5.8;
+            }else{
+                v = 6.7;
             }
 
             //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
@@ -512,8 +511,8 @@ public class HardwareMain {
 
             if (result < 0) {
                 result = 0;
-            } else if (result >= 0.76) {
-                result = 0.76;
+            } else if (result >= 0.81) {
+                result = 0.81;
             }
             return result;
         } catch (Exception e) {
@@ -545,24 +544,39 @@ public class HardwareMain {
     }
 
     public void updateLimelightWithXVel(double offset){
+        ElapsedTime limelightTimer = new ElapsedTime();
+        imuOffset = deltaYaw();
         LLResult result = limelight.getLatestResult();
-        if(result.getTx() != 0 && turretMotor.getCurrentPosition() < 833 && turretMotor.getCurrentPosition() > -833) {
-            double tx = result.getTx() + offset;
+        if((result.getTx() != 0 || limelightTimer.milliseconds() < 150) && turretMotor.getCurrentPosition() < 833 && turretMotor.getCurrentPosition() > -833) {
+            limelightTimer.reset();
+            double tx = result.getTx() + offset + imuOffset;
             double min_command = 0.027;
             double Kp = -0.024;
             double heading_error = -tx;
             double steering_adjust = 0.0;
             if (Math.abs(heading_error) > 1.0) {
                 if (heading_error < 0) {
-                    steering_adjust = (Kp * heading_error + min_command) - (pinpoint.getVelX(DistanceUnit.INCH) * 0.02);
+                    steering_adjust = (Kp * heading_error + min_command) - (pinpoint.getVelX(DistanceUnit.INCH) * 0.015);
                 } else {
-                    steering_adjust = Kp * heading_error - min_command - (pinpoint.getVelX(DistanceUnit.INCH) * 0.02);
+                    steering_adjust = Kp * heading_error - min_command - (pinpoint.getVelX(DistanceUnit.INCH) * 0.015);
                 }
             }
             turretMotor.setPower(steering_adjust);
         }else{
             turretMotor.setPower(0);
         }
+    }
+
+    public double deltaYaw(){
+        if(BLUE_TeleOpV2.state == BLUE_TeleOpV2.State.SHOOT) {
+//            if(getDistanceToGoal() > 80){
+//                return 0.4 * (BLUE_TeleOpV2.yaw - imu.getRobotYawPitchRollAngles().getYaw() - 0.5 * imuOffset);
+//            }
+//            else {
+                return 0.7 * (BLUE_TeleOpV2.yaw - imu.getRobotYawPitchRollAngles().getYaw() - 0.6 * imuOffset);
+//            }
+        }
+        return 0;
     }
 
     public int getSortingPosition(String[] target, String[] colors, int shotNumber){
