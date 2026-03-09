@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.BLUE_TeleOpV2;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Autonomous(name = "Blue Far V1.0", group = "Examples")
@@ -61,7 +62,6 @@ public class AutoBlueFar extends OpMode {
                 .addPath(new BezierLine(pickup1Pose, pickup1Pose2))
                 .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose2.getHeading())
                 .setConstraints(Constants.pathConstraints)
-                .setVelocityConstraint(2.5)
                 .build();
 
         /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -83,6 +83,7 @@ public class AutoBlueFar extends OpMode {
                 .addPath(new BezierLine(pickup2Pose, pickup2Pose2))
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickup2Pose2.getHeading())
                 .setConstraints(Constants.pathConstraints)
+//                .setVelocityConstraint(0.5)
                 .build();
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -105,7 +106,7 @@ public class AutoBlueFar extends OpMode {
             case 0:
                 if (!follower.isBusy()) {
                     robot.spindexerShootingSlot1();
-                    robot.hoodServo.setPosition(0.75);
+                    robot.hoodServo.setPosition(0.73);
                     robot.shooterVELO(-208);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
@@ -126,47 +127,52 @@ public class AutoBlueFar extends OpMode {
             case 1:
                 if (!follower.isBusy()) {
                     time = 750;
-                    if((pathTimer.getElapsedTime() < time)){
-                        robot.intakeIN();
-//                        robot.intakeServoOUT();
+                    if((pathTimer.getElapsedTime() < 750)){
+                        robot.intakeSTOP();
                         robot.kickerUP();
-                    }else if(pathTimer.getElapsedTime() < time+200) {
+                    }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.kickerDOWN();
-//                        robot.intakeServoIN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+400) {
+                    else if(pathTimer.getElapsedTime() < time+1000) {
                         robot.spindexerShootingSlot2();
-                    }else if(pathTimer.getElapsedTime() < time+1700) {
+                    }else if(pathTimer.getElapsedTime() < time+1750) {
                         robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+1900) {
+                    else if(pathTimer.getElapsedTime() < time+2000) {
                         robot.kickerDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2300) {
+                    else if(pathTimer.getElapsedTime() < time+2750) {
                         robot.spindexerShootingSlot3();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2600) {
+                    else if(pathTimer.getElapsedTime() < time+3250) {
                         robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2900) {
+                    else if(pathTimer.getElapsedTime() < time+4000) {
                         robot.kickerDOWN();
                         robot.spindexerIntakeSlot1();
-                        robot.intakeOUT();
 //                        robot.shooterOFF();
                         if(firstTime) {
                             setPathState(2);
+//                            firstTime = false;
                         }else if(secondTime){
-                            setPathState(12);
+                            setPathState(5);
                         }else{
                             setPathState(12);
                         }
                     }
                 }
                 break;
+            case 13:
+                if(!follower.isBusy()) {
+                    follower.followPath(goToPickup1, true);
+                    setPathState(2);
+                }
+                break;
             case 2:
+                telemetry.addData("balls[]", Arrays.toString(balls));
+
                 robot.kickerDOWN();
                 robot.intakeIN();
-
                 //Intake code
                 {
                 double spindexerServoPosition = robot.getSpindexerServoPosition();
@@ -182,12 +188,14 @@ public class AutoBlueFar extends OpMode {
                 }
 
                 String ball = ballDetected();
+                    telemetry.addData("balls", ball);
 
                 if (currentSlot == 1 && balls[0].equals("NONE")) {
                     robot.spindexerIntakeSlot1();
                 }
 
                 if (!(ball.equals("NONE"))) {
+                    telemetry.addLine("ACCESSED");
                     balls[currentSlot - 1] = ball;
                     if (currentSlot == 1) {
                         robot.spindexerIntakeSlot2();
@@ -199,11 +207,11 @@ public class AutoBlueFar extends OpMode {
                     }
                 }
                 }
-
                 if (!follower.isBusy()) {
-                    follower.followPath(goToPickup1, true);
-                    follower.followPath(grabPickup1, true);
-                    setPathState(3);
+                    follower.followPath(grabPickup1, 0.5,true);
+                    if(pathTimer.getElapsedTime() > 3000) {
+                        setPathState(3);
+                    }
                 }
                 break;
             case 3:
@@ -212,11 +220,8 @@ public class AutoBlueFar extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
                     robot.shooterVELO(-208);
-                    if(pathTimer.getElapsedTime() > 4000) {
-                        robot.intakeOUT();
-//                        robot.intakeServoOUT();
-                    }
-                    if(pathTimer.getElapsedTime() > 5500) {
+
+                    if(pathTimer.getElapsedTime() > 3500) {
 //                        robot.hoodServo.setPosition(0.46);
 //                        robot.intakeServoSTOP();
                         robot.kickerUP();
@@ -280,7 +285,7 @@ public class AutoBlueFar extends OpMode {
                     currentSlot = 3;
                 }
 
-                String ball = BLUE_TeleOpV2.ballDetected();
+                String ball = ballDetected();
 
                 if (currentSlot == 1 && balls[0].equals("NONE")) {
                     robot.spindexerIntakeSlot1();
@@ -302,22 +307,24 @@ public class AutoBlueFar extends OpMode {
                     robot.intakeIN();
 //                    robot.intakeServoIN();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2, true);
-                    setPathState(7);
+                    follower.followPath(grabPickup2, 0.45, true);
+                    if(pathTimer.getElapsedTime() > 2500) {
+                        setPathState(7);
+                    }
                 }
                 break;
             case 7:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
                     follower.followPath(scorePickup2, true);
-                    robot.intakeOUT();
                     secondTime = false;
                     setPathState(11);
                 }
                 break;
             case 11:
                 if (!follower.isBusy()) {
-                    if(pathTimer.getElapsedTime() > 3500){
+                    if(pathTimer.getElapsedTime() > 2500){
+                        robot.spindexerShootingSlot1();
                         setPathState(1);
                     }
                 }
@@ -456,11 +463,11 @@ public class AutoBlueFar extends OpMode {
 //        } else if (hue < 150) {
 //            detectedColor = "NONE";
 //        }
-        if (robot.leftColorPin0.getState() == true) {
+        if (robot.leftColorPin0.getState()) {
             detectedBall = "PURPLE BALL";
-        } else if (robot.leftColorPin1.getState() == true) {
+        } else if (robot.leftColorPin1.getState()) {
             detectedBall = "GREEN BALL";
-        } else if (robot.rightColorPin1.getState() == true) {
+        } else if (robot.rightColorPin1.getState()) {
             detectedBall = "BALL";
         } else{
             detectedBall = "NONE";

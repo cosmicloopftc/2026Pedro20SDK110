@@ -77,7 +77,7 @@ public class BLUE_TeleOpV2 extends OpMode {
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.2;
     ElapsedTime timer = new ElapsedTime();
-    ElapsedTime timerLimelight = new ElapsedTime();
+    ElapsedTime bumpCorrectionTimer = new ElapsedTime();
 
     private String shootingMode = "none";
     private String intakeMode = "normal";
@@ -90,17 +90,18 @@ public class BLUE_TeleOpV2 extends OpMode {
     public boolean intakeSlotPosition = true;
 
     //Analog spindexer non-intaking position ranges
-
+    public static double yaw;
+    boolean executeOnce = true;
 
     public double shooterSpeed;
 
     public static HardwareMain robot = new HardwareMain();
     HardwareDrivetrainNOTusingPedroPath robotDrivetrain = new HardwareDrivetrainNOTusingPedroPath();
-    enum State{
+    public enum State{
         INTAKE,
         SPINDEXER_STATE_ACTION, SHOOT
     }
-    State state = State.INTAKE;
+    public static State state = State.INTAKE;
     @IgnoreConfigurable
     static PoseHistory poseHistory;
 
@@ -253,7 +254,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         }
         telemetryM.addData("Auto pipeline", autoPipeline);
 
-        //TODO: Dominic's method to aim turret to goal (autoPipeline 0=red goal, 1=blue goal)
+//TODO: Dominic's method to aim turret to goal (autoPipeline 0=red goal, 1=blue goal)
 //        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
 //            telemetry.addLine("ACCESSED");
 //            if(getDistanceToGoal() > 80) {
@@ -279,6 +280,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         //IMU yaw=0 is set at initial robot heading when robot is initial turned on.
         //    This orientation is carried to all programs later if robot is not turned off.
         //Here, fField angle is set to be
+
         double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
                 .getYaw(AngleUnit.DEGREES);
         double robotPedroPathHeadingDeg = Math.toDegrees(follower.getPose().getHeading());
@@ -341,6 +343,7 @@ public class BLUE_TeleOpV2 extends OpMode {
                 return;
             }
         }
+
 
 
 
@@ -417,6 +420,7 @@ public class BLUE_TeleOpV2 extends OpMode {
 
         switch (state) {
             case INTAKE:
+                executeOnce = true;
                 robot.kickerDOWN();
                 if (intakeMode.equals("normal")) {
                     double spindexerServoPosition = robot.getSpindexerServoPosition();
@@ -437,21 +441,11 @@ public class BLUE_TeleOpV2 extends OpMode {
 
                     if (currentSlot == 1 && balls[0].equals("NONE")) {
                         robot.spindexerIntakeSlot1();
-                    } //else if (currentSlot == 2) {
-//                        robot.spindexerIntakeSlot2();
-//                    } else if (currentSlot == 3 && balls[2].equals("NONE")) {
-//                        robot.spindexerIntakeSlot3();
-//                    }
+                    }
 
                     String ball = ballDetected();
-//                    if (intakeSlotPosition) {
-//                        ball = ballDetected();
-//                    } else {
-//                        ball = "NONE";
-//                    }
-
                     if (!(ball.equals("NONE"))) {
-                        if (currentSlot >= 0 && currentSlot < 3){
+                        if (currentSlot > 0 && currentSlot <= 3){
                             balls[currentSlot - 1] = ball;
                         }
                         if (currentSlot == 1) {
@@ -510,6 +504,23 @@ public class BLUE_TeleOpV2 extends OpMode {
                     shootingMode = "all3check";
 
                 }
+                //Shoot only next ball
+                else if (gamepad2.right_bumper){
+                    currentSlot = 4;
+                    if (!(balls[1].equals("NONE"))){
+                        robot.spindexerShootingSlot1();
+                        shootingMode = "checkShootingSlot1";
+                    }
+                    else if (!(balls[0].equals("NONE"))){
+                        robot.spindexerShootingSlot2();
+                        shootingMode = "checkShootingSlot2";
+                    }
+                    else if (!(balls[2].equals("NONE"))){
+                        robot.spindexerShootingSlot3();
+                        shootingMode = "checkShootingSlot3";
+                    }
+                }
+
                 if (shootingMode.equals("all3check") && robot.getSpindexerServoPosition() > 0.87){
                     shootingMode = "all3";
                     timer.reset();
@@ -519,9 +530,31 @@ public class BLUE_TeleOpV2 extends OpMode {
                     shootingMode = "manual";
                     state = State.SHOOT;
                 }
+                else if (shootingMode.equals("checkShootingSlot1") && robot.getSpindexerServoPosition() > 0.87 && robot.getSpindexerServoPosition() < 0.91){
+                    shootingMode = "onlySlot1";
+                    timer.reset();
+                    state = State.SHOOT;
+                }
+                else if (shootingMode.equals("checkShootingSlot2") && robot.getSpindexerServoPosition() > 0.53 && robot.getSpindexerServoPosition() < 0.57){
+                    shootingMode = "onlySlot2";
+                    timer.reset();
+                    state = State.SHOOT;
+                }
+                else if (shootingMode.equals("checkShootingSlot3") && robot.getSpindexerServoPosition() > 0.2 && robot.getSpindexerServoPosition() < 0.24){
+                    shootingMode = "onlySlot3";
+                    timer.reset();
+                    state = State.SHOOT;
+                }
 
                 break;
             case SHOOT:
+                //This is for bump correction
+                if(executeOnce){
+                    yaw = robot.imu.getRobotYawPitchRollAngles().getYaw();
+                    executeOnce = false;
+//                    bumpCorrectionTimer.reset();
+                }
+
                 // Old version of all 3:
                 if (shootingMode.equals("all3")){
                     if (timer.milliseconds() > 0 && timer.milliseconds() < 150){
@@ -626,6 +659,57 @@ public class BLUE_TeleOpV2 extends OpMode {
                     }
                     else if(gamepad2.right_trigger >= 0.2){
                         robot.spindexerShootingSlot3();
+                    }
+                }
+                else if (shootingMode.equals("onlySlot1")){
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 150){
+                        robot.spindexerShootingSlot1();
+                        robot.kickerUP();
+                    }
+                    else if(timer.milliseconds() >= 150 && timer.milliseconds() < 350){
+                        robot.spindexerShootingSlot1();
+                        robot.kickerDOWN();
+                    }
+                    else if(timer.milliseconds() > 350){
+                        robot.spindexerShootingSlot1();
+                        balls[1] = "NONE";
+                        currentSlot = 1;
+                        intakeSlotPosition = false;
+                        shootingMode = "none";
+                    }
+                }
+                else if (shootingMode.equals("onlySlot2")){
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 150){
+                        robot.spindexerShootingSlot2();
+                        robot.kickerUP();
+                    }
+                    else if(timer.milliseconds() >= 150 && timer.milliseconds() < 350){
+                        robot.spindexerShootingSlot2();
+                        robot.kickerDOWN();
+                    }
+                    else if(timer.milliseconds() > 350){
+                        robot.spindexerShootingSlot2();
+                        balls[0] = "NONE";
+                        currentSlot = 1;
+                        intakeSlotPosition = false;
+                        shootingMode = "none";
+                    }
+                }
+                else if (shootingMode.equals("onlySlot3")){
+                    if (timer.milliseconds() > 0 && timer.milliseconds() < 150){
+                        robot.spindexerShootingSlot3();
+                        robot.kickerUP();
+                    }
+                    else if(timer.milliseconds() >= 150 && timer.milliseconds() < 350){
+                        robot.spindexerShootingSlot3();
+                        robot.kickerDOWN();
+                    }
+                    else if(timer.milliseconds() > 350){
+                        robot.spindexerShootingSlot3();
+                        balls[2] = "NONE";
+                        currentSlot = 1;
+                        intakeSlotPosition = false;
+                        shootingMode = "none";
                     }
                 }
                 if (gamepad1.dpad_up || gamepad2.x){
@@ -768,6 +852,8 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Distance to goal",   Math.round( HardwareMain.getDistanceToGoal()* 10)/10);
         telemetryM.addData("Angle to goal from lightlight", Math.round(result.getTx()* 100)/100);
 
+        telemetryM.addData("Yaw", robot.imu.getRobotYawPitchRollAngles().getYaw());
+
 
 
 //TODO: comment out for now to use turret 360 degree PID method instead of previous one from Dominic
@@ -807,6 +893,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive: " + automatedDrive);
 
+
         telemetryM.addLine("");
         telemetryM.addLine("");
         telemetryM.addData("Goal X", GoalX);
@@ -823,6 +910,8 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Goal turretAngleRelativeToField_Deg = ", (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
         telemetryM.addData("Tx by LimeLight",  (double) Math.round(result.getTx() * 100 / 100));
         telemetryM.addLine(turrentAimingMethod);
+
+
 
         telemetryM.update(telemetry);
 
