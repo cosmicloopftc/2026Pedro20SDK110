@@ -125,7 +125,7 @@ public class HardwareMain {
 //        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 //        //Initialize IMU with this mounting orientation
 //        imu.initialize(new IMU.Parameters(orientationOnRobot));
-        //    imu.resetYaw();
+//            imu.resetYaw();
 
         //map and setup mode of Intake Motor
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
@@ -487,11 +487,13 @@ public class HardwareMain {
             double g = 9.8;
 
             double v = 7.3;
-            if (getDistanceToGoal() < 80 && getDistanceToGoal() > 47)
+            if (getDistanceToGoal() < 90 && getDistanceToGoal() > 47)
             {
                 v = 6.2;
-            }else{
+            }else if (getDistanceToGoal() > 35 || getDistanceToGoal() > 90){
                 v = 6.7;
+            }else {
+                v = 7;
             }
 
             //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
@@ -505,10 +507,9 @@ public class HardwareMain {
             }
 
             double result = -0.0312086 * (Math.min(theta1, theta2) * 180 / Math.PI) + 1.80914;
-            if (getDistanceToGoal() > 80) {
-                result = result - 0.04;
+            if (getDistanceToGoal() > 90) {
+                result = result - 0.02;
             }
-
             if (result < 0) {
                 result = 0;
             } else if (result >= 0.81) {
@@ -569,12 +570,7 @@ public class HardwareMain {
 
     public double deltaYaw(){
         if(BLUE_TeleOpV2.state == BLUE_TeleOpV2.State.SHOOT) {
-//            if(getDistanceToGoal() > 80){
-//                return 0.4 * (BLUE_TeleOpV2.yaw - imu.getRobotYawPitchRollAngles().getYaw() - 0.5 * imuOffset);
-//            }
-//            else {
-                return 0.7 * (BLUE_TeleOpV2.yaw - imu.getRobotYawPitchRollAngles().getYaw() - 0.6 * imuOffset);
-//            }
+            return (BLUE_TeleOpV2.yaw - imu.getRobotYawPitchRollAngles().getYaw() - 0.4 * imuOffset);
         }
         return 0;
     }
@@ -637,8 +633,6 @@ public class HardwareMain {
         }
         return getSpindexerPosition();
     }
-
-
 }
 
 

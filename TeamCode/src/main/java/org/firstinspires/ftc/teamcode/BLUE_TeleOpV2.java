@@ -255,22 +255,22 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Auto pipeline", autoPipeline);
 
 //TODO: Dominic's method to aim turret to goal (autoPipeline 0=red goal, 1=blue goal)
-//        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
-//            telemetry.addLine("ACCESSED");
-//            if(getDistanceToGoal() > 80) {
-//                robot.updateLimelightWithXVel(-3.5);
-//            }else{
-//                robot.updateLimelightWithXVel(0);
-//            }
-//        }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
-//            if(getDistanceToGoal() > 80) {
-//                robot.updateLimelightWithXVel(2.75);
-//            }else{
-//                robot.updateLimelightWithXVel(0);
-//            }
-//        }else{
-//            robot.turretMotor.setPower(0);
-//        }
+        if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1){
+            telemetry.addLine("ACCESSED");
+            if(getDistanceToGoal() > 90) {
+                robot.updateLimelightWithXVel(-3.5);
+            }else{
+                robot.updateLimelightWithXVel(0);
+            }
+        }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
+            if(getDistanceToGoal() > 90) {
+                robot.updateLimelightWithXVel(2.75);
+            }else{
+                robot.updateLimelightWithXVel(0);
+            }
+        }else{
+            robot.turretMotor.setPower(0);
+        }
 
 
 
@@ -319,7 +319,7 @@ public class BLUE_TeleOpV2 extends OpMode {
 //            return;
 //        }
 
-
+        /**
         if ((turretAngleRelativeToRobot_Deg > -120) && (turretAngleRelativeToRobot_Deg < 120)) {
             if (!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) {
                 telemetryM.addLine("ACCESSED BLUE");
@@ -343,7 +343,7 @@ public class BLUE_TeleOpV2 extends OpMode {
                 return;
             }
         }
-
+        */
 
 
 
@@ -754,11 +754,12 @@ public class BLUE_TeleOpV2 extends OpMode {
             shooterOn = true;
         }
         if(shooterOn){
-            if(getDistanceToGoal() > 80 && result.isValid()) {
-                currentSpeed = -215;            //214
+            if(getDistanceToGoal() > 90 && result.isValid()) {
+                currentSpeed = -212;            //214
             }else if(result.isValid()){
-                currentSpeed = -168;
+                currentSpeed = -170;
             }
+
             if(result.isValid()){
                 robot.shooterVELO(currentSpeed);
             }
@@ -847,8 +848,8 @@ public class BLUE_TeleOpV2 extends OpMode {
 //        telemetryM.addData("Launch angle", HardwareMain.getLaunchAngle());
 //        telemetryM.addData("Distance to goal", HardwareMain.getDistanceToGoal());
 //        telemetryM.addData("Angle to goal from lightlight", result.getTy());
-        telemetryM.addData("Hood position", Math.round(robot.hoodServo.getPosition()* 100)/100);
-        telemetryM.addData("Launch angle", Math.round(HardwareMain.getLaunchAngle()* 100)/100);
+        telemetryM.addData("Hood position", robot.hoodServo.getPosition());
+        telemetryM.addData("Launch angle", HardwareMain.getLaunchAngle());
         telemetryM.addData("Distance to goal",   Math.round( HardwareMain.getDistanceToGoal()* 10)/10);
         telemetryM.addData("Angle to goal from lightlight", Math.round(result.getTx()* 100)/100);
 
@@ -909,7 +910,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Cur turretAngleRelativeToField_Deg = ", (double) Math.round(turretAngleRelativeToField_Deg) * 10 / 10);
         telemetryM.addData("Goal turretAngleRelativeToField_Deg = ", (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
         telemetryM.addData("Tx by LimeLight",  (double) Math.round(result.getTx() * 100 / 100));
-        telemetryM.addLine(turrentAimingMethod);
+//        telemetryM.addLine(turrentAimingMethod);
 
 
 
