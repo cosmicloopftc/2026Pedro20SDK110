@@ -12,7 +12,7 @@ public class AutoToTeleopData {
     public static double transferServoPos = 0.0;
     public static double hoodServoPos = 0.0;
     public static int turretMotorPos = 0;
-    public static int limeLightPipeline = 0;
+    public static int limeLightPipeline = 0;         //pipeline to BLUE = 1 (RED = 0)
     public static boolean autoRan = false;
 
 

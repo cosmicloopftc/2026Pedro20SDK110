@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.Hardware;
 /** copy over from Marcus' branch 1/18/2026
  */
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad2;
+
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -58,7 +60,7 @@ public class HardwareMain {
     public GoBildaPinpointDriver pinpoint;
 
     public DcMotorEx intakeMotor = null;
-    public CRServo transferServo = null;
+//    public CRServo transferServo = null;
     public Servo leftKickerServo = null;
     public Servo rightKickerServo = null;
     public Servo spindexerServo = null;
@@ -85,17 +87,17 @@ public class HardwareMain {
     //public NormalizedColorSensor backBallColorSensor = null;
 
 
-    public DigitalChannel LEDrightGreen;
-    public DigitalChannel LEDrightRed;
-    public DigitalChannel LEDleftRed;
-    public DigitalChannel LEDleftGreen;
-    public DigitalChannel LEDcenterGreen;
-    public DigitalChannel LEDcenterRed;
+//    public DigitalChannel LEDrightGreen;
+//    public DigitalChannel LEDrightRed;
+//    public DigitalChannel LEDleftRed;
+//    public DigitalChannel LEDleftGreen;
+//    public DigitalChannel LEDcenterGreen;
+//    public DigitalChannel LEDcenterRed;
 
     public Servo slot1RGB = null;
     public Servo slot2RGB = null;
     public Servo slot3RGB = null;
-
+    public Servo statusRGB = null;
     double newForward = 0, newRight = 0, driveTheta = 0, r = 0 ;
 
     final float[] right_hsvValues = new float[3];
@@ -153,8 +155,8 @@ public class HardwareMain {
         spindexerServoPosition = hardwareMap.get(AnalogInput.class, "spindexerServoPosition");
 
 
-        transferServo = hardwareMap.get(CRServo.class, "transferServo");
-        transferServo.setDirection(DcMotorSimple.Direction.REVERSE);
+//        transferServo = hardwareMap.get(CRServo.class, "transferServo");
+//        transferServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         leftKickerServo = hardwareMap.get(Servo.class,"leftKickerServo");
         leftKickerServo.setDirection(Servo.Direction.FORWARD);
@@ -213,19 +215,19 @@ public class HardwareMain {
          pin0 = hardwareMap.analogInput.get("analog0");
          pin1 = hardwareMap.analogInput.get("analog2");
 
-        LEDcenterGreen = hardwareMap.get(DigitalChannel.class, "centerGreen");               //connect to Digital port 4
-        LEDcenterRed = hardwareMap.get(DigitalChannel.class, "centerRed");                   //connect to Digital port 5
-
-        LEDleftGreen = hardwareMap.get(DigitalChannel.class, "leftGreen");               //connect to Digital port 2
-        LEDleftRed = hardwareMap.get(DigitalChannel.class, "leftRed");                   //connect to Digital port 3
-
-        LEDrightGreen = hardwareMap.get(DigitalChannel.class, "rightGreen");             //connect to Digital port 0
-        LEDrightRed = hardwareMap.get(DigitalChannel.class, "rightRed");             //connect to Digital port 1
+//        LEDcenterGreen = hardwareMap.get(DigitalChannel.class, "centerGreen");               //connect to Digital port 4
+//        LEDcenterRed = hardwareMap.get(DigitalChannel.class, "centerRed");                   //connect to Digital port 5
+//
+//        LEDleftGreen = hardwareMap.get(DigitalChannel.class, "leftGreen");               //connect to Digital port 2
+//        LEDleftRed = hardwareMap.get(DigitalChannel.class, "leftRed");                   //connect to Digital port 3
+//
+//        LEDrightGreen = hardwareMap.get(DigitalChannel.class, "rightGreen");             //connect to Digital port 0
+//        LEDrightRed = hardwareMap.get(DigitalChannel.class, "rightRed");             //connect to Digital port 1
 
         slot1RGB = hardwareMap.get(Servo.class,"slot1RGB");
         slot2RGB = hardwareMap.get(Servo.class,"slot2RGB");
         slot3RGB = hardwareMap.get(Servo.class,"slot3RGB");
-
+        statusRGB = hardwareMap.get(Servo.class,"statusRGB");
 
 
 //?unknown source        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
@@ -369,16 +371,16 @@ public class HardwareMain {
     }
 
     //For Omniwheel transfer:
-    public void transferUP(){
-        transferServo.setPower(0.8);
-
-    }
-    public void transferDOWN(){
-        transferServo.setPower(-0.8);
-    }
-    public void transferSTOP(){
-        transferServo.setPower(0);
-    }
+//    public void transferUP(){
+//        transferServo.setPower(0.8);
+//
+//    }
+//    public void transferDOWN(){
+//        transferServo.setPower(-0.8);
+//    }
+//    public void transferSTOP(){
+//        transferServo.setPower(0);
+//    }
 
     //For kicker servo transfer:
     public void kickerUP(){
@@ -508,7 +510,7 @@ public class HardwareMain {
             }else if (getDistanceToGoal() > 35 || getDistanceToGoal() > 90){
                 v = 6.7;
             }else {
-                v = 7;
+                v = 6.5;
             }
 
             //This is a common value in the equation which I assigned to a variable to cut down on the number of calculations the computer had to do
@@ -561,11 +563,10 @@ public class HardwareMain {
 
     public void updateLimelightWithXVel(double offset){
         ElapsedTime limelightTimer = new ElapsedTime();
-        imuOffset = deltaYaw();
         LLResult result = limelight.getLatestResult();
         if((result.getTx() != 0 || limelightTimer.milliseconds() < 150) && turretMotor.getCurrentPosition() < 833 && turretMotor.getCurrentPosition() > -833) {
             limelightTimer.reset();
-            double tx = result.getTx() + offset + imuOffset;
+            double tx = result.getTx() + offset;
             double min_command = 0.027;
             double Kp = -0.024;
             double heading_error = -tx;

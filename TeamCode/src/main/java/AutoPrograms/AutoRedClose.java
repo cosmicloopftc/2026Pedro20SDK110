@@ -16,10 +16,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Autonomous(name = "Red Close V1.0", group = "Examples")
 public class AutoRedClose extends OpMode {
+    public int currentSlot = 1;
+    public String[] balls = {"NONE", "NONE", "NONE"};
+
     private static boolean firstTime;
     private static boolean secondTime;
     private static boolean startRunningLimelight = false;
@@ -37,7 +41,9 @@ public class AutoRedClose extends OpMode {
 
     private final Pose pickup2Pose = new Pose(96, 57, Math.toRadians(0));
     private final Pose pickup2Pose2 = new Pose(133, 57, Math.toRadians(0));
-    private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
+
+    private final Pose parkPose = new Pose(119,84, Math.toRadians(90));
+    private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
 
     public void buildPaths() {
         scorePreload = follower.pathBuilder()
@@ -86,6 +92,12 @@ public class AutoRedClose extends OpMode {
                 .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
                 .setConstraints(Constants.pathConstraints)
                 .build();
+
+        park = follower.pathBuilder()
+                .addPath( new BezierLine(scorePose, parkPose))
+                .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
+                .setConstraints(Constants.pathConstraints)
+                .build();
     }
 
     public void autonomousPathUpdate() {
@@ -93,17 +105,17 @@ public class AutoRedClose extends OpMode {
         switch (pathState) {
             case 0:
                 if (!follower.isBusy()) {
+                    robot.spindexerShootingSlot1();
                     robot.hoodServo.setPosition(0.47);
-                    robot.spindexerIntakeSlot1();
                     robot.shooterVELO(-157);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
-                    if(pathTimer.getElapsedTime() > 250){
+                    if(pathTimer.getElapsedTime() > 150){
                         startRunningLimelight = true;
                     }
                     if(pathTimer.getElapsedTime() > 2000) {
-                        robot.transferUP();
+                        robot.kickerUP();
 //                        robot.intakeServoIN();
                         pathTimer.resetTimer();
                         setPathState(1);
@@ -114,65 +126,112 @@ public class AutoRedClose extends OpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    time = 1000;
-                    if((pathTimer.getElapsedTime() < 1000)){
-                        robot.transferUP();
+                    time = 750;
+                    if((pathTimer.getElapsedTime() < 750)){
+                        robot.intakeSTOP();
+                        robot.kickerUP();
                     }else if(pathTimer.getElapsedTime() < time+250) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                     }
                     else if(pathTimer.getElapsedTime() < time+1000) {
-                        robot.spindexerIntakeSlot2();
+                        robot.spindexerShootingSlot2();
                     }else if(pathTimer.getElapsedTime() < time+1750) {
-                        robot.transferUP();
+                        robot.kickerUP();
                     }
                     else if(pathTimer.getElapsedTime() < time+2000) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                     }
                     else if(pathTimer.getElapsedTime() < time+2750) {
-                        robot.spindexerIntakeSlot3();
+                        robot.spindexerShootingSlot3();
                     }
                     else if(pathTimer.getElapsedTime() < time+3250) {
-                        robot.transferUP();
+                        robot.kickerUP();
                     }
                     else if(pathTimer.getElapsedTime() < time+4000) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                         robot.spindexerIntakeSlot1();
 //                        robot.shooterOFF();
                         if(firstTime) {
+                            startRunningLimelight = false;
                             setPathState(2);
+//                            firstTime = false;
                         }else if(secondTime){
+                            startRunningLimelight = false;
                             setPathState(5);
                         }else{
-                            setPathState(-1);
+                            setPathState(12);
                         }
                     }
                 }
                 break;
-            case 2:
-                if (!follower.isBusy()) {
-                    robot.transferDOWN();
-                    robot.intakeIN();
-
-//                    robot.intakeServoIN();
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+            case 13:
+                if(!follower.isBusy()) {
                     follower.followPath(goToPickup1, true);
-                    follower.followPath(grabPickup1, true);
-                    setPathState(3);
+                    if(follower.getPose().getY() >= pickup1Pose.getY()-0.5 && follower.getPose().getY() <= pickup1Pose.getY()+0.5 &&
+                            follower.getPose().getY() >= pickup1Pose.getX()-0.5 && follower.getPose().getY() <= pickup1Pose.getX()+0.5){
+                        setPathState(2);
+                    }
+
                 }
                 break;
+            case 2:
+                telemetry.addData("balls[]", Arrays.toString(balls));
+
+                robot.kickerDOWN();
+                robot.intakeIN();
+                //Intake code
+            {
+                double spindexerServoPosition = robot.getSpindexerServoPosition();
+
+                if (spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0){
+                    currentSlot = 1;
+                }
+                else if (spindexerServoPosition > 0.37 && spindexerServoPosition < 0.4 && robot.spindexerServo.getPosition() == 0.37){
+                    currentSlot = 2;
+                }
+                else if (spindexerServoPosition > 0.7 && spindexerServoPosition < 0.75 && robot.spindexerServo.getPosition() == 0.74){
+                    currentSlot = 3;
+                }
+
+                String ball = ballDetected();
+                telemetry.addData("balls", ball);
+
+                if (currentSlot == 1 && balls[0].equals("NONE")) {
+                    robot.spindexerIntakeSlot1();
+                }
+
+                if (!(ball.equals("NONE"))) {
+                    telemetry.addLine("ACCESSED");
+                    balls[currentSlot - 1] = ball;
+                    if (currentSlot == 1) {
+                        robot.spindexerIntakeSlot2();
+                    } else if (currentSlot == 2) {
+                        robot.spindexerIntakeSlot3();
+                    } else {
+                        robot.intakeOUT();
+                        robot.spindexerShootingSlot1(); // TODO: switch to shooting state? intake out? stop intake?
+                    }
+                }
+            }
+            if (!follower.isBusy()) {
+                follower.followPath(grabPickup1, 0.5,true);
+                if(pathTimer.getElapsedTime() > 3000) {
+                    setPathState(3);
+                }
+            }
+            break;
             case 3:
                 if (!follower.isBusy()) {
+                    robot.spindexerShootingSlot1();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
-                    if(pathTimer.getElapsedTime() > 4000) {
-                        robot.intakeOUT();
-//                        robot.intakeServoOUT();
-                    }
-                    if(pathTimer.getElapsedTime() > 5500) {
+
+                    if(pathTimer.getElapsedTime() > 3500) {
 //                        robot.hoodServo.setPosition(0.46);
 //                        robot.intakeServoSTOP();
-                        robot.transferUP();
+                        robot.kickerUP();
                         firstTime = false;
+                        startRunningLimelight = true;
                         setPathState(1);
                     }
                 }
@@ -186,24 +245,24 @@ public class AutoRedClose extends OpMode {
                         robot.intakeOUT();
 //                        robot.intakeServoIN();
                     }else if(pathTimer.getElapsedTime() < time+250) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                     }
                     else if(pathTimer.getElapsedTime() < time+1000) {
-                        robot.spindexerIntakeSlot2();
+                        robot.spindexerShootingSlot2();
                     }else if(pathTimer.getElapsedTime() < time+1750) {
-                        robot.transferUP();
+                        robot.kickerUP();
                     }
                     else if(pathTimer.getElapsedTime() < time+2250) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                     }
                     else if(pathTimer.getElapsedTime() < time+2750) {
-                        robot.spindexerIntakeSlot3();
+                        robot.spindexerShootingSlot3();
                     }
                     else if(pathTimer.getElapsedTime() < time+3250) {
-                        robot.transferUP();
+                        robot.kickerUP();
                     }
                     else if(pathTimer.getElapsedTime() < time+3750) {
-                        robot.transferDOWN();
+                        robot.kickerDOWN();
                         robot.spindexerIntakeSlot1();
 //                        robot.intakeServoSTOP();
                         setPathState(5);
@@ -212,23 +271,54 @@ public class AutoRedClose extends OpMode {
                 break;
             case 5:
                 if (!follower.isBusy()) {
-                    robot.turretMotor.setTargetPosition(0);
-                    robot.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(goToPickup2, true);
                     setPathState(6);
                 }
                 break;
             case 6:
-                if (!follower.isBusy()) {
-                    robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    robot.intakeIN();
+                //Intake code, put outside the !follower.isBusy() statement
+            {
+                double spindexerServoPosition = robot.getSpindexerServoPosition();
+
+                if (spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0){
+                    currentSlot = 1;
+                }
+                else if (spindexerServoPosition > 0.37 && spindexerServoPosition < 0.4 && robot.spindexerServo.getPosition() == 0.37){
+                    currentSlot = 2;
+                }
+                else if (spindexerServoPosition > 0.7 && spindexerServoPosition < 0.75 && robot.spindexerServo.getPosition() == 0.74){
+                    currentSlot = 3;
+                }
+
+                String ball = ballDetected();
+
+                if (currentSlot == 1 && balls[0].equals("NONE")) {
+                    robot.spindexerIntakeSlot1();
+                }
+
+                if (!(ball.equals("NONE"))) {
+                    balls[currentSlot - 1] = ball;
+                    if (currentSlot == 1) {
+                        robot.spindexerIntakeSlot2();
+                    } else if (currentSlot == 2) {
+                        robot.spindexerIntakeSlot3();
+                    } else {
+                        robot.intakeOUT();
+                        robot.spindexerShootingSlot1(); // TODO: switch to shooting state? intake out? stop intake?
+                    }
+                }
+            }
+            if (!follower.isBusy()) {
+                robot.intakeIN();
 //                    robot.intakeServoIN();
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2, true);
+                /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                follower.followPath(grabPickup2, 0.4, true);
+                if(pathTimer.getElapsedTime() > 2750) {
                     setPathState(7);
                 }
-                break;
+            }
+            break;
             case 7:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
@@ -239,11 +329,19 @@ public class AutoRedClose extends OpMode {
                 break;
             case 11:
                 if (!follower.isBusy()) {
-                    if(pathTimer.getElapsedTime() > 3500){
-//                        robot.intakeServoOUT();
-                        robot.intakeOUT();
-                        setPathState(1);
+                    if(pathTimer.getElapsedTime() > 2250){
+                        robot.spindexerShootingSlot1();
+                        if(pathTimer.getElapsedTime() > 2750) {
+                            startRunningLimelight = true;
+                            setPathState(1);
+                        }
                     }
+                }
+                break;
+            case 12:
+                if(!follower.isBusy()){
+                    follower.followPath(park);
+                    setPathState(-1);
                 }
                 break;
         }
@@ -363,5 +461,26 @@ public class AutoRedClose extends OpMode {
      **/
     @Override
     public void stop() {
+    }
+
+    public static String ballDetected(){
+        String detectedBall = "";
+//        if (hue > 200 && hue < 250) {
+//            detectedColor = "PURPLE BALL";
+//        } else if (hue > 150 && hue < 180) {
+//            detectedColor = "GREEN BALL";
+//        } else if (hue < 150) {
+//            detectedColor = "NONE";
+//        }
+        if (robot.leftColorPin0.getState()) {
+            detectedBall = "PURPLE BALL";
+        } else if (robot.leftColorPin1.getState()) {
+            detectedBall = "GREEN BALL";
+        } else if (robot.rightColorPin1.getState()) {
+            detectedBall = "BALL";
+        } else{
+            detectedBall = "NONE";
+        }
+        return detectedBall;
     }
 }

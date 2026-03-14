@@ -1,16 +1,13 @@
-package AutoPrograms; // make sure this aligns with class location
+package AutoPrograms.OLD; // make sure this aligns with class location
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
@@ -19,14 +16,16 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import java.util.Arrays;
 import java.util.List;
 
-@Autonomous(name = "Blue Close V1.0", group = "Blue")
-public class AutoBlueClose extends OpMode {
-    public int currentSlot = 1;
-    public String[] balls = {"NONE", "NONE", "NONE"};
+import AutoPrograms.AutoToTeleopData;
 
+//@Autonomous(name = "Blue Far V1.0", group = "Examples")
+public class AutoBlueFarOLD extends OpMode {
     private static boolean firstTime;
     private static boolean secondTime;
     private static boolean startRunningLimelight = false;
+
+    public int currentSlot = 1;
+    public String[] balls = {"NONE", "NONE", "NONE"};
 
     public static HardwareMain robot = new HardwareMain();
 
@@ -34,15 +33,17 @@ public class AutoBlueClose extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(58, 102, Math.toRadians(150));
-    private final Pose pickup1Pose = new Pose(48, 84, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(19, 84, Math.toRadians(180));
 
-    private final Pose pickup2Pose = new Pose(48, 57, Math.toRadians(180));
-    private final Pose pickup2Pose2 = new Pose(8.5, 57, Math.toRadians(180));
+    private int autoLimelightPipeline = 1;          //pipeline to BLUE = 1 (RED = 0)
 
-    private final Pose parkPose = new Pose(27,84, Math.toRadians(90));
+    private final Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.
+    private final Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(180)); // Scoring Pose of our robot.
+    private final Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(180));
+    private final Pose scorePose = new Pose(56, 13, Math.toRadians(120));
+    private final Pose parkPose = new Pose(47,19, Math.toRadians(90));
+
+    private final Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
+    private final Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
 
     public void buildPaths() {
@@ -84,18 +85,19 @@ public class AutoBlueClose extends OpMode {
                 .addPath(new BezierLine(pickup2Pose, pickup2Pose2))
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickup2Pose2.getHeading())
                 .setConstraints(Constants.pathConstraints)
+//                .setVelocityConstraint(0.5)
                 .build();
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup2 = follower.pathBuilder()
-                .addPath( new BezierCurve(pickup2Pose2, new Pose(32.530, 55.939), scorePose))
+                .addPath(new BezierLine(pickup2Pose2, scorePose))
                 .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
                 .setConstraints(Constants.pathConstraints)
                 .build();
 
         park = follower.pathBuilder()
-                .addPath( new BezierLine(scorePose, parkPose))
-                .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
+                .addPath(new BezierLine(scorePose, parkPose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), parkPose.getHeading())
                 .setConstraints(Constants.pathConstraints)
                 .build();
     }
@@ -106,8 +108,8 @@ public class AutoBlueClose extends OpMode {
             case 0:
                 if (!follower.isBusy()) {
                     robot.spindexerShootingSlot1();
-                    robot.hoodServo.setPosition(0.47);
-                    robot.shooterVELO(-157);
+                    robot.hoodServo.setPosition(0.72);
+                    robot.shooterVELO(-208);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePreload, true);
@@ -143,6 +145,9 @@ public class AutoBlueClose extends OpMode {
                     }
                     else if(pathTimer.getElapsedTime() < time+2750) {
                         robot.spindexerShootingSlot3();
+                        if(!secondTime){
+                            robot.hoodServo.setPosition(0.7);
+                        }
                     }
                     else if(pathTimer.getElapsedTime() < time+3250) {
                         robot.kickerUP();
@@ -152,11 +157,9 @@ public class AutoBlueClose extends OpMode {
                         robot.spindexerIntakeSlot1();
 //                        robot.shooterOFF();
                         if(firstTime) {
-                            startRunningLimelight = false;
                             setPathState(2);
 //                            firstTime = false;
                         }else if(secondTime){
-                            startRunningLimelight = false;
                             setPathState(5);
                         }else{
                             setPathState(12);
@@ -167,8 +170,8 @@ public class AutoBlueClose extends OpMode {
             case 13:
                 if(!follower.isBusy()) {
                     follower.followPath(goToPickup1, true);
-                    if(follower.getPose().getY() >= pickup1Pose.getY()-0.5 && follower.getPose().getY() <= pickup1Pose.getY()+0.5 &&
-                            follower.getPose().getY() >= pickup1Pose.getX()-0.5 && follower.getPose().getY() <= pickup1Pose.getX()+0.5){
+                    if(follower.getPose().getY() >= pickup1Pose.getY()-1 && follower.getPose().getY() <= pickup1Pose.getY()+1 &&
+                        follower.getPose().getY() >= pickup1Pose.getX()-1 && follower.getPose().getY() <= pickup1Pose.getX()+1){
                         setPathState(2);
                     }
 
@@ -180,7 +183,7 @@ public class AutoBlueClose extends OpMode {
                 robot.kickerDOWN();
                 robot.intakeIN();
                 //Intake code
-            {
+                {
                 double spindexerServoPosition = robot.getSpindexerServoPosition();
 
                 if (spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0){
@@ -194,7 +197,7 @@ public class AutoBlueClose extends OpMode {
                 }
 
                 String ball = ballDetected();
-                telemetry.addData("balls", ball);
+                    telemetry.addData("balls", ball);
 
                 if (currentSlot == 1 && balls[0].equals("NONE")) {
                     robot.spindexerIntakeSlot1();
@@ -212,26 +215,26 @@ public class AutoBlueClose extends OpMode {
                         robot.spindexerShootingSlot1(); // TODO: switch to shooting state? intake out? stop intake?
                     }
                 }
-            }
-            if (!follower.isBusy()) {
-                follower.followPath(grabPickup1, 0.5,true);
-                if(pathTimer.getElapsedTime() > 3000) {
-                    setPathState(3);
                 }
-            }
-            break;
+                if (!follower.isBusy()) {
+                    follower.followPath(grabPickup1, 0.5,true);
+                    if(pathTimer.getElapsedTime() > 3000) {
+                        setPathState(3);
+                    }
+                }
+                break;
             case 3:
                 if (!follower.isBusy()) {
                     robot.spindexerShootingSlot1();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(scorePickup1, true);
+                    robot.shooterVELO(-208);
 
                     if(pathTimer.getElapsedTime() > 3500) {
 //                        robot.hoodServo.setPosition(0.46);
 //                        robot.intakeServoSTOP();
                         robot.kickerUP();
                         firstTime = false;
-                        startRunningLimelight = true;
                         setPathState(1);
                     }
                 }
@@ -278,7 +281,7 @@ public class AutoBlueClose extends OpMode {
                 break;
             case 6:
                 //Intake code, put outside the !follower.isBusy() statement
-            {
+                {
                 double spindexerServoPosition = robot.getSpindexerServoPosition();
 
                 if (spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0){
@@ -309,16 +312,16 @@ public class AutoBlueClose extends OpMode {
                     }
                 }
             }
-            if (!follower.isBusy()) {
-                robot.intakeIN();
+                if (!follower.isBusy()) {
+                    robot.intakeIN();
 //                    robot.intakeServoIN();
-                /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                follower.followPath(grabPickup2, 0.4, true);
-                if(pathTimer.getElapsedTime() > 2750) {
-                    setPathState(7);
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    follower.followPath(grabPickup2, 0.45, true);
+                    if(pathTimer.getElapsedTime() > 2750) {
+                        setPathState(7);
+                    }
                 }
-            }
-            break;
+                break;
             case 7:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
@@ -332,7 +335,6 @@ public class AutoBlueClose extends OpMode {
                     if(pathTimer.getElapsedTime() > 2250){
                         robot.spindexerShootingSlot1();
                         if(pathTimer.getElapsedTime() > 2750) {
-                            startRunningLimelight = true;
                             setPathState(1);
                         }
                     }
@@ -362,8 +364,8 @@ public class AutoBlueClose extends OpMode {
     public void loop() {
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
-        if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 245 && robot.turretMotor.getCurrentPosition() > -263 && startRunningLimelight) {
-            double tx = result.getTx();
+        if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -233 && startRunningLimelight) {
+            double tx = result.getTx() - 3.5;
             double min_command = 0.02;
             double Kp = -0.015;
             double heading_error = -tx;
@@ -402,8 +404,8 @@ public class AutoBlueClose extends OpMode {
         AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
         AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
 
-        AutoToTeleopData.limeLightPipeline = 1;
-        AutoToTeleopData.autoRan = true;
+        AutoToTeleopData.limeLightPipeline = autoLimelightPipeline;
+        AutoToTeleopData.autoRan = true;            //=true when data is coming from Auto so that TeleOp can use the data coming from Auto.
     }
 
     /**
@@ -418,13 +420,14 @@ public class AutoBlueClose extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+        robot.kickerDOWN();
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);
 
-
         robot.limelight.pipelineSwitch(1);
+
         //Set up bulk data reading
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
@@ -483,4 +486,3 @@ public class AutoBlueClose extends OpMode {
         return detectedBall;
     }
 }
-

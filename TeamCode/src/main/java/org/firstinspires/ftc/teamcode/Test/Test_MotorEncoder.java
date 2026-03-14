@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.Test;
 
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+//import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.bylazar.telemetry.PanelsTelemetry;

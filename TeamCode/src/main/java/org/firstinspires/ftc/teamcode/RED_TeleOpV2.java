@@ -29,7 +29,7 @@ public class RED_TeleOpV2 extends BLUE_TeleOpV2 {
         //For now, at start of TeleOp, set RED FAR robot to be at BLUE Endgame box = (38. 33, ....) and point up to goal Y direction
         //For now, at start of TeleOp, set RED NEAR robot to be at ??? and point up to goal Y direction
 
-        autoPipeline = 0;  // TODO: set pipeline to Red
+        autoPipeline = 0;  // TODO: set autoPipeline to Red = 0 (BLUE = 1)
         GoalX = 129;                    //RED goal coordinates
         GoalY = 128;
         startingPose = new Pose(105,33, Math.toRadians(90)); //    Consider having the robot at this BLUE endgame box area.
