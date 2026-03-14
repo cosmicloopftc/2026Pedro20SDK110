@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 //             in HardwareMain, and in TeleOpV2.java
 
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+//import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
@@ -171,14 +171,14 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addLine("Initialized all mechanisms");
 
 //        robot.limelight.pipelineSwitch(2);
-        robot.LEDrightGreen.setMode(DigitalChannel.Mode.OUTPUT);
-        robot.LEDrightRed.setMode(DigitalChannel.Mode.OUTPUT);
-        robot.LEDleftGreen.setMode(DigitalChannel.Mode.OUTPUT);
-        robot.LEDleftRed.setMode(DigitalChannel.Mode.OUTPUT);
-        robot.LEDrightGreen.setState(true);
-        robot.LEDleftGreen.setState(true);
-        robot.LEDrightRed.setState(true);
-        robot.LEDleftRed.setState(true);
+//        robot.LEDrightGreen.setMode(DigitalChannel.Mode.OUTPUT);
+//        robot.LEDrightRed.setMode(DigitalChannel.Mode.OUTPUT);
+//        robot.LEDleftGreen.setMode(DigitalChannel.Mode.OUTPUT);
+//        robot.LEDleftRed.setMode(DigitalChannel.Mode.OUTPUT);
+//        robot.LEDrightGreen.setState(true);
+//        robot.LEDleftGreen.setState(true);
+//        robot.LEDrightRed.setState(true);
+//        robot.LEDleftRed.setState(true);
 //        if(gamepad2.left_bumper){
 //            robot.limelight.pipelineSwitch(0);
 //// TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
@@ -231,10 +231,10 @@ public class BLUE_TeleOpV2 extends OpMode {
         follower.update();
         robot.limelight.start();
 //        robot.limelight.pipelineSwitch(1);
-        robot.LEDrightGreen.setState(false);
-        robot.LEDleftGreen.setState(false);
-        robot.LEDrightRed.setState(false);
-        robot.LEDleftRed.setState(false);
+//        robot.LEDrightGreen.setState(false);
+//        robot.LEDleftGreen.setState(false);
+//        robot.LEDrightRed.setState(false);
+//        robot.LEDleftRed.setState(false);
     }
     @Override
     public void loop() {
@@ -266,7 +266,7 @@ public class BLUE_TeleOpV2 extends OpMode {
             }
         }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
             if(getDistanceToGoal() > 90) {
-                robot.updateLimelightWithXVel(2.75);
+                robot.updateLimelightWithXVel(1.5);
             }else{
                 robot.updateLimelightWithXVel(0);
             }
@@ -357,35 +357,35 @@ public class BLUE_TeleOpV2 extends OpMode {
 
         //close zone 163; far zone: 205
         shooterSpeed = robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES);
-        if (shooterSpeed >= 195 && shooterSpeed <= 215 && !aprilTags.isEmpty()){
-            //detect AprilTag AND shooterSpeed is at HIGH speed target: GREEN, GREEN (both tag and high speed)
-            robot.LEDrightGreen.setState(true);
-            robot.LEDleftGreen.setState(true);
-            robot.LEDrightRed.setState(false);
-            robot.LEDleftRed.setState(false);
-        }
-        else if (shooterSpeed >= 155 && shooterSpeed <= 175 && !aprilTags.isEmpty()) {
-            //detect AprilTag AND shooterSpeed is at LOW speed target: GREEN, RED (both tag and low speed)
-            robot.LEDrightGreen.setState(false);
-            robot.LEDleftGreen.setState(true);
-            robot.LEDrightRed.setState(true);
-            robot.LEDleftRed.setState(false);
-        }
-        else if (!aprilTags.isEmpty()){
-            //detect AprilTag only: ORANGE, ORANGE
-            robot.LEDrightGreen.setState(true);
-            robot.LEDleftGreen.setState(true);
-            robot.LEDrightRed.setState(true);
-            robot.LEDleftRed.setState(true);
-        }
-        else{
-            //NO AprilTag AND not at any speed target: RED, RED  (don't bother shooting.)
-            robot.LEDrightGreen.setState(false);
-            robot.LEDleftGreen.setState(false);
-            robot.LEDrightRed.setState(true);
-            robot.LEDleftRed.setState(true);
-        }
-
+//        if (shooterSpeed >= 195 && shooterSpeed <= 215 && !aprilTags.isEmpty()){
+//            //detect AprilTag AND shooterSpeed is at HIGH speed target: GREEN, GREEN (both tag and high speed)
+////            robot.LEDrightGreen.setState(true);
+////            robot.LEDleftGreen.setState(true);
+////            robot.LEDrightRed.setState(false);
+////            robot.LEDleftRed.setState(false);
+//        }
+//        else if (shooterSpeed >= 155 && shooterSpeed <= 175 && !aprilTags.isEmpty()) {
+//            //detect AprilTag AND shooterSpeed is at LOW speed target: GREEN, RED (both tag and low speed)
+//            robot.LEDrightGreen.setState(false);
+//            robot.LEDleftGreen.setState(true);
+//            robot.LEDrightRed.setState(true);
+//            robot.LEDleftRed.setState(false);
+//        }
+//        else if (!aprilTags.isEmpty()){
+//            //detect AprilTag only: ORANGE, ORANGE
+//            robot.LEDrightGreen.setState(true);
+//            robot.LEDleftGreen.setState(true);
+//            robot.LEDrightRed.setState(true);
+//            robot.LEDleftRed.setState(true);
+//        }
+//        else{
+//            //NO AprilTag AND not at any speed target: RED, RED  (don't bother shooting.)
+//            robot.LEDrightGreen.setState(false);
+//            robot.LEDleftGreen.setState(false);
+//            robot.LEDrightRed.setState(true);
+//            robot.LEDleftRed.setState(true);
+//        }
+//
 
 
 
@@ -922,6 +922,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive: " + automatedDrive);
 
+        telemetry.addData("Auto pipeline", autoPipeline);
 
         telemetryM.addLine("");
         telemetryM.addLine("");
@@ -937,7 +938,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Right Flywheel/Shooter (deg/sec) = ", (double) Math.round(leftFlywheelVelocity) * 10 / 10);
         telemetryM.addData("Cur turretAngleRelativeToField_Deg = ", (double) Math.round(turretAngleRelativeToField_Deg) * 10 / 10);
         telemetryM.addData("Goal turretAngleRelativeToField_Deg = ", (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
-        telemetryM.addData("Tx by LimeLight",  (double) Math.round(result.getTx() * 100 / 100));
+        telemetryM.addData("Tx by LimeLight",  Math.round(result.getTx()));
 //        telemetryM.addLine(turrentAimingMethod);
 
 
