@@ -1,26 +1,34 @@
 package AutoPrograms; // make sure this aligns with class location
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.configurables.annotations.IgnoreConfigurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
-import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.BLUE_TeleOpV2;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
 
 import java.util.Arrays;
 import java.util.List;
 
-@Autonomous(name = "Blue Far V1.0", group = "Examples")
-public class AutoBlueFar extends OpMode {
+@Configurable
+@Autonomous(name = "test BlueFar3forExtend V1.1", group = "Examples")
+public class AutoBlueFar3forExtend extends OpMode {
+
+    @IgnoreConfigurable
+    public static TelemetryManager telemetryM;
+
     private static boolean firstTime;
     private static boolean secondTime;
     private static boolean startRunningLimelight = false;
@@ -30,22 +38,36 @@ public class AutoBlueFar extends OpMode {
 
     public static HardwareMain robot = new HardwareMain();
 
-    private Follower follower;
+    private static Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
 
-    private int autoLimelightPipeline = 1;          //pipeline to BLUE = 1 (RED = 0)
+//    public Pose startPose; // Start Pose of our robot.
+//    public Pose pickup1Pose; // Scoring Pose of our robot.
+//    public Pose pickup1Pose2;
+//    public Pose scorePose;
+//    public Pose parkPose;
+//
+//    public Pose pickup2Pose;
+//    public Pose pickup2Pose2;
 
-    private final Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(180));
-    private final Pose scorePose = new Pose(56, 13, Math.toRadians(120));
-    private final Pose parkPose = new Pose(47,19, Math.toRadians(90));
+    public int autoLimelightPipeline = 1;          //pipeline to BLUE = 1 (RED = 0)
 
-    private final Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
-    private final Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
+    public Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.
+    public Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(180)); // Scoring Pose of our robot.
+    public Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(180));
+    public Pose scorePose = new Pose(56, 13, Math.toRadians(120));
+    public Pose parkPose = new Pose(47,19, Math.toRadians(90));
+
+    public Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
+    public Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
+
+
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
+
+
+
 
     public void buildPaths() {
         scorePreload = follower.pathBuilder()
@@ -172,7 +194,7 @@ public class AutoBlueFar extends OpMode {
                 if(!follower.isBusy()) {
                     follower.followPath(goToPickup1, true);
                     if(follower.getPose().getY() >= pickup1Pose.getY()-1 && follower.getPose().getY() <= pickup1Pose.getY()+1 &&
-                        follower.getPose().getY() >= pickup1Pose.getX()-1 && follower.getPose().getY() <= pickup1Pose.getX()+1){
+                            follower.getPose().getY() >= pickup1Pose.getX()-1 && follower.getPose().getY() <= pickup1Pose.getX()+1){
                         setPathState(2);
                     }
 
@@ -184,7 +206,7 @@ public class AutoBlueFar extends OpMode {
                 robot.kickerDOWN();
                 robot.intakeIN();
                 //Intake code
-                {
+            {
                 double spindexerServoPosition = robot.getSpindexerServoPosition();
 
                 if (spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0){
@@ -198,7 +220,7 @@ public class AutoBlueFar extends OpMode {
                 }
 
                 String ball = ballDetected();
-                    telemetry.addData("balls", ball);
+                telemetry.addData("balls", ball);
 
                 if (currentSlot == 1 && balls[0].equals("NONE")) {
                     robot.spindexerIntakeSlot1();
@@ -216,14 +238,14 @@ public class AutoBlueFar extends OpMode {
                         robot.spindexerShootingSlot1(); // TODO: switch to shooting state? intake out? stop intake?
                     }
                 }
+            }
+            if (!follower.isBusy()) {
+                follower.followPath(grabPickup1, 0.5,true);
+                if(pathTimer.getElapsedTime() > 3000) {
+                    setPathState(3);
                 }
-                if (!follower.isBusy()) {
-                    follower.followPath(grabPickup1, 0.5,true);
-                    if(pathTimer.getElapsedTime() > 3000) {
-                        setPathState(3);
-                    }
-                }
-                break;
+            }
+            break;
             case 3:
                 if (!follower.isBusy()) {
                     robot.spindexerShootingSlot1();
@@ -282,7 +304,7 @@ public class AutoBlueFar extends OpMode {
                 break;
             case 6:
                 //Intake code, put outside the !follower.isBusy() statement
-                {
+            {
                 double spindexerServoPosition = robot.getSpindexerServoPosition();
 
                 if (spindexerServoPosition > 0.02 && spindexerServoPosition < 0.07 && robot.spindexerServo.getPosition() == 0){
@@ -313,16 +335,16 @@ public class AutoBlueFar extends OpMode {
                     }
                 }
             }
-                if (!follower.isBusy()) {
-                    robot.intakeIN();
+            if (!follower.isBusy()) {
+                robot.intakeIN();
 //                    robot.intakeServoIN();
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2, 0.45, true);
-                    if(pathTimer.getElapsedTime() > 2750) {
-                        setPathState(7);
-                    }
+                /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                follower.followPath(grabPickup2, 0.45, true);
+                if(pathTimer.getElapsedTime() > 2750) {
+                    setPathState(7);
                 }
-                break;
+            }
+            break;
             case 7:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if (!follower.isBusy()) {
@@ -358,6 +380,75 @@ public class AutoBlueFar extends OpMode {
         pathTimer.resetTimer();
     }
 
+
+
+
+
+    /**
+     * This method is called once at the init of the OpMode.
+     **/
+    @Override
+    public void init() {
+//        Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(180)); // Scoring Pose of our robot.
+//        Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(180));
+//        Pose scorePose = new Pose(56, 13, Math.toRadians(120));
+//        Pose parkPose = new Pose(47,19, Math.toRadians(90));
+//
+//        Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
+//        Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
+
+
+        telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+
+        firstTime = true;
+        secondTime = true;
+        robot.init(hardwareMap);
+        pathTimer = new Timer();
+        opmodeTimer = new Timer();
+        opmodeTimer.resetTimer();
+
+        robot.kickerDOWN();
+
+        follower = Constants.createFollower(hardwareMap);
+        buildPaths();
+        follower.setStartingPose(startPose);
+
+        robot.limelight.pipelineSwitch(1);
+
+        //Set up bulk data reading
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+
+    }
+
+
+    /**
+     * This method is called continuously after Init while waiting for "play".
+     **/
+    @Override
+    public void init_loop() {
+        telemetry.addData("x", follower.getPose().getX());
+        telemetry.addData("y", follower.getPose().getY());
+        telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("Starting pose", follower.getPose());
+    }
+
+    /**
+     * This method is called once at the start of the OpMode.
+     * It runs all the setup actions, including building paths and starting the path system
+     **/
+    @Override
+    public void start() {
+        opmodeTimer.resetTimer();
+        robot.limelight.start();
+        setPathState(0);
+    }
+
+
+
+
     /**
      * This is the main loop of the OpMode, it will run repeatedly after clicking "Play".
      **/
@@ -389,16 +480,16 @@ public class AutoBlueFar extends OpMode {
         autonomousPathUpdate();
 
         // Feedback to Driver Hub for debugging
-        telemetry.addData("Elapsed time", pathTimer.getElapsedTime());
-        telemetry.addData("path state", pathState);
-        telemetry.addData("x", follower.getPose().getX());
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.addData("Tx:", result.getTx());
-        telemetry.addData("Is running", robot.limelight.isRunning());
-        telemetry.addData("Spindexer position", robot.getSpindexerPosition());
-        telemetry.addData("Shooter speed", robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
-        telemetry.update();
+        telemetryM.addData("Elapsed time", pathTimer.getElapsedTime());
+        telemetryM.addData("path state", pathState);
+        telemetryM.addData("x", follower.getPose().getX());
+        telemetryM.addData("y", follower.getPose().getY());
+        telemetryM.addData("heading", follower.getPose().getHeading());
+        telemetryM.addData("Tx:", result.getTx());
+        telemetryM.addData("Is running", robot.limelight.isRunning());
+        telemetryM.addData("Spindexer position", robot.getSpindexerPosition());
+        telemetryM.addData("Shooter speed", robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
+        telemetryM.update(telemetry);
 
         AutoToTeleopData.pose = follower.getPose();
         AutoToTeleopData.SpindexerServoPos = robot.spindexerServo.getPosition();
@@ -406,58 +497,14 @@ public class AutoBlueFar extends OpMode {
         AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
 
         AutoToTeleopData.limeLightPipeline = autoLimelightPipeline;
-        AutoToTeleopData.autoRan = true;            //=true when data is coming from Auto so that TeleOp can use the data coming from Auto.
+        AutoToTeleopData.autoRan = true;
+
+        draw();
     }
 
-    /**
-     * This method is called once at the init of the OpMode.
-     **/
-    @Override
-    public void init() {
-        firstTime = true;
-        secondTime = true;
-        robot.init(hardwareMap);
-        pathTimer = new Timer();
-        opmodeTimer = new Timer();
-        opmodeTimer.resetTimer();
 
-        robot.kickerDOWN();
 
-        follower = Constants.createFollower(hardwareMap);
-        buildPaths();
-        follower.setStartingPose(startPose);
 
-        robot.limelight.pipelineSwitch(1);
-
-        //Set up bulk data reading
-        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
-        for (LynxModule hub : allHubs) {
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-        }
-
-    }
-
-    /**
-     * This method is called continuously after Init while waiting for "play".
-     **/
-    @Override
-    public void init_loop() {
-        telemetry.addData("x", follower.getPose().getX());
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.addData("Starting pose", follower.getPose());
-    }
-
-    /**
-     * This method is called once at the start of the OpMode.
-     * It runs all the setup actions, including building paths and starting the path system
-     **/
-    @Override
-    public void start() {
-        opmodeTimer.resetTimer();
-        robot.limelight.start();
-        setPathState(0);
-    }
 
     /**
      * We do not use this because everything should automatically disable
@@ -486,4 +533,21 @@ public class AutoBlueFar extends OpMode {
         }
         return detectedBall;
     }
+
+
+    public static void drawOnlyCurrent() {
+        try {
+            Drawing.drawRobot(follower.getPose());
+            Drawing.sendPacket();
+        } catch (Exception e) {
+            throw new RuntimeException("Drawing failed " + e);
+        }
+    }
+
+    public static void draw() {
+        Drawing.drawDebug(follower);
+    }
+
+
+
 }

@@ -33,6 +33,9 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.view.View;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -69,13 +72,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
+
+@Configurable
 @TeleOp(name = "Test_ColorSensor V1.0", group = "Test")
-
 public class Test_RevSensorColor extends LinearOpMode {
-
+  private TelemetryManager telemetryM;
   /** The colorSensor field will contain a reference to our color sensor hardware object */
   NormalizedColorSensor rightBallColor;
-  NormalizedColorSensor leftBallColor;
+//  NormalizedColorSensor leftBallColor;
 
   public String detectedColor = "";
 
@@ -95,7 +99,7 @@ public class Test_RevSensorColor extends LinearOpMode {
    * the former from the latter in separate methods.
    */
   @Override public void runOpMode() {
-
+    telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     // Get a reference to the RelativeLayout so we can later change the background
     // color of the Robot Controller app to match the hue detected by the RGB sensor.
     int relativeLayoutId = hardwareMap.appContext.getResources().getIdentifier("RelativeLayout", "id", hardwareMap.appContext.getPackageName());
@@ -144,17 +148,16 @@ public class Test_RevSensorColor extends LinearOpMode {
     // Get a reference to our sensor object. It's recommended to use NormalizedColorSensor over
     // ColorSensor, because NormalizedColorSensor consistently gives values between 0 and 1, while
     // the values you get from ColorSensor are dependent on the specific sensor you're using.
-    rightBallColor = hardwareMap.get(NormalizedColorSensor.class, "rightBallColorSensor");
-    leftBallColor = hardwareMap.get(NormalizedColorSensor.class, "leftBallColorSensor");
+    rightBallColor = hardwareMap.get(NormalizedColorSensor.class, "Color");
 
     // If possible, turn the light on in the beginning (it might already be on anyway,
     // we just make sure it is if we can).
     if (rightBallColor instanceof SwitchableLight) {
       ((SwitchableLight)rightBallColor).enableLight(true);
     }
-    if (leftBallColor instanceof SwitchableLight) {
-      ((SwitchableLight)leftBallColor).enableLight(true);
-    }
+//    if (leftBallColor instanceof SwitchableLight) {
+//      ((SwitchableLight)leftBallColor).enableLight(true);
+//    }
 
 
     // Wait for the start button to be pressed.
@@ -180,7 +183,7 @@ public class Test_RevSensorColor extends LinearOpMode {
       // Tell the sensor our desired gain value (normally you would do this during initialization,
       // not during the loop)
       rightBallColor.setGain(gain);
-      leftBallColor.setGain(gain);
+//      leftBallColor.setGain(gain);
 
       // Check the status of the X button on the gamepad
       xButtonCurrentlyPressed = gamepad1.x;
@@ -193,10 +196,10 @@ public class Test_RevSensorColor extends LinearOpMode {
             SwitchableLight light = (SwitchableLight) rightBallColor;
             light.enableLight(!light.isLightOn());
           }
-          if (leftBallColor instanceof SwitchableLight) {
-            SwitchableLight light = (SwitchableLight) leftBallColor;
-            light.enableLight(!light.isLightOn());
-          }
+//          if (leftBallColor instanceof SwitchableLight) {
+//            SwitchableLight light = (SwitchableLight) leftBallColor;
+//            light.enableLight(!light.isLightOn());
+//          }
 
         }
       }
@@ -204,7 +207,7 @@ public class Test_RevSensorColor extends LinearOpMode {
 
       // Get the normalized colors from the sensor
       NormalizedRGBA rightColor = rightBallColor.getNormalizedColors();
-      NormalizedRGBA leftColor = leftBallColor.getNormalizedColors();
+//      NormalizedRGBA leftColor = leftBallColor.getNormalizedColors();
 
       /* Use telemetry to display feedback on the driver station. We show the red, green, and blue
        * normalized values from the sensor (in the range of 0 to 1), as well as the equivalent
@@ -213,24 +216,24 @@ public class Test_RevSensorColor extends LinearOpMode {
 
       // Update the hsvValues array by passing it to Color.colorToHSV()
       Color.colorToHSV(rightColor.toColor(), right_hsvValues);
-      Color.colorToHSV(leftColor.toColor(), left_hsvValues);
+//      Color.colorToHSV(leftColor.toColor(), left_hsvValues);
 
-      telemetry.addLine("LEFT BALL SENSOR ");
-      telemetry.addLine()
-              .addData("Red", "%.3f", leftColor.red)
-              .addData("Green", "%.3f",leftColor.green)
-              .addData("Blue", "%.3f", leftColor.blue);
-      telemetry.addLine()
-              .addData("Hue", "%.3f", left_hsvValues[0])
-              .addData("Saturation", "%.3f", left_hsvValues[1])
-              .addData("Value", "%.3f", left_hsvValues[2]);
-      telemetry.addData("Alpha", "%.3f", leftColor.alpha);
-      telemetry.addLine("");
-      telemetry.addLine()
-              .addData("Hue", "%.3f", left_hsvValues[0])
-              .addData("BALL = ", ColorBallDetected(left_hsvValues[0]));
-      telemetry.addLine("");
-      telemetry.addLine("");
+//      telemetry.addLine("LEFT BALL SENSOR ");
+//      telemetry.addLine()
+//              .addData("Red", "%.3f", leftColor.red)
+//              .addData("Green", "%.3f",leftColor.green)
+//              .addData("Blue", "%.3f", leftColor.blue);
+//      telemetry.addLine()
+//              .addData("Hue", "%.3f", left_hsvValues[0])
+//              .addData("Saturation", "%.3f", left_hsvValues[1])
+//              .addData("Value", "%.3f", left_hsvValues[2]);
+//      telemetry.addData("Alpha", "%.3f", leftColor.alpha);
+//      telemetry.addLine("");
+//      telemetry.addLine()
+//              .addData("Hue", "%.3f", left_hsvValues[0])
+//              .addData("BALL = ", ColorBallDetected(left_hsvValues[0]));
+//      telemetry.addLine("");
+//      telemetry.addLine("");
       telemetry.addLine("RIGHT BALL SENSOR")
               .addData("Red", "%.3f", rightColor.red)
               .addData("Green", "%.3f", rightColor.green)
@@ -241,8 +244,9 @@ public class Test_RevSensorColor extends LinearOpMode {
               .addData("Value", "%.3f", right_hsvValues[2]);
       telemetry.addData("Alpha", "%.3f", rightColor.alpha);
       telemetry.addLine("");
+      float right_hsvValuesONLY = right_hsvValues[0];
       telemetry.addLine()
-              .addData("Hue", "%.3f", right_hsvValues[0])
+              .addData("Hue", "%.3f", right_hsvValuesONLY)
               .addData("BALL = ", ColorBallDetected(right_hsvValues[0]));
 
 
@@ -253,9 +257,9 @@ public class Test_RevSensorColor extends LinearOpMode {
       if (rightBallColor instanceof DistanceSensor) {
         telemetry.addData("Distance (cm)", "%.3f", ((DistanceSensor) rightBallColor).getDistance(DistanceUnit.CM));
       }
-      if (leftBallColor instanceof DistanceSensor) {
-        telemetry.addData("Distance (cm)", "%.3f", ((DistanceSensor) leftBallColor).getDistance(DistanceUnit.CM));
-      }
+//      if (leftBallColor instanceof DistanceSensor) {
+//        telemetry.addData("Distance (cm)", "%.3f", ((DistanceSensor) leftBallColor).getDistance(DistanceUnit.CM));
+//      }
       telemetry.update();
 
       // Change the Robot Controller's background color to match the color detected by the color sensor.

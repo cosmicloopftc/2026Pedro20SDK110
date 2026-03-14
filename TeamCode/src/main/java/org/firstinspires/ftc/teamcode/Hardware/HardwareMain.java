@@ -79,6 +79,9 @@ public class HardwareMain {
     public DigitalChannel rightColorPin0 = null;
     public DigitalChannel rightColorPin1 = null;
 
+    public AnalogInput pin0 = null;
+    public AnalogInput pin1 = null;
+
     //public NormalizedColorSensor backBallColorSensor = null;
 
 
@@ -88,6 +91,10 @@ public class HardwareMain {
     public DigitalChannel LEDleftGreen;
     public DigitalChannel LEDcenterGreen;
     public DigitalChannel LEDcenterRed;
+
+    public Servo slot1RGB = null;
+    public Servo slot2RGB = null;
+    public Servo slot3RGB = null;
 
     double newForward = 0, newRight = 0, driveTheta = 0, r = 0 ;
 
@@ -203,6 +210,8 @@ public class HardwareMain {
          leftColorPin1 = hardwareMap.digitalChannel.get("leftColorPin1");
          rightColorPin0 = hardwareMap.digitalChannel.get("rightColorPin0");
          rightColorPin1 = hardwareMap.digitalChannel.get("rightColorPin1");
+         pin0 = hardwareMap.analogInput.get("analog0");
+         pin1 = hardwareMap.analogInput.get("analog2");
 
         LEDcenterGreen = hardwareMap.get(DigitalChannel.class, "centerGreen");               //connect to Digital port 4
         LEDcenterRed = hardwareMap.get(DigitalChannel.class, "centerRed");                   //connect to Digital port 5
@@ -212,6 +221,12 @@ public class HardwareMain {
 
         LEDrightGreen = hardwareMap.get(DigitalChannel.class, "rightGreen");             //connect to Digital port 0
         LEDrightRed = hardwareMap.get(DigitalChannel.class, "rightRed");             //connect to Digital port 1
+
+        slot1RGB = hardwareMap.get(Servo.class,"slot1RGB");
+        slot2RGB = hardwareMap.get(Servo.class,"slot2RGB");
+        slot3RGB = hardwareMap.get(Servo.class,"slot3RGB");
+
+
 
 //?unknown source        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
         //batteryVoltageSensor = hardwareMap.voltageSensor.get("Expansion Hub 2");       //GeorgeFIRST kickoff video

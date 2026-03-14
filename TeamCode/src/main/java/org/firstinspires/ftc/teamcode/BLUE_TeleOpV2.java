@@ -52,7 +52,7 @@ public class BLUE_TeleOpV2 extends OpMode {
     String turrentAimingMethod;
 
     public static double distance;
-    int autoPipeline =1;                    // TODO: set pipeline to blue
+    int autoPipeline =1;                    // TODO: set pipeline to blue =1 (red = 0)
 
     public static boolean shooterOn = false;
     public static int currentSpeed = -210;
@@ -88,6 +88,8 @@ public class BLUE_TeleOpV2 extends OpMode {
     public String[] balls = {"NONE", "NONE", "NONE"};
     public int currentSlot = 1;
     public boolean intakeSlotPosition = true;
+    double Brushland_LeftHue;
+    double Brushland_RightHue;
 
     //Analog spindexer non-intaking position ranges
     public static double yaw;
@@ -272,7 +274,9 @@ public class BLUE_TeleOpV2 extends OpMode {
             robot.turretMotor.setPower(0);
         }
 
-
+        robot.slot1RGB.setPosition(ballInSlot(balls[1]));
+        robot.slot2RGB.setPosition(ballInSlot(balls[0]));
+        robot.slot3RGB.setPosition(ballInSlot(balls[2]));
 
 
         //DATA for use with Turret aiming--by PedroPathing coordinate
@@ -521,13 +525,31 @@ public class BLUE_TeleOpV2 extends OpMode {
                     }
                 }
 
+                //Choose which slot to shoot:
+                else if (gamepad2.left_trigger >= 0.2){
+                    intakeMode = "none";
+                    robot.spindexerShootingSlot1();
+                    shootingMode = "checkShootingSlot1";
+                }
+                else if (gamepad2.left_bumper){
+                    intakeMode = "none";
+                    robot.spindexerShootingSlot2();
+                    shootingMode = "checkShootingSlot2";
+                }
+                else if (gamepad2.right_trigger >= 0.2){
+                    intakeMode = "none";
+                    robot.spindexerShootingSlot3();
+                    shootingMode = "checkShootingSlot3";
+                }
+                //Total manual shooting
+                else if (gamepad2.y){
+                    shootingMode = "manual";
+                    state = State.SHOOT;
+                }
+
                 if (shootingMode.equals("all3check") && robot.getSpindexerServoPosition() > 0.87){
                     shootingMode = "all3";
                     timer.reset();
-                    state = State.SHOOT;
-                }
-                else if (gamepad2.left_trigger >= 0.2 || gamepad2.left_bumper || gamepad2.right_trigger >= 0.2){
-                    shootingMode = "manual";
                     state = State.SHOOT;
                 }
                 else if (shootingMode.equals("checkShootingSlot1") && robot.getSpindexerServoPosition() > 0.87 && robot.getSpindexerServoPosition() < 0.91){
@@ -671,7 +693,7 @@ public class BLUE_TeleOpV2 extends OpMode {
                         robot.kickerDOWN();
                     }
                     else if(timer.milliseconds() > 350){
-                        robot.spindexerShootingSlot1();
+                        robot.spindexerShootingSlot2();
                         balls[1] = "NONE";
                         currentSlot = 1;
                         intakeSlotPosition = false;
@@ -886,6 +908,12 @@ public class BLUE_TeleOpV2 extends OpMode {
 //        telemetryM.addData("Spindexer Analog Position: ", robot.getSpindexerServoPosition());
         telemetryM.addData("Spindexer Analog Position: ", (double) Math.round(robot.getSpindexerServoPosition() * 100) / 100);
 
+        Brushland_LeftHue = robot.pin0.getVoltage() / 3.3 * 360;
+        Brushland_RightHue = robot.pin1.getVoltage() / 3.3 * 360;
+        telemetryM.addData("Left hue: ", Brushland_LeftHue);
+        telemetryM.addData("Right hue: ", Brushland_RightHue);
+
+
         telemetryM.addLine("");
         telemetryM.debug("loopCycleTime (ms): " + (double) Math.round(loopCycleTime.milliseconds()));
 
@@ -1000,16 +1028,31 @@ public class BLUE_TeleOpV2 extends OpMode {
 //        } else if (hue < 150) {
 //            detectedColor = "NONE";
 //        }
-        if (robot.leftColorPin0.getState() == true) {
+        if (robot.leftColorPin0.getState() || robot.rightColorPin0.getState()) {
             detectedBall = "PURPLE BALL";
-        } else if (robot.leftColorPin1.getState() == true) {
+            return detectedBall;
+        }
+        else if (robot.leftColorPin1.getState() && robot.rightColorPin1.getState()) {
             detectedBall = "GREEN BALL";
-        } else if (robot.rightColorPin1.getState() == true) {
-            detectedBall = "BALL";
-        } else{
+            return detectedBall;
+        }
+//        else if (robot.rightColorPin1.getState() == true) {
+//            detectedBall = "BALL";
+//        }
+        else{
             detectedBall = "NONE";
         }
         return detectedBall;
+    }
+
+    public static double ballInSlot(String ball){
+        if (ball.equals("PURPLE BALL")){
+            return 0.7;
+        }
+        else if (ball.equals("GREEN BALL")){
+            return 0.5;
+        }
+        return 0.28;
     }
 
 }
