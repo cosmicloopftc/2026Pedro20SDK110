@@ -9,7 +9,6 @@ public class AutoRedFarV3extend extends AutoBlueFar3forExtend {
 
     public AutoRedFarV3extend() {
         this.autoLimelightPipeline = 0;
-
         this.startPose = new Pose(88, 8, Math.toRadians(90));           // Start Pose of our robot.
         this.pickup1Pose = new Pose(92.5, 35, Math.toRadians(0));       // Scoring Pose of our robot.
         this.pickup1Pose2 = new Pose(134, 35, Math.toRadians(0));       //old from DCM: Pose(132.5, 35, Math.toRadians(0)
@@ -18,13 +17,7 @@ public class AutoRedFarV3extend extends AutoBlueFar3forExtend {
 
         this.pickup2Pose = new Pose(135, 35, Math.toRadians(270));
         this.pickup2Pose2 = new Pose(135, 11, Math.toRadians(270));
-
-
    }
-
-
-
-
 
     /**
      * This method is called once at the init of the OpMode.
@@ -32,7 +25,7 @@ public class AutoRedFarV3extend extends AutoBlueFar3forExtend {
     @Override
     public void init() {
         super.init();
-
+        robot.limelight.pipelineSwitch(0);
     }
 
     /**
@@ -40,7 +33,7 @@ public class AutoRedFarV3extend extends AutoBlueFar3forExtend {
      **/
     @Override
     public void init_loop() {
-        super.init_loop();;
+        super.init_loop();
     }
 
     /**
@@ -56,9 +49,8 @@ public class AutoRedFarV3extend extends AutoBlueFar3forExtend {
      **/
     @Override
     public void loop() {
+        offset = 1.5;
         super.loop();
-
-
     }
     /**
      * We do not use this because everything should automatically disable

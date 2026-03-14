@@ -17,7 +17,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
+//import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +29,7 @@ public class AutoBlueFar3forExtend extends OpMode {
     @IgnoreConfigurable
     public static TelemetryManager telemetryM;
 
+    public static double offset = -3.5;
     private static boolean firstTime;
     private static boolean secondTime;
     private static boolean startRunningLimelight = false;
@@ -457,7 +458,7 @@ public class AutoBlueFar3forExtend extends OpMode {
         //AprilTag Tracking
         LLResult result = robot.limelight.getLatestResult();
         if(result.getTx() != 0 && robot.turretMotor.getCurrentPosition() < 300 && robot.turretMotor.getCurrentPosition() > -233 && startRunningLimelight) {
-            double tx = result.getTx() - 3.5;
+            double tx = result.getTx() + offset;
             double min_command = 0.02;
             double Kp = -0.015;
             double heading_error = -tx;
@@ -499,7 +500,7 @@ public class AutoBlueFar3forExtend extends OpMode {
         AutoToTeleopData.limeLightPipeline = autoLimelightPipeline;
         AutoToTeleopData.autoRan = true;
 
-        draw();
+//        draw();
     }
 
 
@@ -535,18 +536,18 @@ public class AutoBlueFar3forExtend extends OpMode {
     }
 
 
-    public static void drawOnlyCurrent() {
-        try {
-            Drawing.drawRobot(follower.getPose());
-            Drawing.sendPacket();
-        } catch (Exception e) {
-            throw new RuntimeException("Drawing failed " + e);
-        }
-    }
+//    public static void drawOnlyCurrent() {
+//        try {
+//            Drawing.drawRobot(follower.getPose());
+//            Drawing.sendPacket();
+//        } catch (Exception e) {
+//            throw new RuntimeException("Drawing failed " + e);
+//        }
+//    }
 
-    public static void draw() {
-        Drawing.drawDebug(follower);
-    }
+//    public static void draw() {
+//        Drawing.drawDebug(follower);
+//    }
 
 
 

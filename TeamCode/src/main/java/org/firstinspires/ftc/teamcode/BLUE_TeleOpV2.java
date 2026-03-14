@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 //             in HardwareMain, and in TeleOpV2.java
 
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+//import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
@@ -266,7 +266,7 @@ public class BLUE_TeleOpV2 extends OpMode {
             }
         }else if(!aprilTags.isEmpty() && aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0){
             if(getDistanceToGoal() > 90) {
-                robot.updateLimelightWithXVel(2.75);
+                robot.updateLimelightWithXVel(1.5);
             }else{
                 robot.updateLimelightWithXVel(0);
             }
@@ -922,6 +922,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.debug("automatedDrive: " + automatedDrive);
 
+        telemetry.addData("Auto pipeline", autoPipeline);
 
         telemetryM.addLine("");
         telemetryM.addLine("");
@@ -937,7 +938,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("Right Flywheel/Shooter (deg/sec) = ", (double) Math.round(leftFlywheelVelocity) * 10 / 10);
         telemetryM.addData("Cur turretAngleRelativeToField_Deg = ", (double) Math.round(turretAngleRelativeToField_Deg) * 10 / 10);
         telemetryM.addData("Goal turretAngleRelativeToField_Deg = ", (double) Math.round(goalTurretAngleRelField_Deg) * 10 / 10);
-        telemetryM.addData("Tx by LimeLight",  (double) Math.round(result.getTx() * 100 / 100));
+        telemetryM.addData("Tx by LimeLight",  Math.round(result.getTx()));
 //        telemetryM.addLine(turrentAimingMethod);
 
 
