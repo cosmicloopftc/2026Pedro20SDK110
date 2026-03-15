@@ -1,4 +1,4 @@
-package AutoPrograms; // make sure this aligns with class location
+package AutoPrograms.OLD; // make sure this aligns with class location
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
@@ -8,9 +8,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
@@ -19,13 +17,10 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import java.util.Arrays;
 import java.util.List;
 
-@Autonomous(name = "BlueClose V1.0", group = "Blue")
-public class AutoBlueClose extends OpMode {
+import AutoPrograms.AutoToTeleopData;
 
-//    public double offset = -3.5;
-    public double imuOffsetAtStart = -36;            //turn left 45 degree to match PedroPath: positive yaw direction is counter-clockwise
-    public double robotImuHeadingDeg;
-
+//@Autonomous(name = "Red Close V1.0", group = "Examples")
+public class AutoRedCloseOLD extends OpMode {
     public int currentSlot = 1;
     public String[] balls = {"NONE", "NONE", "NONE"};
 
@@ -39,15 +34,15 @@ public class AutoBlueClose extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    public Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
-    public Pose scorePose = new Pose(58, 102, Math.toRadians(150));
-    public Pose pickup1Pose = new Pose(48, 84, Math.toRadians(180)); // Scoring Pose of our robot.
-    public Pose pickup1Pose2 = new Pose(19, 84, Math.toRadians(180));
+    private final Pose startPose = new Pose(118, 130.5, Math.toRadians(-144)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(86, 102, Math.toRadians(30));
+    private final Pose pickup1Pose = new Pose(96, 84, Math.toRadians(0)); // Scoring Pose of our robot.
+    private final Pose pickup1Pose2 = new Pose(124, 84, Math.toRadians(0));
 
-    public Pose pickup2Pose = new Pose(48, 57, Math.toRadians(180));
-    public Pose pickup2Pose2 = new Pose(8.5, 57, Math.toRadians(180));
+    private final Pose pickup2Pose = new Pose(96, 57, Math.toRadians(0));
+    private final Pose pickup2Pose2 = new Pose(133, 57, Math.toRadians(0));
 
-    public Pose parkPose = new Pose(27,84, Math.toRadians(90));
+    private final Pose parkPose = new Pose(119,84, Math.toRadians(90));
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
 
     public void buildPaths() {
@@ -93,7 +88,7 @@ public class AutoBlueClose extends OpMode {
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup2 = follower.pathBuilder()
-                .addPath( new BezierCurve(pickup2Pose2, new Pose(32.530, 55.939), scorePose))
+                .addPath( new BezierCurve(pickup2Pose2, new Pose(111.47, 55.939), scorePose))
                 .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
                 .setConstraints(Constants.pathConstraints)
                 .build();
@@ -404,6 +399,7 @@ public class AutoBlueClose extends OpMode {
 
         AutoToTeleopData.pose = follower.getPose();
         AutoToTeleopData.SpindexerServoPos = robot.spindexerServo.getPosition();
+//        AutoToTeleopData.transferServoPos = robot.transferServo.getPosition();
         AutoToTeleopData.hoodServoPos = robot.hoodServo.getPosition();
         AutoToTeleopData.turretMotorPos = robot.turretMotor.getCurrentPosition();
 
@@ -429,17 +425,13 @@ public class AutoBlueClose extends OpMode {
         follower.setStartingPose(startPose);
 
 
-        robot.limelight.pipelineSwitch(1);
+        robot.limelight.pipelineSwitch(0);
         //Set up bulk data reading
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-        double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
-                .getYaw(AngleUnit.DEGREES) +  imuOffsetAtStart ;
-
-        robot.limelight.start();                //TODO: test this out to start.
     }
 
     /**
@@ -451,11 +443,6 @@ public class AutoBlueClose extends OpMode {
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.addData("Starting pose", follower.getPose());
-        robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
-                .getYaw(AngleUnit.DEGREES);
-        telemetry.addData("robotImuHeadingDeg (degrees) = ",  (double) Math.round(robotImuHeadingDeg) * 10 / 10);
-        telemetry.addData("Is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
-
     }
 
     /**
@@ -497,4 +484,3 @@ public class AutoBlueClose extends OpMode {
         return detectedBall;
     }
 }
-

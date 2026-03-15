@@ -25,6 +25,7 @@ import java.util.List;
 @Configurable
 @Autonomous(name = "BlueFar (core base) V1.1", group = "Blue")
 public class AutoBlueFar extends OpMode {
+    public double imuOffsetAtStart = 90;            //turn left 45 degree to match PedroPath: positive yaw direction is counter-clockwise
 
     @IgnoreConfigurable
     public static TelemetryManager telemetryM;
@@ -59,12 +60,12 @@ public class AutoBlueFar extends OpMode {
 
     public Pose startPose = new Pose(56, 8, Math.toRadians(90)); // Start Pose of our robot.
     public Pose pickup1Pose = new Pose(51.5, 35, Math.toRadians(180)); // Scoring Pose of our robot.
-    public Pose pickup1Pose2 = new Pose(11.5, 35, Math.toRadians(180));
+    public Pose pickup1Pose2 = new Pose(10.5, 35, Math.toRadians(180));
     public Pose scorePose = new Pose(56, 13, Math.toRadians(120));
     public Pose parkPose = new Pose(47,19, Math.toRadians(90));
 
-    public Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
-    public Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
+    public Pose pickup2Pose = new Pose(11.5, 24, Math.toRadians(230));
+    public Pose pickup2Pose2 = new Pose(7.5, 10, Math.toRadians(270));
 
 
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
@@ -134,7 +135,7 @@ public class AutoBlueFar extends OpMode {
             case 0:
                 if (!follower.isBusy()) {
                     robot.spindexerShootingSlot1();
-                    robot.hoodServo.setPosition(0.72);
+                    robot.hoodServo.setPosition(0.7);
                     robot.shooterVELO(-208);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
@@ -158,29 +159,30 @@ public class AutoBlueFar extends OpMode {
                     if((pathTimer.getElapsedTime() < 750)){
                         robot.intakeSTOP();
                         robot.kickerUP();
-                    }else if(pathTimer.getElapsedTime() < time+250) {
+                    }else if(pathTimer.getElapsedTime() < time+200) {
                         robot.kickerDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+1000) {
+                    else if(pathTimer.getElapsedTime() < time+900) {
                         robot.spindexerShootingSlot2();
-                    }else if(pathTimer.getElapsedTime() < time+1750) {
+                    }else if(pathTimer.getElapsedTime() < time+1650) {
                         robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2000) {
+                    else if(pathTimer.getElapsedTime() < time+1850) {
                         robot.kickerDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2750) {
+                    else if(pathTimer.getElapsedTime() < time+2600) {
                         robot.spindexerShootingSlot3();
                         if(!secondTime){
                             robot.hoodServo.setPosition(0.7);
                         }
                     }
-                    else if(pathTimer.getElapsedTime() < time+3250) {
+                    else if(pathTimer.getElapsedTime() < time+3050) {
                         robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+3750) {
+                    else if(pathTimer.getElapsedTime() < time+3500) {
                         robot.kickerDOWN();
                         robot.spindexerIntakeSlot1();
+                        startRunningLimelight = false;
 //                        robot.shooterOFF();
                         if(firstTime) {
                             setPathState(2);
@@ -296,8 +298,9 @@ public class AutoBlueFar extends OpMode {
             }
             break;
             case 3:
-
-                if(robot.spindexerServo.getPosition() > 0.905 && robot.spindexerServo.getPosition() < 0.935) {
+                startRunningLimelight = true;
+                countBalls = 0;
+                if(pathTimer.getElapsedTime() > 250) {
                     robot.intakeOUT();
                 }
                 if (!follower.isBusy()) {
@@ -306,9 +309,9 @@ public class AutoBlueFar extends OpMode {
                     if(!threeBalls) {
                         follower.followPath(scorePickup1, true);
                     }
-                    robot.shooterVELO(-208);
+                    robot.shooterVELO(-210);
 
-                    if(pathTimer.getElapsedTime() > 3500) {
+                    if(pathTimer.getElapsedTime() > 3250) {
                         threeBalls = false;
 //                        robot.hoodServo.setPosition(0.46);
 //                        robot.intakeServoSTOP();
@@ -439,14 +442,16 @@ public class AutoBlueFar extends OpMode {
                 robot.intakeIN();
 //                    robot.intakeServoIN();
                 /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                follower.followPath(grabPickup2, 0.5, true);
-                if(pathTimer.getElapsedTime() > 3000) {
+                follower.followPath(grabPickup2, 0.43, true);
+                if(pathTimer.getElapsedTime() > 3050) {
                     setPathState(7);
                 }
             }
             break;
             case 7:
-                if(robot.spindexerServo.getPosition() > 0.905 && robot.spindexerServo.getPosition() < 0.935) {
+                countBalls = 0;
+                startRunningLimelight = true;
+                if(pathTimer.getElapsedTime() > 250) {
                     robot.intakeOUT();
                 }
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
@@ -460,9 +465,9 @@ public class AutoBlueFar extends OpMode {
                 break;
             case 11:
                 if (!follower.isBusy()) {
-                    if(pathTimer.getElapsedTime() > 2250){
+                    if(pathTimer.getElapsedTime() > 2000){
                         robot.spindexerShootingSlot1();
-                        if(pathTimer.getElapsedTime() > 2750) {
+                        if(pathTimer.getElapsedTime() > 2250) {
                             setPathState(1);
                         }
                     }
