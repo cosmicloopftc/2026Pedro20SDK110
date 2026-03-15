@@ -19,8 +19,11 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import java.util.Arrays;
 import java.util.List;
 
-@Autonomous(name = "Blue Close V1.0", group = "Blue")
+@Autonomous(name = "BlueClose V1.0", group = "Blue")
 public class AutoBlueClose extends OpMode {
+    public double imuOffsetAtStart = -36;            //turn left 45 degree to match PedroPath: positive yaw direction is counter-clockwise
+    public double robotImuHeadingDeg;
+
     public int currentSlot = 1;
     public String[] balls = {"NONE", "NONE", "NONE"};
 
@@ -431,6 +434,10 @@ public class AutoBlueClose extends OpMode {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
+        double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
+                .getYaw(AngleUnit.DEGREES) +  imuOffsetAtStart ;
+
+        robot.limelight.start();                //TODO: test this out to start.
     }
 
     /**
@@ -442,6 +449,11 @@ public class AutoBlueClose extends OpMode {
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.addData("Starting pose", follower.getPose());
+        robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
+                .getYaw(AngleUnit.DEGREES);
+        telemetry.addData("robotImuHeadingDeg (degrees) = ",  (double) Math.round(robotImuHeadingDeg) * 10 / 10);
+        telemetry.addData("Is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
+
     }
 
     /**

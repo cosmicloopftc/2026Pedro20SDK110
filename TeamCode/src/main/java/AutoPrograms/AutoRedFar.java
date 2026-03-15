@@ -3,11 +3,13 @@ package AutoPrograms; // make sure this aligns with class location
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Far (extend from AutoBlueFar) v1.3", group = "Red")
+@Autonomous(name = "Red Far(extend AutoBlueFar) v1.3", group = "Red")
 
 public class AutoRedFar extends AutoBlueFar {
 
     public AutoRedFar() {
+        this.imuOffsetAtStart = 90;            //translate IMU to Pedropath: positive yaw direction is counter-clockwise
+
         this.autoLimelightPipeline = 0;
         this.startPose = new Pose(88, 8, Math.toRadians(90));           // Start Pose of our robot.
         this.pickup1Pose = new Pose(92.5, 35, Math.toRadians(0));       // Scoring Pose of our robot.
@@ -49,7 +51,7 @@ public class AutoRedFar extends AutoBlueFar {
      **/
     @Override
     public void loop() {
-        offset = 1.5;
+        offset = -1;         //TODO: Ask Dominic to determine
         super.loop();
     }
     /**
