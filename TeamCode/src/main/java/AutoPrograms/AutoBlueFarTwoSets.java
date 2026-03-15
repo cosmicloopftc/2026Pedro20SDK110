@@ -17,14 +17,13 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.HardwareMain;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-//import org.firstinspires.ftc.teamcode.pedroPathing.Drawing;
 
 import java.util.Arrays;
 import java.util.List;
 
 @Configurable
-@Autonomous(name = "BlueFar (core base) V1.1", group = "Examples")
-public class AutoBlueFar extends OpMode {
+@Autonomous(name = "BlueFar Two sets V1.1", group = "Examples")
+public class AutoBlueFarTwoSets extends OpMode {
 
     @IgnoreConfigurable
     public static TelemetryManager telemetryM;
@@ -183,7 +182,8 @@ public class AutoBlueFar extends OpMode {
                         robot.spindexerIntakeSlot1();
 //                        robot.shooterOFF();
                         if(firstTime) {
-                            setPathState(2);
+                            setPathState(5);
+                            firstTime = false;
 //                            firstTime = false;
                         }else if(secondTime){
                             setPathState(5);
