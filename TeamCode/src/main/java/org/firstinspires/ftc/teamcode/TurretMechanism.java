@@ -3,8 +3,8 @@ package org.firstinspires.ftc.teamcode;
 /** copy over from Marcus' branch 1/18/2026
  */
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
+//import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+//import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import android.sax.StartElementListener;
 

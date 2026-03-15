@@ -35,14 +35,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
+import AutoPrograms.AutoToTeleopData;
+import AutoPrograms.AutoToTeleopData.*;
+
+
+
 /**1/18/2026  correct manual move control (used PedroPathing teleOp method)
  * identify code to slow down manual move (slowModeMultiplier, slowMode) ; auto path (automatedDrive)
- *
  */
 
 @Configurable
 @TeleOp(name = "BLUE TeleOpV2 v1.3", group = "A")
 public class BLUE_TeleOpV2 extends OpMode {
+    double robotImuHeadingDeg;
 
     private TurretMechanism turret = new TurretMechanism();
 
@@ -52,7 +57,7 @@ public class BLUE_TeleOpV2 extends OpMode {
     String turrentAimingMethod;
 
     public static double distance;
-    int autoPipeline =1;                    // TODO: set pipeline to blue =1 (red = 0)
+    int autoPipeline = 1;                    // TODO: set pipeline to blue =1 (red = 0)
 
     public static boolean shooterOn = false;
     public static int currentSpeed = -210;
@@ -90,6 +95,7 @@ public class BLUE_TeleOpV2 extends OpMode {
     public boolean intakeSlotPosition = true;
     double Brushland_LeftHue;
     double Brushland_RightHue;
+    String ball = "NONE";
 
     //Analog spindexer non-intaking position ranges
     public static double yaw;
@@ -107,6 +113,7 @@ public class BLUE_TeleOpV2 extends OpMode {
     @IgnoreConfigurable
     static PoseHistory poseHistory;
 
+    boolean colorIntakeToggle = false;
 
 
     @Override
@@ -114,6 +121,12 @@ public class BLUE_TeleOpV2 extends OpMode {
         robot.init(hardwareMap);
         robotDrivetrain.init(hardwareMap);
         turret.init(hardwareMap);
+
+        if (AutoPrograms.AutoToTeleopData.autoRan) {
+            startingPose = AutoToTeleopData.pose;
+        }
+
+
 
         //TODO: need to adjust this starting point--for now it is at BLUE endgame box--robot and turret point straight forward.
         //TODO: set startingPose to start TeleOp--tx from Auto?
@@ -139,8 +152,8 @@ public class BLUE_TeleOpV2 extends OpMode {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-        double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
-                .getYaw(AngleUnit.DEGREES);
+        robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
+                .getYaw(AngleUnit.DEGREES) ;
         telemetryM.addData("robotImuHeadingDeg (degrees) = ",  (double) Math.round(robotImuHeadingDeg) * 10 / 10);
 
 //        if (AutoToTeleopData.autoRan) {
@@ -216,12 +229,15 @@ public class BLUE_TeleOpV2 extends OpMode {
         // TODO: set pipeline to blue =1 (red = 0)
         if (autoPipeline==1){
             telemetryM.addData("autoPipeline = BLUE = ", autoPipeline);
+            telemetryM.addLine("Note: Not checking Limelight");
             robot.statusRGB.setPosition(0.48);         //yellow = 0.388; green =0.48, ready, done init
         }else if (autoPipeline==0) {
             telemetryM.addData("autoPipeline = RED = ", autoPipeline);
+            telemetryM.addLine("Note: Not checking Limelight");
             robot.statusRGB.setPosition(0.48);         //yellow = 0.388; green =0.48, ready, done init
         }else{
             telemetryM.addData("ERROR in autoPipeline ", autoPipeline);
+            telemetryM.addLine("Note: Not checking Limelight");
             robot.statusRGB.setPosition(0.28);         //yellow = 0.388; green =0.48, ready, done init; Red =error = 0.28
         }
 
@@ -229,7 +245,6 @@ public class BLUE_TeleOpV2 extends OpMode {
 
 // TODO: ask Dominic if the next line needs to be commented out because this has already been set by initial auto run at start of match
         //      autoPipeline = robot.limelight.getLatestResult().getPipelineIndex();
-
 
 
     }
@@ -251,6 +266,7 @@ public class BLUE_TeleOpV2 extends OpMode {
 //        robot.LEDleftGreen.setState(false);
 //        robot.LEDrightRed.setState(false);
 //        robot.LEDleftRed.setState(false);
+        robot.statusRGB.setPosition(0);
     }
     @Override
     public void loop() {
@@ -264,6 +280,34 @@ public class BLUE_TeleOpV2 extends OpMode {
         List<LLResultTypes.FiducialResult> aprilTags = result.getFiducialResults();
         telemetryM.addData("Tx",  (double) Math.round(result.getTx() * 100 / 100));
         telemetryM.addData("Is empty", aprilTags.isEmpty());
+
+
+
+//        if (getRuntime() > 200) {
+//            ball = colorBallDetected();
+//        }
+//        else{
+//            ball = ballDetected();
+//        }
+        ball = ballDetected();
+
+//        if(gamepad1.psWasPressed() && !colorIntakeToggle){
+//            colorIntakeToggle = true;
+//            ball = colorBallDetected();
+//        }
+//        else if(!gamepad1.psWasPressed() && colorIntakeToggle){
+//            colorIntakeToggle = false;
+//            ball = ballDetected();
+//        }
+
+
+
+
+        boolean leftColorPurple = robot.leftColorPin0.getState();
+        boolean leftColorGreen = robot.leftColorPin1.getState();
+        boolean rightColorPurple = robot.rightColorPin0.getState();
+        boolean rightColorGreen = robot.rightColorPin1.getState();
+
 
 
 
@@ -290,6 +334,14 @@ public class BLUE_TeleOpV2 extends OpMode {
             robot.turretMotor.setPower(0);
         }
 
+    //manually control the turret rotation; TODO: Dominic to test the turret's speed of rotate
+        double turretRotateControl = gamepad2.right_stick_x;
+        if (Math.abs(turretRotateControl) > 0.1){
+            robot.turretMotor.setPower(0.7 *turretRotateControl);
+        }
+
+
+
         robot.slot1RGB.setPosition(ballInSlot(balls[1]));
         robot.slot2RGB.setPosition(ballInSlot(balls[0]));
         robot.slot3RGB.setPosition(ballInSlot(balls[2]));
@@ -298,7 +350,7 @@ public class BLUE_TeleOpV2 extends OpMode {
         //DATA for use with Turret aiming--by PedroPathing coordinate
         //  (remember this is based on starting pose--see line 112 (robot at red endgame box, and both robot and turret point straight forward)
         //IMU yaw=0 is set at initial robot heading when robot is initial turned on.
-        //    This orientation is carried to all programs later if robot is not turned off.
+        //TODO: important: This orientation is carried to all programs later if robot is not turned off.
         //Here, fField angle is set to be
 
         double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
@@ -406,30 +458,13 @@ public class BLUE_TeleOpV2 extends OpMode {
 
 
 
-//        if (robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) >= 150 && robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) <= 220 && !aprilTags.isEmpty()){
-//            robot.LEDrightGreen.setState(true);
-//            robot.LEDleftGreen.setState(true);
-//            robot.LEDrightRed.setState(false);
-//            robot.LEDleftRed.setState(false);
-//        }
-//        else if(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) >= 150 && robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) <= 220){
-//            robot.LEDrightGreen.setState(true);
-//            robot.LEDleftGreen.setState(true);
-//            robot.LEDrightRed.setState(true);
-//            robot.LEDleftRed.setState(true);
-//        }
-//        else if(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) >= 150 && robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) <= 220){
-//            robot.LEDrightGreen.setState(true);
-//            robot.LEDleftGreen.setState(true);
-//            robot.LEDrightRed.setState(true);
-//            robot.LEDleftRed.setState(true);
-//        }
-//        else{
-//            robot.LEDrightGreen.setState(false);
-//            robot.LEDleftGreen.setState(false);
-//            robot.LEDrightRed.setState(true);
-//            robot.LEDleftRed.setState(true);
-//        }
+        if (robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) >= 150 && robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) <= 220 && !aprilTags.isEmpty()){
+            robot.statusRGB.setPosition(0.5);
+        }
+        else {
+            robot.statusRGB.setPosition(0);
+        }
+
 
 //        if (gamepad2.a){
 //            robot.transferDOWN();
@@ -463,7 +498,6 @@ public class BLUE_TeleOpV2 extends OpMode {
                         robot.spindexerIntakeSlot1();
                     }
 
-                    String ball = ballDetected();
                     if (!(ball.equals("NONE"))) {
                         if (currentSlot > 0 && currentSlot <= 3){
                             balls[currentSlot - 1] = ball;
@@ -506,19 +540,20 @@ public class BLUE_TeleOpV2 extends OpMode {
                     robot.intakeSTOP();
                 }
                 else if (robot.getSpindexerServoPosition() > 0.87){
-                    if (gamepad1.dpad_down){
-                        robot.intakeOUT();
+                    if (gamepad1.dpad_left){
+                        robot.intakeSTOP();
                     }
                     else{
-                        robot.intakeSTOP();
+                        robot.intakeOUT();
                     }
                 }
                 else if (gamepad1.a){
                     state = State.SHOOT;
                 }
 
-                if (gamepad2.b && (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isConnected() && robot.limelight.isRunning()))){
+                if (gamepad2.b /*&& (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isConnected() && robot.limelight.isRunning()))*/){
                     //robot.auto3Shoot();
+                    robot.intakeSTOP();
                     currentSlot = 4;
                     robot.spindexerShootingSlot1();
                     shootingMode = "all3check";
@@ -526,6 +561,7 @@ public class BLUE_TeleOpV2 extends OpMode {
                 }
                 //Shoot only next ball
                 else if (gamepad2.right_bumper){
+                    robot.intakeSTOP();
                     currentSlot = 4;
                     if (!(balls[1].equals("NONE"))){
                         robot.spindexerShootingSlot1();
@@ -543,16 +579,19 @@ public class BLUE_TeleOpV2 extends OpMode {
 
                 //Choose which slot to shoot:
                 else if (gamepad2.left_trigger >= 0.2){
+                    robot.intakeSTOP();
                     intakeMode = "none";
                     robot.spindexerShootingSlot1();
                     shootingMode = "checkShootingSlot1";
                 }
                 else if (gamepad2.left_bumper){
+                    robot.intakeSTOP();
                     intakeMode = "none";
                     robot.spindexerShootingSlot2();
                     shootingMode = "checkShootingSlot2";
                 }
                 else if (gamepad2.right_trigger >= 0.2){
+                    robot.intakeSTOP();
                     intakeMode = "none";
                     robot.spindexerShootingSlot3();
                     shootingMode = "checkShootingSlot3";
@@ -586,6 +625,7 @@ public class BLUE_TeleOpV2 extends OpMode {
 
                 break;
             case SHOOT:
+                robot.intakeSTOP();
                 //This is for bump correction
                 if(executeOnce){
                     yaw = robot.imu.getRobotYawPitchRollAngles().getYaw();
@@ -681,7 +721,7 @@ public class BLUE_TeleOpV2 extends OpMode {
 //                    }
 //                }
                 else if (shootingMode.equals("manual")){
-                    if (gamepad2.right_bumper && (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isRunning() && robot.limelight.isConnected()))){
+                    if (gamepad2.right_bumper /*&& (((!aprilTags.isEmpty() && ((aprilTags.get(0).getFiducialId() == 20 && autoPipeline == 1) || (aprilTags.get(0).getFiducialId() == 24 && autoPipeline == 0)))) || !(robot.limelight.isRunning() && robot.limelight.isConnected()))*/){
                         robot.kickerUP();
                         shootingResults.add(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES));
                         timer.reset();
@@ -886,13 +926,12 @@ public class BLUE_TeleOpV2 extends OpMode {
 //        telemetryM.addData("Launch angle", HardwareMain.getLaunchAngle());
 //        telemetryM.addData("Distance to goal", HardwareMain.getDistanceToGoal());
 //        telemetryM.addData("Angle to goal from lightlight", result.getTy());
-        telemetryM.addData("Hood position", robot.hoodServo.getPosition());
-        telemetryM.addData("Launch angle", HardwareMain.getLaunchAngle());
-        telemetryM.addData("Distance to goal",   Math.round( HardwareMain.getDistanceToGoal()* 10)/10);
-        telemetryM.addData("Angle to goal from lightlight", Math.round(result.getTx()* 100)/100);
+        telemetryM.addData("Hood position", (double) Math.round(robot.hoodServo.getPosition()) * 10 / 10);
+        telemetryM.addData("Launch angle (deg)", (double) Math.round(HardwareMain.getLaunchAngle()) * 10 / 10);
+        telemetryM.addData("Distance to goal (inch)", (double) Math.round(HardwareMain.getDistanceToGoal()) * 10 / 10);
+        telemetryM.addData("Angle to goal from lightlight (deg)", Math.round(result.getTx()* 100)/100);
 
-        telemetryM.addData("Yaw", robot.imu.getRobotYawPitchRollAngles().getYaw());
-
+        telemetryM.addData("Yaw (deg)",  (double) Math.round(yaw) * 10 / 10);
 
 
 //TODO: comment out for now to use turret 360 degree PID method instead of previous one from Dominic
@@ -913,21 +952,21 @@ public class BLUE_TeleOpV2 extends OpMode {
         telemetryM.addData("leftShooter  AngVel (deg/s?): ", (double) Math.round(robot.leftShooterMotor.getVelocity(AngleUnit.DEGREES) * 10) / 10);
 
 
-        telemetryM.addData("Left digital 0", robot.leftColorPin0.getState());
-        telemetryM.addData("Left digital 1", robot.leftColorPin1.getState());
-        telemetryM.addData("Right digital 0: 5 mm away", robot.rightColorPin0.getState());
-        telemetryM.addData("Right digital 1: 10 mm away", robot.rightColorPin1.getState());
-        telemetryM.addData("BALL = ", ballDetected());
+        telemetryM.addData("Left digital 0 Purple: ", leftColorPurple);
+        telemetryM.addData("Right digital 0 Purple: ", rightColorPurple);
+        telemetryM.addData("Left digital 1 Green: ", leftColorGreen);
+        telemetryM.addData("Right digital 1 Green: ", rightColorGreen);
+        telemetryM.addData("BALL = ", ball);
         telemetryM.addData("Slot 1 = ", balls[0]);
         telemetryM.addData("Slot 2 = ", balls[1]);
         telemetryM.addData("Slot 3 = ", balls[2]);
 //        telemetryM.addData("Spindexer Analog Position: ", robot.getSpindexerServoPosition());
         telemetryM.addData("Spindexer Analog Position: ", (double) Math.round(robot.getSpindexerServoPosition() * 100) / 100);
 
-        Brushland_LeftHue = robot.pin0.getVoltage() / 3.3 * 360;
-        Brushland_RightHue = robot.pin1.getVoltage() / 3.3 * 360;
-        telemetryM.addData("Left hue: ", Brushland_LeftHue);
-        telemetryM.addData("Right hue: ", Brushland_RightHue);
+//        Brushland_LeftHue = robot.pin0.getVoltage() / 3.3 * 360;
+//        Brushland_RightHue = robot.pin1.getVoltage() / 3.3 * 360;
+//        telemetryM.addData("Left hue: ", Brushland_LeftHue);
+//        telemetryM.addData("Right hue: ", Brushland_RightHue);
 
 
         telemetryM.addLine("");
@@ -1038,13 +1077,16 @@ public class BLUE_TeleOpV2 extends OpMode {
 
     //TODO:  need to adjust the Hue value limit based on testing at different light setting.
     public static String ballDetected(){
-//        if (hue > 200 && hue < 250) {
-//            detectedColor = "PURPLE BALL";
-//        } else if (hue > 150 && hue < 180) {
-//            detectedColor = "GREEN BALL";
-//        } else if (hue < 150) {
-//            detectedColor = "NONE";
-//        }
+        if (robot.leftColorPin0.getState() || robot.rightColorPin0.getState() || robot.leftColorPin1.getState() || robot.rightColorPin1.getState()) {
+            detectedBall = "BALL";
+            return detectedBall;
+        }
+        else{
+            detectedBall = "NONE";
+        }
+        return detectedBall;
+    }
+    public static String colorBallDetected(){
         if (robot.leftColorPin0.getState() || robot.rightColorPin0.getState()) {
             detectedBall = "PURPLE BALL";
             return detectedBall;
@@ -1053,14 +1095,12 @@ public class BLUE_TeleOpV2 extends OpMode {
             detectedBall = "GREEN BALL";
             return detectedBall;
         }
-//        else if (robot.rightColorPin1.getState() == true) {
-//            detectedBall = "BALL";
-//        }
         else{
             detectedBall = "NONE";
         }
         return detectedBall;
     }
+
 
     public static double ballInSlot(String ball){
         if (ball.equals("PURPLE BALL")){
@@ -1069,7 +1109,15 @@ public class BLUE_TeleOpV2 extends OpMode {
         else if (ball.equals("GREEN BALL")){
             return 0.5;
         }
-        return 0.28;
+        else if (ball.equals("BALL")){
+            return 0.63;
+        }
+        return 0;
+    }
+
+    public static boolean toggle(boolean colorToggle){
+        colorToggle = !colorToggle;
+        return colorToggle;
     }
 
 }

@@ -24,6 +24,8 @@ import java.util.List;
 @Configurable
 @Autonomous(name = "RedFar Two Sets V1.1", group = "Examples")
 public class AutoRedFarTwoSets extends AutoBlueFarTwoSets {
+    double imuOffsetAtStart = -135;            //turn right 135 degree to match PedroPath: positive yaw direction is counter-clockwise
+
     public static double offset = 1.5;
 
 //    public Pose startPose; // Start Pose of our robot.

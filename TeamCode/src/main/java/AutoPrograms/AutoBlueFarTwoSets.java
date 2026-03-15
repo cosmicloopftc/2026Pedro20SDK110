@@ -24,6 +24,9 @@ import java.util.List;
 @Configurable
 @Autonomous(name = "BlueFar Two sets V1.1", group = "Examples")
 public class AutoBlueFarTwoSets extends OpMode {
+    public double imuOffsetAtStart = 45;            //turn left 45 degree to match PedroPath: positive yaw direction is counter-clockwise
+
+
 
     @IgnoreConfigurable
     public static TelemetryManager telemetryM;
@@ -133,7 +136,7 @@ public class AutoBlueFarTwoSets extends OpMode {
             case 0:
                 if (!follower.isBusy()) {
                     robot.spindexerShootingSlot1();
-                    robot.hoodServo.setPosition(0.72);
+                    robot.hoodServo.setPosition(0.7);
                     robot.shooterVELO(-208);
 //                    telemetry.addData("Flywheel speed", robot.leftShooterMotor.getVelocity());
 //                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */

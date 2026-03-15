@@ -19,8 +19,13 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import java.util.Arrays;
 import java.util.List;
 
-@Autonomous(name = "Blue Close V1.0", group = "Blue")
+@Autonomous(name = "BlueClose V1.0", group = "Blue")
 public class AutoBlueClose extends OpMode {
+
+//    public double offset = -3.5;
+    public double imuOffsetAtStart = -36;            //turn left 45 degree to match PedroPath: positive yaw direction is counter-clockwise
+    public double robotImuHeadingDeg;
+
     public int currentSlot = 1;
     public String[] balls = {"NONE", "NONE", "NONE"};
 
@@ -34,15 +39,16 @@ public class AutoBlueClose extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(58, 102, Math.toRadians(150));
-    private final Pose pickup1Pose = new Pose(48, 84, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(19, 84, Math.toRadians(180));
+    public Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
+    public Pose scorePose = new Pose(58, 102, Math.toRadians(150));
+    public Pose pickup1Pose = new Pose(48, 84, Math.toRadians(180)); // Scoring Pose of our robot.
+    public Pose pickup1Pose2 = new Pose(19, 84, Math.toRadians(180));
 
-    private final Pose pickup2Pose = new Pose(48, 57, Math.toRadians(180));
-    private final Pose pickup2Pose2 = new Pose(8.5, 57, Math.toRadians(180));
+    public Pose pickup2Pose = new Pose(48, 57, Math.toRadians(180));
+    public Pose curvePose = new Pose(32.530, 55.939);
+    public Pose pickup2Pose2 = new Pose(9.5, 57, Math.toRadians(180));
 
-    private final Pose parkPose = new Pose(27,84, Math.toRadians(90));
+    public Pose parkPose = new Pose(27,84, Math.toRadians(90));
     private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
 
     public void buildPaths() {
@@ -88,7 +94,7 @@ public class AutoBlueClose extends OpMode {
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup2 = follower.pathBuilder()
-                .addPath( new BezierCurve(pickup2Pose2, new Pose(32.530, 55.939), scorePose))
+                .addPath( new BezierCurve(pickup2Pose2, curvePose, scorePose))
                 .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), scorePose.getHeading())
                 .setConstraints(Constants.pathConstraints)
                 .build();
@@ -127,27 +133,27 @@ public class AutoBlueClose extends OpMode {
             case 1:
                 if (!follower.isBusy()) {
                     time = 750;
-                    if((pathTimer.getElapsedTime() < 750)){
+                    if((pathTimer.getElapsedTime() < time)){
                         robot.intakeSTOP();
                         robot.kickerUP();
                     }else if(pathTimer.getElapsedTime() < time+250) {
                         robot.kickerDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+1000) {
+                    else if(pathTimer.getElapsedTime() < time+900) {
                         robot.spindexerShootingSlot2();
-                    }else if(pathTimer.getElapsedTime() < time+1750) {
+                    }else if(pathTimer.getElapsedTime() < time+1650) {
                         robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2000) {
+                    else if(pathTimer.getElapsedTime() < time+1900) {
                         robot.kickerDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2750) {
+                    else if(pathTimer.getElapsedTime() < time+2550) {
                         robot.spindexerShootingSlot3();
                     }
-                    else if(pathTimer.getElapsedTime() < time+3250) {
+                    else if(pathTimer.getElapsedTime() < time+3050) {
                         robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+4000) {
+                    else if(pathTimer.getElapsedTime() < time+3800) {
                         robot.kickerDOWN();
                         robot.spindexerIntakeSlot1();
 //                        robot.shooterOFF();
@@ -431,6 +437,10 @@ public class AutoBlueClose extends OpMode {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
+        double robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
+                .getYaw(AngleUnit.DEGREES) +  imuOffsetAtStart ;
+
+        robot.limelight.start();                //TODO: test this out to start.
     }
 
     /**
@@ -442,6 +452,11 @@ public class AutoBlueClose extends OpMode {
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.addData("Starting pose", follower.getPose());
+        robotImuHeadingDeg = robot.imu.getRobotYawPitchRollAngles()
+                .getYaw(AngleUnit.DEGREES);
+        telemetry.addData("robotImuHeadingDeg (degrees) = ",  (double) Math.round(robotImuHeadingDeg) * 10 / 10);
+        telemetry.addData("Is running and connected", robot.limelight.isRunning() && robot.limelight.isConnected());
+
     }
 
     /**

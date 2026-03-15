@@ -23,18 +23,18 @@ public class TEST_ConfigureColorRangefinder extends LinearOpMode {
             pin0 --> purple
             pin1 --> green */
 
-        crf.setPin0Digital(ColorRangefinder.DigitalMode.HSV, 140 / 360.0 * 255, 200 / 360.0 * 255); // purple
-        crf.setPin0DigitalMaxDistance(ColorRangefinder.DigitalMode.HSV, 10); // 10mm or closer requirement
-        crf.setPin1Digital(ColorRangefinder.DigitalMode.HSV, 90 / 360.0 * 255, 139.9 / 360.0 * 255); // green
-        crf.setPin1DigitalMaxDistance(ColorRangefinder.DigitalMode.HSV, 10); // 10mm or closer requirement
+//        crf.setPin0Digital(ColorRangefinder.DigitalMode.HSV, 140 / 360.0 * 255, 200 / 360.0 * 255); // purple
+//        crf.setPin0DigitalMaxDistance(ColorRangefinder.DigitalMode.HSV, 10); // 10mm or closer requirement
+//        crf.setPin1Digital(ColorRangefinder.DigitalMode.HSV, 90 / 360.0 * 255, 139.9 / 360.0 * 255); // green
+//        crf.setPin1DigitalMaxDistance(ColorRangefinder.DigitalMode.HSV, 10); // 10mm or closer requirement
 
         //Analog test for hue
 //        crf.setPin0Analog(ColorRangefinder.AnalogMode.HSV);
 //        crf.setPin1Digital(ColorRangefinder.DigitalMode.HSV, 0, 20); // placeholder
 
         //Distance:
-//        crf.setPin0Digital(ColorRangefinder.DigitalMode.DISTANCE, 0, 5);
-//        crf.setPin1Digital(ColorRangefinder.DigitalMode.DISTANCE, 0, 10);
+        crf.setPin0Digital(ColorRangefinder.DigitalMode.DISTANCE, 0, 10);
+        crf.setPin1Digital(ColorRangefinder.DigitalMode.DISTANCE, 0, 15);
 
 
 //        crf.setPin0Digital(ColorRangefinder.DigitalMode.HSV, 200, 250); // purple
