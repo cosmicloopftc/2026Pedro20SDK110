@@ -63,7 +63,7 @@ public class AutoBlueFar extends OpMode {
     public Pose scorePose = new Pose(56, 13, Math.toRadians(120));
     public Pose parkPose = new Pose(47,19, Math.toRadians(90));
 
-    public Pose pickup2Pose = new Pose(9, 35, Math.toRadians(270));
+    public Pose pickup2Pose = new Pose(13, 35, Math.toRadians(230));
     public Pose pickup2Pose2 = new Pose(9, 11, Math.toRadians(270));
 
 
