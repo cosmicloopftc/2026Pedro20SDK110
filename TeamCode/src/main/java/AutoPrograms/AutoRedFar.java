@@ -18,7 +18,7 @@ public class AutoRedFar extends AutoBlueFar {
         this.parkPose = new Pose(97, 19, Math.toRadians(90));
 
         this.pickup2Pose = new Pose(131, 25, Math.toRadians(310));
-        this.pickup2Pose2 = new Pose(135, 11, Math.toRadians(270));
+        this.pickup2Pose2 = new Pose(133, 11, Math.toRadians(270));
    }
 
     /**
@@ -51,7 +51,7 @@ public class AutoRedFar extends AutoBlueFar {
      **/
     @Override
     public void loop() {
-        offset = -1;         //TODO: Ask Dominic to determine
+        offset = 1;         //TODO: Ask Dominic to determine
         super.loop();
     }
     /**

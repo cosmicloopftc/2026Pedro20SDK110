@@ -37,16 +37,16 @@ public class AutoBlueClose extends OpMode {
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
-    private final Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(58, 102, Math.toRadians(150));
-    private final Pose pickup1Pose = new Pose(48, 84, Math.toRadians(180)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose2 = new Pose(19, 84, Math.toRadians(180));
+    public  Pose startPose = new Pose(26, 130.5, Math.toRadians(-36)); // Start Pose of our robot.
+    public  Pose scorePose = new Pose(58, 102, Math.toRadians(150));
+    public  Pose pickup1Pose = new Pose(48, 84, Math.toRadians(180)); // Scoring Pose of our robot.
+    public  Pose pickup1Pose2 = new Pose(19, 84, Math.toRadians(180));
 
-    private final Pose pickup2Pose = new Pose(48, 57, Math.toRadians(180));
-    private final Pose pickup2Pose2 = new Pose(8.5, 57, Math.toRadians(180));
+    public  Pose pickup2Pose = new Pose(48, 57, Math.toRadians(180));
+    public  Pose pickup2Pose2 = new Pose(8.5, 57, Math.toRadians(180));
 
-    private final Pose parkPose = new Pose(27,84, Math.toRadians(90));
-    private PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
+    public  Pose parkPose = new Pose(27,84, Math.toRadians(90));
+    public PathChain goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload, park;
 
     public void buildPaths() {
         scorePreload = follower.pathBuilder()

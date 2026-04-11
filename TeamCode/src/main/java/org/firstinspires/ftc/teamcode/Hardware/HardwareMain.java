@@ -120,7 +120,7 @@ public class HardwareMain {
 
     /* Initialize standard Hardware interface */
     public void init(HardwareMap hardwareMap)    {
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(50, 0.0001, 0.0005, 12.1);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(160, 0.0035, 0.068, 13.1);
 
         //Save reference to Hardware map
         //Sensor.init(hardwareMap);

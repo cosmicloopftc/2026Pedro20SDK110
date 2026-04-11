@@ -39,11 +39,11 @@ public class AutoRedCloseGate extends OpMode {
     private final Pose pickup1Pose = new Pose(96, 84, Math.toRadians(0)); // Scoring Pose of our robot.
     private final Pose pickup1Pose2 = new Pose(124, 84, Math.toRadians(0));
 
-    private final Pose gatePose = new Pose(122, 70, Math.toRadians(0));
+    private final Pose gatePose = new Pose(123.5, 74, Math.toRadians(0));
 
     private final Pose pickup2Pose = new Pose(96, 57, Math.toRadians(0));
-    private final Pose pickup2Pose2 = new Pose(133, 57, Math.toRadians(0));
-    private final Pose parkPose = new Pose(120,84, Math.toRadians(90));
+    private final Pose pickup2Pose2 = new Pose(131.5, 57, Math.toRadians(0));
+    private final Pose parkPose = new Pose(120,84, Math.toRadians(130));
 
     private PathChain hitGate, park, goToPickup1, goToPickup2, grabPickup1, scorePickup1, grabPickup2, scorePickup2, scorePreload;
 
@@ -134,7 +134,7 @@ public class AutoRedCloseGate extends OpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    time = 750;
+                    time = 700;
                     if((pathTimer.getElapsedTime() < 750)){
                         robot.intakeSTOP();
                         robot.kickerUP();
@@ -143,19 +143,19 @@ public class AutoRedCloseGate extends OpMode {
                     }
                     else if(pathTimer.getElapsedTime() < time+950) {
                         robot.spindexerShootingSlot2();
-                    }else if(pathTimer.getElapsedTime() < time+1700) {
+                    }else if(pathTimer.getElapsedTime() < time+1650) {
                         robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+1900) {
+                    else if(pathTimer.getElapsedTime() < time+1850) {
                         robot.kickerDOWN();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2250) {
+                    else if(pathTimer.getElapsedTime() < time+2200) {
                         robot.spindexerShootingSlot3();
                     }
-                    else if(pathTimer.getElapsedTime() < time+2650) {
+                    else if(pathTimer.getElapsedTime() < time+2550) {
                         robot.kickerUP();
                     }
-                    else if(pathTimer.getElapsedTime() < time+3600) {
+                    else if(pathTimer.getElapsedTime() < time+3300) {
                         robot.kickerDOWN();
                         robot.spindexerIntakeSlot1();
 //                        robot.shooterOFF();
@@ -222,7 +222,7 @@ public class AutoRedCloseGate extends OpMode {
                 }
             }
             if (!follower.isBusy()) {
-                follower.followPath(grabPickup1, 0.5,true);
+                follower.followPath(grabPickup1, 0.45,true);
                 if(pathTimer.getElapsedTime() > 3000) {
                     setPathState(14);
                 }

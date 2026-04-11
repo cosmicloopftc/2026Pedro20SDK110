@@ -6,12 +6,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name = "Red Close(extend AutoBlueFar) v1.3", group = "Red")
 
-public class AutoRedClose extends AutoBlueFar {
+public class AutoRedClose extends AutoBlueClose {
 
     public AutoRedClose() {
         this.imuOffsetAtStart = -144;            //translate IMU to Pedropath: positive yaw direction is counter-clockwise
 
-        this.autoLimelightPipeline = 0;
         this.startPose = new Pose(118, 130.5, Math.toRadians(-144)); // Start Pose of our robot.
         this.scorePose = new Pose(86, 102, Math.toRadians(30));
         this.pickup1Pose = new Pose(96, 84, Math.toRadians(0)); // Scoring Pose of our robot.
@@ -54,7 +53,6 @@ public class AutoRedClose extends AutoBlueFar {
      **/
     @Override
     public void loop() {
-        offset = 1.5;       //TODO: ask Dominic
         super.loop();
     }
     /**
